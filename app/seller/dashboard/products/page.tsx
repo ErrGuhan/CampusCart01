@@ -29,7 +29,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { getMyProducts } from '@/lib/supabase-queries';
-import { getCategories } from '@/lib/supabase-queries';
+import { getClientCategories } from '@/lib/supabase-client-queries';
 import type { Category, Product } from '@/lib/types';
 
 type SellerProduct = Product & { _editing?: boolean };
@@ -54,7 +54,7 @@ export default function SellerProductsPage() {
   }, [profile?.id]);
 
   useEffect(() => {
-    getCategories().then(setCategories);
+    getClientCategories().then(setCategories);
   }, []);
 
   if (loading) {
@@ -273,6 +273,7 @@ export default function SellerProductsPage() {
             saving={saving}
             onSave={handleSave}
             onCancel={() => { setDialogOpen(false); setEditProduct(null); }}
+            categories={categories}
           />
         </DialogContent>
       </Dialog>
@@ -301,12 +302,13 @@ export default function SellerProductsPage() {
 }
 
 function ProductForm({
-  product, saving, onSave, onCancel,
+  product, saving, onSave, onCancel, categories,
 }: {
   product: Product | null;
   saving: boolean;
   onSave: () => void;
   onCancel: () => void;
+  categories: Category[];
 }) {
   const [name, setName] = useState(product?.name || '');
   const [description, setDescription] = useState(product?.description || '');

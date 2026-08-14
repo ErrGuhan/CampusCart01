@@ -146,18 +146,18 @@ export default function SellerSettingsPage() {
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="rounded-lg border border-border p-3 text-center">
                   <Star className="h-4 w-4 text-warning mx-auto mb-1" />
-                  <div className="text-lg font-bold">{mockSeller.rating.toFixed(1)}</div>
+                  <div className="text-lg font-bold">0.0</div>
                   <div className="text-xs text-muted-foreground">Rating</div>
                 </div>
                 <div className="rounded-lg border border-border p-3 text-center">
                   <Package className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <div className="text-lg font-bold">{mockSeller.productCount}</div>
+                  <div className="text-lg font-bold">0</div>
                   <div className="text-xs text-muted-foreground">Products</div>
                 </div>
                 <div className="rounded-lg border border-border p-3 text-center">
                   <Calendar className="h-4 w-4 text-success mx-auto mb-1" />
                   <div className="text-lg font-bold">
-                    {new Date(mockSeller.joinedAt).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
+                    N/A
                   </div>
                   <div className="text-xs text-muted-foreground">Joined</div>
                 </div>
