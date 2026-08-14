@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Store, Save, Loader2, User, Building2, GraduationCap,
@@ -57,6 +58,28 @@ export default function SellerSettingsPage() {
   if (!user) {
     router.push('/login');
     return null;
+  }
+
+  if (!profile?.is_seller) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-16">
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <Store className="h-16 w-16 text-muted-foreground/40 mb-4" />
+            <h1 className="font-display text-2xl font-bold tracking-tight">Seller settings are locked</h1>
+            <p className="mt-2 text-muted-foreground max-w-md">
+              Only active sellers can edit their store settings. Other students continue using the marketplace as buyers.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button asChild><Link href="/products">Explore Products</Link></Button>
+              <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   const initials = displayName

@@ -86,6 +86,28 @@ export default function SellerProductsPage() {
     );
   }
 
+  if (!profile?.is_seller) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-16">
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
+            <h1 className="font-display text-2xl font-bold tracking-tight">Access restricted to sellers</h1>
+            <p className="mt-2 text-muted-foreground max-w-md">
+              Only student sellers can manage listings. Buyers can continue exploring and purchasing products.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button asChild><Link href="/products">Browse Products</Link></Button>
+              <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   const filtered = sellerProducts.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;

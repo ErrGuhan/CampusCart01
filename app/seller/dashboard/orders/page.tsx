@@ -60,6 +60,28 @@ export default function SellerOrdersPage() {
     );
   }
 
+  if (!profile?.is_seller) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-16">
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
+            <h1 className="font-display text-2xl font-bold tracking-tight">Orders are only for sellers</h1>
+            <p className="mt-2 text-muted-foreground max-w-md">
+              Students who are not selling products can browse products and place orders from the marketplace.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button asChild><Link href="/products">Go Shopping</Link></Button>
+              <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   const sellerOrders = orders.filter((o) =>
     o.items.some((i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots')
   );

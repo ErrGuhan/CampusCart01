@@ -69,6 +69,30 @@ export default function SellerDashboardPage() {
     );
   }
 
+  if (!profile?.is_seller) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-16">
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-6">
+              <Package className="h-10 w-10" />
+            </div>
+            <h1 className="font-display text-2xl font-bold tracking-tight">Seller dashboard is for sellers only</h1>
+            <p className="mt-2 text-muted-foreground max-w-md">
+              This page is reserved for students who are selling products. Browse and buy from other sellers in the marketplace.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button asChild><Link href="/products">Browse Products</Link></Button>
+              <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   const lowStockProducts = sellerProducts.filter((p) => p.inventory <= 5);
   const sellerOrders = orders.filter((o) =>
     o.items.some((i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots')

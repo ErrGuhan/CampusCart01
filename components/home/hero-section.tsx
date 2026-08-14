@@ -1,8 +1,15 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/components/auth-provider';
 
 export function HeroSection() {
+  const { user, profile } = useAuth();
+  const sellerLink = user && profile?.is_seller ? '/seller/dashboard' : user ? '/account/settings' : '/register';
+  const sellerLabel = user && profile?.is_seller ? 'Seller Dashboard' : 'Start Selling';
+
   return (
     <section className="relative overflow-hidden border-b border-border">
       <div className="absolute inset-0 bg-gradient-to-b from-accent/40 via-background to-background" />
@@ -42,7 +49,7 @@ export function HeroSection() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="w-full sm:w-auto sm:h-12 sm:px-6 text-base">
-                <Link href="/seller/dashboard">Start Selling</Link>
+                <Link href={sellerLink}>{sellerLabel}</Link>
               </Button>
             </div>
 
