@@ -1,46 +1,58 @@
+'use client';
+
 import Link from 'next/link';
 import { Store, Instagram, Twitter, Linkedin, Mail } from 'lucide-react';
-
-const footerSections = [
-  {
-    title: 'Marketplace',
-    links: [
-      { href: '/products', label: 'Browse Products' },
-      { href: '/categories', label: 'Categories' },
-      { href: '/sellers', label: 'Student Creators' },
-      { href: '/deals', label: 'Deals' },
-    ],
-  },
-  {
-    title: 'Sell',
-    links: [
-      { href: '/seller/dashboard', label: 'Seller Dashboard' },
-      { href: '/seller/products/new', label: 'List a Product' },
-      { href: '/seller/earnings', label: 'Earnings' },
-      { href: '/how-it-works', label: 'How It Works' },
-    ],
-  },
-  {
-    title: 'Account',
-    links: [
-      { href: '/login', label: 'Sign In' },
-      { href: '/register', label: 'Create Account' },
-      { href: '/account/orders', label: 'My Orders' },
-      { href: '/account/wishlist', label: 'Wishlist' },
-    ],
-  },
-  {
-    title: 'Help',
-    links: [
-      { href: '/policies', label: 'Marketplace Policies' },
-      { href: '/safety', label: 'Trust & Safety' },
-      { href: '/contact', label: 'Contact' },
-      { href: '/faq', label: 'FAQ' },
-    ],
-  },
-];
+import { useAuth } from '@/components/auth-provider';
 
 export function Footer() {
+  const { profile, user } = useAuth();
+
+  const footerSections = [
+    {
+      title: 'Marketplace',
+      links: [
+        { href: '/products', label: 'Browse Products' },
+        { href: '/categories', label: 'Categories' },
+        { href: '/sellers', label: 'Student Creators' },
+        { href: '/how-it-works', label: 'How It Works' },
+      ],
+    },
+    {
+      title: 'Sell',
+      links: profile?.is_seller
+        ? [
+            { href: '/seller/dashboard', label: 'Seller Dashboard' },
+            { href: '/seller/dashboard/products', label: 'Manage Products' },
+            { href: '/seller/dashboard/orders', label: 'Orders' },
+            { href: '/how-it-works', label: 'How It Works' },
+          ]
+        : [
+            { href: user ? '/account/settings' : '/register', label: 'Become a Seller' },
+            { href: '/seller/dashboard', label: 'Seller Dashboard' },
+            { href: '/how-it-works', label: 'How It Works' },
+            { href: '/products', label: 'List Your Products' },
+          ],
+    },
+    {
+      title: 'Account',
+      links: [
+        { href: user ? '/account' : '/login', label: user ? 'My Account' : 'Sign In' },
+        { href: user ? '/account/settings' : '/register', label: user ? 'Settings' : 'Create Account' },
+        { href: '/account/orders', label: 'My Orders' },
+        { href: '/wishlist', label: 'Wishlist' },
+      ],
+    },
+    {
+      title: 'Help',
+      links: [
+        { href: '/how-it-works', label: 'Marketplace Guide' },
+        { href: '/products', label: 'Buying Guide' },
+        { href: 'mailto:support@campuscart.com?subject=CampusCart%20Support', label: 'Contact' },
+        { href: '/how-it-works', label: 'FAQ' },
+      ],
+    },
+  ];
+
   return (
     <footer className="border-t border-border bg-secondary/30 mt-16 sm:mt-20">
       <div className="container-px mx-auto max-w-7xl py-10 sm:py-14">
@@ -60,14 +72,16 @@ export function Footer() {
             </p>
             <div className="mt-4 sm:mt-5 flex items-center gap-2">
               {[
-                { Icon: Instagram, label: 'Instagram' },
-                { Icon: Twitter, label: 'Twitter' },
-                { Icon: Linkedin, label: 'LinkedIn' },
-                { Icon: Mail, label: 'Email' },
-              ].map(({ Icon, label }) => (
+                { Icon: Instagram, label: 'Instagram', href: 'https://instagram.com' },
+                { Icon: Twitter, label: 'Twitter', href: 'https://x.com' },
+                { Icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com' },
+                { Icon: Mail, label: 'Email', href: 'mailto:hello@campuscart.com' },
+              ].map(({ Icon, label, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target={href.startsWith('http') ? '_blank' : undefined}
+                  rel={href.startsWith('http') ? 'noreferrer' : undefined}
                   aria-label={label}
                   className="flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-accent transition-colors touch-target"
                 >
@@ -84,7 +98,7 @@ export function Footer() {
               </h3>
               <ul className="mt-3 sm:mt-4 space-y-2">
                 {section.links.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${section.title}-${link.href}-${link.label}`}>
                     <Link
                       href={link.href}
                       className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -103,13 +117,13 @@ export function Footer() {
             {new Date().getFullYear()} CampusCart. All rights reserved.
           </p>
           <div className="flex items-center gap-6 flex-wrap justify-center">
-            <Link href="/privacy" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/how-it-works" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/how-it-works" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
               Terms
             </Link>
-            <Link href="/policies" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/how-it-works" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
               Policies
             </Link>
           </div>
