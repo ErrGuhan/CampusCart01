@@ -83,6 +83,22 @@
   .container-px {
     @apply px-4 sm:px-6 lg:px-8;
   }
+  /* Mobile-optimized touch targets */
+  .touch-target {
+    @apply min-h-10 min-w-10 sm:min-h-9 sm:min-w-9;
+  }
+  /* Improved mobile spacing */
+  @media (max-width: 640px) {
+    body {
+      @apply text-base;
+    }
+  }
+  /* Optimize input and button sizes for mobile */
+  input,
+  button,
+  [role="button"] {
+    @apply min-h-10 sm:min-h-auto;
+  }
 }
 
 @keyframes fade-in-up {

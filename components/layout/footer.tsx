@@ -42,23 +42,23 @@ const footerSections = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-secondary/30 mt-20">
-      <div className="container-px mx-auto max-w-7xl py-14">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-6">
-          <div className="lg:col-span-2">
+    <footer className="border-t border-border bg-secondary/30 mt-16 sm:mt-20">
+      <div className="container-px mx-auto max-w-7xl py-10 sm:py-14">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-6">
+          <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Store className="h-5 w-5" />
               </div>
-              <span className="font-display text-xl font-bold tracking-tight">
+              <span className="font-display text-lg sm:text-xl font-bold tracking-tight">
                 CampusCart
               </span>
             </Link>
-            <p className="mt-4 text-sm text-muted-foreground max-w-xs leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed">
               A trusted marketplace where students create, discover, and support
               each other. Built by students, for students.
             </p>
-            <div className="mt-5 flex items-center gap-2">
+            <div className="mt-4 sm:mt-5 flex items-center gap-2">
               {[
                 { Icon: Instagram, label: 'Instagram' },
                 { Icon: Twitter, label: 'Twitter' },
@@ -69,7 +69,7 @@ export function Footer() {
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-accent transition-colors"
+                  className="flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-accent transition-colors touch-target"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -78,16 +78,16 @@ export function Footer() {
           </div>
 
           {footerSections.map((section) => (
-            <div key={section.title}>
-              <h3 className="text-sm font-semibold text-foreground">
+            <div key={section.title} className="col-span-1">
+              <h3 className="text-xs sm:text-sm font-semibold text-foreground">
                 {section.title}
               </h3>
-              <ul className="mt-4 space-y-2.5">
+              <ul className="mt-3 sm:mt-4 space-y-2">
                 {section.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -98,18 +98,18 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-          <p className="text-sm text-muted-foreground">
+        <div className="mt-8 sm:mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:pt-8 sm:flex-row">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {new Date().getFullYear()} CampusCart. All rights reserved.
           </p>
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+          <div className="flex items-center gap-6 flex-wrap justify-center">
+            <Link href="/privacy" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
               Terms
             </Link>
-            <Link href="/policies" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/policies" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
               Policies
             </Link>
           </div>

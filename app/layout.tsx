@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   title: 'CampusCart — Discover what your campus creates',
   description:
     'Buy, sell, and discover products created by students in your college. A trusted marketplace for student creators.',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
   openGraph: {
     title: 'CampusCart — Discover what your campus creates',
     description:

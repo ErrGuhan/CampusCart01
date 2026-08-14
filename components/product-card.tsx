@@ -82,20 +82,20 @@ export function ProductCard({ product, className }: ProductCardProps) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
           <span className="truncate">{product.category}</span>
           <span className="text-border">·</span>
           <span className="truncate">{product.seller.displayName}</span>
         </div>
 
-        <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+        <h3 className="mt-1.5 line-clamp-2 text-sm sm:text-base font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
           {product.name}
         </h3>
 
         <div className="mt-2 flex items-center gap-1">
           <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-          <span className="text-xs font-medium text-foreground">
+          <span className="text-xs sm:text-sm font-medium text-foreground">
             {product.rating.toFixed(1)}
           </span>
           <span className="text-xs text-muted-foreground">

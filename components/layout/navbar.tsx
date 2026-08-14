@@ -90,13 +90,13 @@ export function Navbar() {
               <SheetHeader>
                 <SheetTitle className="text-left">CampusCart</SheetTitle>
               </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-1">
+              <nav className="mt-6 flex flex-col gap-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                    className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
                   >
                     {link.label}
                   </Link>
@@ -107,7 +107,7 @@ export function Navbar() {
                     <Link
                       href="/account"
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                      className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
                     >
                       My Account
                     </Link>
@@ -115,7 +115,7 @@ export function Navbar() {
                       <Link
                         href="/seller/dashboard"
                         onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                        className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
                       >
                         Seller Dashboard
                       </Link>
@@ -125,7 +125,7 @@ export function Navbar() {
                         setMobileOpen(false);
                         handleSignOut();
                       }}
-                      className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                      className="rounded-lg px-4 py-3 text-left text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
                     >
                       Sign Out
                     </button>
@@ -135,7 +135,7 @@ export function Navbar() {
                     <Link
                       href="/login"
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                      className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
                     >
                       Sign In
                     </Link>
@@ -144,7 +144,7 @@ export function Navbar() {
                       onClick={() => setMobileOpen(false)}
                       className="mt-1"
                     >
-                      <Button className="w-full">Get Started</Button>
+                      <Button className="w-full h-10">Get Started</Button>
                     </Link>
                   </>
                 )}
