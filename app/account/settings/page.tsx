@@ -16,6 +16,15 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
@@ -31,6 +40,10 @@ export default function AccountSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [notifOrders, setNotifOrders] = useState(true);
   const [notifDeals, setNotifDeals] = useState(true);
+  const [becomingSellerOpen, setBecomingSellerOpen] = useState(false);
+  const [storeName, setStoreName] = useState('');
+  const [storeDescription, setStoreDescription] = useState('');
+  const [becomingSeller, setBecomingSeller] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -93,6 +106,51 @@ export default function AccountSettingsPage() {
   async function handleSignOut() {
     await signOut();
     router.push('/');
+  }
+
+  async function handleBecomeSeller() {
+    if (!storeName.trim()) {
+      toast({
+        title: 'Store name required',
+        description: 'Please enter a name for your store.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setBecomingSeller(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_seller: true,
+          role: 'seller',
+          bio: storeDescription || null,
+        })
+        .eq('id', user!.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Welcome to the seller community!',
+        description: 'Your seller account has been activated. Visit your dashboard to start listing products.',
+      });
+
+      setBecomingSellerOpen(false);
+      setStoreName('');
+      setStoreDescription('');
+      
+      // Redirect to seller dashboard
+      setTimeout(() => router.push('/seller/dashboard'), 1500);
+    } catch {
+      toast({
+        title: 'Could not activate seller account',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setBecomingSeller(false);
+    }
   }
 
   return (
@@ -248,19 +306,99 @@ export default function AccountSettingsPage() {
             </div>
 
             {!profile?.is_seller && (
-              <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/30 p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <Store className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-lg font-bold">Become a Seller</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Unlock the seller dashboard and start listing products
-                    </p>
+              <>
+                <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/30 p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground flex-shrink-0">
+                        <Store className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="font-display text-lg font-bold">Become a Seller</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Unlock the seller dashboard and start listing products to earn money
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => setBecomingSellerOpen(true)}
+                      className="flex-shrink-0"
+                    >
+                      Get Started
+                    </Button>
                   </div>
                 </div>
-              </div>
+
+                <Dialog open={becomingSellerOpen} onOpenChange={setBecomingSellerOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Become a Seller</DialogTitle>
+                      <DialogDescription>
+                        Fill in your store details to start selling on CampusCart
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="storeName" className="text-sm font-medium">
+                          Store Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="storeName"
+                          value={storeName}
+                          onChange={(e) => setStoreName(e.target.value)}
+                          placeholder="e.g., Alex's Tech Store"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="storeDescription" className="text-sm font-medium">
+                          Store Description (optional)
+                        </Label>
+                        <Textarea
+                          id="storeDescription"
+                          value={storeDescription}
+                          onChange={(e) => setStoreDescription(e.target.value)}
+                          placeholder="Tell buyers about your store and what you sell"
+                          rows={4}
+                        />
+                      </div>
+
+                      <div className="rounded-lg bg-secondary/50 p-3">
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-semibold">Note:</span> You can update your store details anytime from your seller dashboard.
+                        </p>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setBecomingSellerOpen(false)}
+                        disabled={becomingSeller}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleBecomeSeller}
+                        disabled={becomingSeller || !storeName.trim()}
+                      >
+                        {becomingSeller ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Activating...
+                          </>
+                        ) : (
+                          <>
+                            <Store className="h-4 w-4 mr-2" />
+                            Activate Seller Account
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
             )}
 
             <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6">

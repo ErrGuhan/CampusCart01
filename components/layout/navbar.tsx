@@ -120,6 +120,15 @@ export function Navbar() {
                         Seller Dashboard
                       </Link>
                     )}
+                    {!profile?.is_seller && (
+                      <Link
+                        href="/account/settings"
+                        onClick={() => setMobileOpen(false)}
+                        className="rounded-lg px-4 py-3 text-sm font-medium text-primary hover:bg-primary/10 hover:text-primary transition-colors touch-target font-semibold"
+                      >
+                        Start Selling
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         setMobileOpen(false);
@@ -254,6 +263,17 @@ export function Navbar() {
                         <Link href="/seller/dashboard" className="cursor-pointer">
                           <LayoutDashboard className="mr-2 h-4 w-4" />
                           Seller Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {!profile?.is_seller && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/account/settings" className="cursor-pointer text-primary font-medium">
+                          <Store className="mr-2 h-4 w-4" />
+                          Become a Seller
                         </Link>
                       </DropdownMenuItem>
                     </>
