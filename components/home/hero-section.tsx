@@ -20,16 +20,16 @@ export function HeroSection() {
           <div className="animate-fade-in-up">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              Trusted by students at your college
+              Trusted by students by our college
             </div>
 
             <h1 className="mt-6 font-display text-4xl font-bold leading-[1.1] tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Discover what your{' '}
+              Discover what our{' '}
               <span className="text-primary">campus creates</span>
             </h1>
 
             <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-lg text-balance">
-              Buy, sell, and discover products created by students in your
+              Buy, sell, and discover products created by our students in our
               college. From handmade crafts to digital designs, find it all in
               one trusted marketplace.
             </p>
