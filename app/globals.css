@@ -85,7 +85,14 @@
   }
   /* Mobile-optimized touch targets */
   .touch-target {
-    @apply min-h-10 min-w-10 sm:min-h-9 sm:min-w-9;
+    min-height: 2.5rem;
+    min-width: 2.5rem;
+  }
+  @media (min-width: 640px) {
+    .touch-target {
+      min-height: auto;
+      min-width: auto;
+    }
   }
   /* Improved mobile spacing */
   @media (max-width: 640px) {
@@ -94,10 +101,12 @@
     }
   }
   /* Optimize input and button sizes for mobile */
-  input,
-  button,
-  [role="button"] {
-    @apply min-h-10 sm:min-h-auto;
+  @media (max-width: 640px) {
+    input,
+    button,
+    [role="button"] {
+      min-height: 2.5rem;
+    }
   }
 }
 
