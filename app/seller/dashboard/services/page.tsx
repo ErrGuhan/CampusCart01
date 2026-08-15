@@ -112,7 +112,14 @@ export default function SellerServicesPage() {
   }
 
   async function handleSave() {
-    if (!user || !profile) return;
+    if (!user) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to offer freelance services.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!title.trim() || !description.trim()) {
       toast({ title: 'Please fill in all required fields', variant: 'destructive' });
       return;
@@ -125,6 +132,12 @@ export default function SellerServicesPage() {
 
     setSaving(true);
     try {
+      const sellerDisplayName = profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Campus Freelancer';
+      const sellerUsername = profile?.username || user.email?.split('@')[0] || 'freelancer';
+      const sellerAvatar = profile?.avatar_url || '';
+      const sellerDepartment = profile?.department || 'SVCET Student';
+      const sellerYear = profile?.year || 'Student';
+
       const slug = editGig?.slug || (
         title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) +
         '-' + Math.floor(1000 + Math.random() * 9000)
@@ -138,11 +151,11 @@ export default function SellerServicesPage() {
 
       const gigPayload = {
         seller_id: user.uid,
-        sellerName: profile.display_name,
-        sellerUsername: profile.username,
-        sellerAvatar: profile.avatar_url || '',
-        sellerDepartment: profile.department || '',
-        sellerYear: profile.year || '',
+        sellerName: sellerDisplayName,
+        sellerUsername: sellerUsername,
+        sellerAvatar: sellerAvatar,
+        sellerDepartment: sellerDepartment,
+        sellerYear: sellerYear,
         title: title.trim(),
         slug,
         description: description.trim(),
@@ -164,14 +177,14 @@ export default function SellerServicesPage() {
         sellerId: user.uid,
         seller: {
           id: user.uid,
-          username: profile.username,
-          displayName: profile.display_name,
-          avatar: profile.avatar_url || '',
-          department: profile.department || '',
-          year: profile.year || '',
-          bio: profile.bio || '',
-          skills: profile.skills || [],
-          rating: 5.0,
+          username: sellerUsername,
+          displayName: sellerDisplayName,
+          avatar: sellerAvatar,
+          department: sellerDepartment,
+          year: sellerYear,
+          bio: profile?.bio || '',
+          skills: profile?.skills || [],
+          rating: editGig?.rating ?? 5.0,
           productCount: 1,
           joinedAt: new Date().toISOString(),
         },
@@ -184,11 +197,10 @@ export default function SellerServicesPage() {
         revisions: parseInt(revisions, 10) || 2,
         tags: tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean),
         coverImage: coverImage || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        portfolioImages: [],
+        status: calculatedStatus,
         rating: editGig?.rating ?? 5.0,
         reviewCount: editGig?.reviewCount ?? 0,
         isVerified: isGigVerified,
-        status: calculatedStatus,
         createdAt: editGig?.createdAt || new Date().toISOString(),
       };
 
