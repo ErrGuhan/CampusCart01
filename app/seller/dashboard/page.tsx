@@ -143,8 +143,8 @@ export default function SellerDashboardPage() {
     const allRatings = [
       ...sellerProducts.map((p) => p.rating),
       ...sellerGigs.map((g) => g.rating),
-    ].filter(Boolean);
-    if (allRatings.length === 0) return '4.9';
+    ].filter((r) => r > 0);
+    if (allRatings.length === 0) return '0.0';
     const avg = allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length;
     return avg.toFixed(1);
   }, [sellerProducts, sellerGigs]);
@@ -173,14 +173,14 @@ export default function SellerDashboardPage() {
 
     const chartData = days.map((day) => ({
       day,
-      value: distribution[day] || (totalRevenue > 0 ? Math.round(totalRevenue * (day === 'Fri' ? 0.35 : day === 'Sat' ? 0.25 : 0.08)) : 0),
+      value: distribution[day] || 0,
     }));
 
     const computedWeeklySum = chartData.reduce((s, d) => s + d.value, 0);
     const maxVal = Math.max(...chartData.map((d) => d.value), 100);
 
-    return { chartData, weeklySum: computedWeeklySum || totalRevenue, maxVal };
-  }, [sellerOrders, totalRevenue]);
+    return { chartData, weeklySum: computedWeeklySum, maxVal };
+  }, [sellerOrders]);
 
   const recentOrders = sellerOrders.slice(0, 5);
 
@@ -250,8 +250,8 @@ export default function SellerDashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          <aside className="hidden lg:block">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-4">
+          <aside className="lg:block">
             <SellerSidebar />
           </aside>
 
@@ -283,14 +283,14 @@ export default function SellerDashboardPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none rounded-xl text-xs">
+              <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+                <Button asChild variant="outline" size="sm" className="rounded-xl text-xs h-9">
                   <Link href={`/seller/${profile?.username || 'guhan'}`}>
                     <Eye className="h-3.5 w-3.5 mr-1.5" />
-                    View Live Store
+                    Live Store
                   </Link>
                 </Button>
-                <Button asChild variant="secondary" size="sm" className="flex-1 sm:flex-none rounded-xl text-xs">
+                <Button asChild variant="secondary" size="sm" className="rounded-xl text-xs h-9">
                   <Link href="/seller/dashboard/settings">
                     Settings
                   </Link>
@@ -299,56 +299,56 @@ export default function SellerDashboardPage() {
             </div>
 
             {/* Key Metric Cards */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 mb-3">
-                  <IndianRupee className="h-5 w-5" />
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-4">
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 mb-2 sm:mb-3">
+                  <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <div className="text-2xl font-bold font-display">₹{totalRevenue.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Total Revenue</div>
+                <div className="text-xl sm:text-2xl font-bold font-display truncate">₹{totalRevenue.toLocaleString()}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Total Revenue</div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-3">
-                  <ShoppingCart className="h-5 w-5" />
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2 sm:mb-3">
+                  <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <div className="text-2xl font-bold font-display">{sellerOrders.length}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Orders Received</div>
+                <div className="text-xl sm:text-2xl font-bold font-display">{sellerOrders.length}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Orders Received</div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 mb-3">
-                  <Package className="h-5 w-5" />
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 mb-2 sm:mb-3">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <div className="text-2xl font-bold font-display">{sellerProducts.length + sellerGigs.length}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-xl sm:text-2xl font-bold font-display">{sellerProducts.length + sellerGigs.length}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 truncate">
                   {sellerProducts.length} Prods • {sellerGigs.length} Gigs
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 mb-3">
-                  <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
+              <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
+                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 mb-2 sm:mb-3">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-amber-500 text-amber-500" />
                 </div>
-                <div className="text-2xl font-bold font-display">{avgRating}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Rating ({totalReviews} reviews)</div>
+                <div className="text-xl sm:text-2xl font-bold font-display">{avgRating}</div>
+                <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Rating ({totalReviews} rev)</div>
               </div>
             </div>
 
             {/* Revenue Chart & Quick Stats */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-5">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4 sm:mb-5">
                   <div>
-                    <h2 className="font-display text-base font-bold">Weekly Sales Trend</h2>
-                    <p className="text-xs text-muted-foreground">Orders and freelance commissions</p>
+                    <h2 className="font-display text-sm sm:text-base font-bold">Weekly Sales Trend</h2>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground">Orders and freelance commissions</p>
                   </div>
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <TrendingUp className="h-4 w-4 text-emerald-500 shrink-0" />
                 </div>
 
-                <div className="flex items-end justify-between gap-2 h-40 pt-4">
+                <div className="flex items-end justify-between gap-1.5 sm:gap-2 h-36 sm:h-40 pt-2 sm:pt-4 overflow-x-auto">
                   {weeklyStats.chartData.map((d) => (
-                    <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
+                    <div key={d.day} className="flex flex-1 min-w-[28px] flex-col items-center gap-1.5 sm:gap-2">
                       <div className="flex w-full items-end justify-center" style={{ height: '100%' }}>
                         <div
                           className="w-full max-w-[2.2rem] rounded-t-lg bg-primary/85 transition-all hover:bg-primary"
@@ -358,13 +358,13 @@ export default function SellerDashboardPage() {
                           title={`₹${d.value}`}
                         />
                       </div>
-                      <span className="text-[11px] font-medium text-muted-foreground">{d.day}</span>
+                      <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground">{d.day}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 flex items-center justify-between text-sm pt-3 border-t border-border">
-                  <span className="text-muted-foreground text-xs">Calculated Week Volume</span>
+                <div className="mt-4 sm:mt-5 flex items-center justify-between text-xs sm:text-sm pt-3 border-t border-border">
+                  <span className="text-muted-foreground text-[11px] sm:text-xs">Calculated Week Volume</span>
                   <span className="font-bold text-primary font-display">₹{weeklyStats.weeklySum.toLocaleString()}</span>
                 </div>
               </div>

@@ -83,30 +83,30 @@ export function HeroSection() {
             </div>
 
             {/* Real dynamic stats */}
-            <div className="mt-8 sm:mt-10 grid grid-cols-3 gap-6 pt-6 border-t border-border/60">
+            <div className="mt-8 sm:mt-10 grid grid-cols-3 gap-2 sm:gap-6 pt-6 border-t border-border/60">
               <div>
-                <div className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+                <div className="font-display text-xl sm:text-3xl font-bold text-foreground">
                   {stats.products}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                   Products & notes
                 </div>
               </div>
 
               <div>
-                <div className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+                <div className="font-display text-xl sm:text-3xl font-bold text-foreground">
                   {stats.creators}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                   Student creators
                 </div>
               </div>
 
               <div>
-                <div className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+                <div className="font-display text-xl sm:text-3xl font-bold text-foreground">
                   {stats.rating} ★
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                   Avg. store rating
                 </div>
               </div>

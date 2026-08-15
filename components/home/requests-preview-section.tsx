@@ -1,14 +1,36 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Tag, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { DEFAULT_REQUESTS } from '@/lib/firebase-queries';
+import { getAllProductRequests } from '@/lib/firebase-queries';
+import type { ProductRequest } from '@/lib/types';
 
 export function RequestsPreviewSection() {
-  const requests = DEFAULT_REQUESTS.slice(0, 3);
+  const [requests, setRequests] = useState<ProductRequest[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const list = await getAllProductRequests();
+        if (mounted) {
+          setRequests(list.filter((r) => r.status === 'open').slice(0, 3));
+        }
+      } catch {}
+    }
+    load();
+
+    const handleUpdate = () => load();
+    window.addEventListener('campuscart_request_updated', handleUpdate);
+    return () => {
+      mounted = false;
+      window.removeEventListener('campuscart_request_updated', handleUpdate);
+    };
+  }, []);
 
   return (
     <section className="container-px mx-auto max-w-7xl py-12">

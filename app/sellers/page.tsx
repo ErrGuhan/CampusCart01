@@ -183,10 +183,14 @@ export default function SellersPage() {
                     </p>
 
                     <div className="mt-2 flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-xs font-semibold">
-                        <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                        <span>{seller.rating.toFixed(1)}</span>
-                      </div>
+                      {seller.rating > 0 ? (
+                        <div className="flex items-center gap-1 text-xs font-semibold">
+                          <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                          <span>{seller.rating.toFixed(1)}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground font-medium">New Creator</span>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         {seller.productCount} {seller.productCount === 1 ? 'item' : 'items'}
                       </span>

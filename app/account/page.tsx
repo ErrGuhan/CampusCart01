@@ -89,8 +89,8 @@ export default function AccountDashboardPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          <aside className="hidden lg:block">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-4">
+          <aside className="lg:block">
             <AccountSidebar />
           </aside>
 

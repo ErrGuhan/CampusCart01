@@ -127,14 +127,14 @@ export function CampusCartAIAssistant() {
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Open AI shopping assistant"
-        className="fixed bottom-20 md:bottom-6 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl hover:scale-105 transition-all duration-300 ring-4 ring-primary/20"
+        className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 ring-4 ring-primary/20"
       >
-        {open ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6 animate-pulse" />}
+        {open ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" />}
       </button>
 
       {/* Chat Window */}
       {open && (
-        <div className="fixed bottom-36 md:bottom-24 right-5 z-40 w-[92vw] sm:w-[400px] h-[520px] rounded-3xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-20 sm:bottom-24 left-2 right-2 sm:left-auto sm:right-5 z-50 sm:w-[400px] h-[75vh] max-h-[540px] rounded-3xl border border-border bg-background/95 backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="p-4 border-b border-border bg-gradient-to-r from-primary/10 to-indigo-500/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">

@@ -266,7 +266,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 </SheetContent>
               </Sheet>
               <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="w-[180px] shrink-0">
+                <SelectTrigger className="w-[140px] sm:w-[180px] shrink-0 text-xs sm:text-sm">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -279,21 +279,47 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
               </Select>
             </div>
 
+            {/* Mobile Category Quick Chips */}
+            <div className="flex gap-1.5 overflow-x-auto pb-2 mb-3 scrollbar-none lg:hidden">
+              <Button
+                variant={selectedCategories.length === 0 ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategories([])}
+                className="rounded-full text-xs h-7 px-3 shrink-0"
+              >
+                All
+              </Button>
+              {categories.map((cat) => {
+                const active = selectedCategories.includes(cat.slug);
+                return (
+                  <Button
+                    key={cat.id}
+                    variant={active ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => toggleCategory(cat.slug)}
+                    className="rounded-full text-xs h-7 px-3 shrink-0"
+                  >
+                    {cat.name}
+                  </Button>
+                );
+              })}
+            </div>
+
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
-                <Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold">No products found</h3>
-                <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 px-4 text-center">
+                <Search className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <h3 className="text-base font-semibold">No products found</h3>
+                <p className="mt-1 text-xs text-muted-foreground max-w-sm">
                   Try adjusting your search or filters to find what you're looking for.
                 </p>
                 {activeFilterCount > 0 && (
-                  <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                  <Button variant="outline" size="sm" className="mt-4 rounded-xl text-xs" onClick={clearFilters}>
                     Clear all filters
                   </Button>
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 xl:grid-cols-4">
                 {filtered.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

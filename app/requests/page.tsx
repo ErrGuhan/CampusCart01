@@ -287,50 +287,50 @@ export default function ProductRequestsPage() {
               return (
                 <div
                   key={req.id}
-                  className="rounded-3xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-sm"
+                  className="rounded-2xl sm:rounded-3xl border border-border bg-card p-4 sm:p-6 transition-all hover:border-primary/30 hover:shadow-sm"
                 >
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-5">
                     {/* User & Request Info */}
-                    <div className="flex items-start gap-4 min-w-0">
-                      <Avatar className="h-12 w-12 shrink-0 ring-2 ring-border">
+                    <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 ring-2 ring-border">
                         <AvatarImage src={req.requesterAvatar} alt={req.requesterName} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs sm:text-sm">
                           {req.requesterName.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
 
                       <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                          <span className="font-bold text-sm text-foreground">{req.requesterName}</span>
-                          <span className="text-xs text-muted-foreground">• {req.requesterDepartment} ({req.requesterYear})</span>
-                          <Badge variant="outline" className="text-[10px]">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
+                          <span className="font-bold text-xs sm:text-sm text-foreground">{req.requesterName}</span>
+                          <span className="text-[11px] sm:text-xs text-muted-foreground">• {req.requesterDepartment} ({req.requesterYear})</span>
+                          <Badge variant="outline" className="text-[9px] sm:text-[10px]">
                             {req.category}
                           </Badge>
                           <Badge
                             className={
                               req.status === 'open'
-                                ? 'bg-success/10 text-success text-[10px]'
+                                ? 'bg-success/10 text-success text-[9px] sm:text-[10px]'
                                 : req.status === 'offers_received'
-                                ? 'bg-indigo-500/10 text-indigo-500 text-[10px]'
-                                : 'bg-secondary text-muted-foreground text-[10px]'
+                                ? 'bg-indigo-500/10 text-indigo-500 text-[9px] sm:text-[10px]'
+                                : 'bg-secondary text-muted-foreground text-[9px] sm:text-[10px]'
                             }
                           >
                             {req.status === 'open' ? '🟢 Open' : req.status === 'offers_received' ? `⚡ ${req.offersCount} Offers` : req.status}
                           </Badge>
                         </div>
 
-                        <h3 className="font-display text-lg font-bold text-foreground leading-snug">
+                        <h3 className="font-display text-base sm:text-lg font-bold text-foreground leading-snug">
                           {req.title}
                         </h3>
 
-                        <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                           {req.description}
                         </p>
 
-                        <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                        <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1 font-bold text-foreground">
                             <span>Max Budget:</span>
-                            <span className="text-primary text-sm">₹{req.budget}</span>
+                            <span className="text-primary text-xs sm:text-sm">₹{req.budget}</span>
                           </div>
                           <span>•</span>
                           <div className="flex items-center gap-1">
@@ -342,14 +342,14 @@ export default function ProductRequestsPage() {
                     </div>
 
                     {/* Action Button */}
-                    <div className="shrink-0 flex items-center gap-2 self-end md:self-start">
+                    <div className="shrink-0 flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0">
                       {!isOwnRequest ? (
                         <Button
                           onClick={() => {
                             setSelectedRequest(req);
                             setOfferModalOpen(true);
                           }}
-                          className="rounded-xl gap-2 shadow-sm text-xs"
+                          className="w-full sm:w-auto rounded-xl gap-2 shadow-sm text-xs h-9 sm:h-10"
                         >
                           <DollarSign className="h-4 w-4" />
                           I Have This / Make Offer

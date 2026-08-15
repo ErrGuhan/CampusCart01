@@ -242,6 +242,21 @@ export default function CartPage() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Sticky Checkout Bar */}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border p-3 shadow-2xl animate-in slide-in-from-bottom-2">
+        <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+          <div>
+            <span className="text-[10px] text-muted-foreground block">Total ({totalItems} items)</span>
+            <span className="font-display text-lg font-bold text-foreground">₹{total}</span>
+          </div>
+          <Button size="sm" className="rounded-xl px-5 h-10 text-xs font-bold shadow-sm" onClick={handleCheckout}>
+            Checkout
+            <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
       <Footer />
     </>
   );

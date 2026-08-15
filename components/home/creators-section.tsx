@@ -61,10 +61,16 @@ export function CreatorsSection({ sellers }: { sellers: Seller[] }) {
               </p>
 
               <div className="mt-4 flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                  <span className="font-semibold">{seller.rating.toFixed(1)}</span>
-                </div>
+                {seller.rating > 0 ? (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                    <span className="font-semibold">{seller.rating.toFixed(1)}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <span className="font-medium text-[11px]">New Creator</span>
+                  </div>
+                )}
                 <div className="h-3 w-px bg-border" />
                 <div className="text-muted-foreground">
                   {seller.productCount} {seller.productCount === 1 ? 'item' : 'items'}

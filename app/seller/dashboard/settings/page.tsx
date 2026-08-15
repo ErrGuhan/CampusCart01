@@ -161,8 +161,8 @@ export default function SellerSettingsPage() {
           <p className="mt-1.5 text-muted-foreground">Manage your seller profile and store details</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          <aside className="hidden lg:block">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-4">
+          <aside className="lg:block">
             <SellerSidebar />
           </aside>
 

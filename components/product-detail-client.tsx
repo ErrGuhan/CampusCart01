@@ -19,17 +19,68 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/components/cart-provider';
+import { useAuth } from '@/components/auth-provider';
+import { addProductReview } from '@/lib/firebase-queries';
 import type { Product, Review } from '@/lib/types';
 
 type Props = { product: Product; relatedProducts: Product[]; reviews?: Review[] };
 
 export function ProductDetailClient({ product, relatedProducts, reviews = [] }: Props) {
+  const { user, profile } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [productReviews, setProductReviews] = useState<Review[]>(reviews);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
   const { toast } = useToast();
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    setProductReviews(reviews);
+  }, [reviews]);
+
+  const currentReviewCount = productReviews.length;
+  const currentRating =
+    currentReviewCount > 0
+      ? productReviews.reduce((acc, r) => acc + r.rating, 0) / currentReviewCount
+      : 0;
+
+  async function handleSubmitReview(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to rate this product.', variant: 'destructive' });
+      return;
+    }
+    if (!reviewComment.trim()) {
+      toast({ title: 'Review comment required', description: 'Please write a brief feedback comment.', variant: 'destructive' });
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const newRev = await addProductReview(product.id, {
+        author: profile?.display_name || user.email?.split('@')[0] || 'Verified Student Buyer',
+        authorAvatar: profile?.avatar_url || '',
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        userId: user.uid,
+      });
+
+      setProductReviews((prev) => [newRev, ...prev]);
+      setShowReviewForm(false);
+      setReviewComment('');
+      setReviewRating(5);
+      toast({ title: 'Review Submitted! ⭐', description: 'Thank you for your verified rating!' });
+    } catch {
+      toast({ title: 'Failed to submit review', variant: 'destructive' });
+    } finally {
+      setSubmittingReview(false);
+    }
+  }
 
   useEffect(() => {
     try {
@@ -108,8 +159,8 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-6">
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+      <main className="container-px mx-auto max-w-7xl py-4 sm:py-6 pb-28 md:pb-8">
+        <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 overflow-x-auto pb-1">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
           <ChevronRight className="h-4 w-4" />
           <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
@@ -121,28 +172,44 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
           <span className="text-foreground truncate">{product.name}</span>
         </nav>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+          <div className="space-y-3">
             <div className="relative overflow-hidden rounded-2xl border border-border bg-secondary/30 aspect-square">
               <img
                 src={product.images[selectedImage]}
                 alt={product.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-all duration-300"
               />
               {hasDiscount && (
-                <Badge variant="destructive" className="absolute top-4 left-4 shadow-md">
+                <Badge variant="destructive" className="absolute top-3 left-3 shadow-md text-xs">
                   {discountPercent}% OFF
                 </Badge>
               )}
+
+              {/* Mobile Image Pagination Dots */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10 sm:hidden">
+                  {product.images.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImage(idx)}
+                      aria-label={`View image ${idx + 1}`}
+                      className={`h-2 rounded-full transition-all ${
+                        selectedImage === idx ? 'w-5 bg-white shadow-md' : 'w-2 bg-white/60'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
             {product.images.length > 1 && (
-              <div className="flex gap-3">
+              <div className="flex gap-2.5 overflow-x-auto pb-1 sm:pb-0">
                 {product.images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
-                    className={`relative h-20 w-20 overflow-hidden rounded-lg border-2 transition-all ${
-                      selectedImage === idx ? 'border-primary' : 'border-border hover:border-muted-foreground/30'
+                    className={`relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                      selectedImage === idx ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground/30'
                     }`}
                   >
                     <img src={img} alt={`${product.name} view ${idx + 1}`} className="h-full w-full object-cover" />
@@ -176,21 +243,27 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
                   {product.name}
                 </h1>
                 <div className="mt-2 flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= Math.round(product.rating)
-                            ? 'fill-warning text-warning'
-                            : 'text-muted-foreground/30'
-                        }`}
-                      />
-                    ))}
-                    <span className="ml-1 text-sm font-medium">{product.rating.toFixed(1)}</span>
-                  </div>
+                  {currentReviewCount > 0 ? (
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= Math.round(currentRating)
+                              ? 'fill-warning text-warning'
+                              : 'text-muted-foreground/30'
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-1 text-sm font-medium">{currentRating.toFixed(1)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full">
+                      No ratings yet
+                    </span>
+                  )}
                   <span className="text-sm text-muted-foreground">
-                    {product.reviewCount} reviews
+                    {currentReviewCount} {currentReviewCount === 1 ? 'review' : 'reviews'}
                   </span>
                 </div>
               </div>
@@ -349,13 +422,19 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold">{product.seller.displayName}</h3>
-                <Badge variant="secondary" className="text-xs">
-                  <Star className="h-3 w-3 fill-warning text-warning mr-1" />
-                  {product.seller.rating.toFixed(1)}
-                </Badge>
+                {product.seller.rating > 0 ? (
+                  <Badge variant="secondary" className="text-xs">
+                    <Star className="h-3 w-3 fill-warning text-warning mr-1" />
+                    {product.seller.rating.toFixed(1)}
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">
+                    Creator
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
-                {product.seller.department} · {product.seller.year} · {product.seller.productCount} products
+                {product.seller.department} {product.seller.year ? `· ${product.seller.year}` : ''} · {product.seller.productCount} items
               </p>
             </div>
             <Button variant="outline" size="sm">
@@ -368,7 +447,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
           <Tabs defaultValue="reviews">
             <TabsList>
               <TabsTrigger value="reviews">
-                Reviews ({product.reviewCount})
+                Reviews ({currentReviewCount})
               </TabsTrigger>
               <TabsTrigger value="description">
                 Full Description
@@ -378,18 +457,112 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="reviews" className="mt-6">
-              {reviews.length === 0 ? (
+            <TabsContent value="reviews" className="mt-6 space-y-6">
+              {/* Write Review Trigger / Form */}
+              <div className="rounded-2xl border border-border bg-card p-5">
+                {!showReviewForm ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-sm">Verified Student Reviews</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Have you used or purchased this item? Share your experience with classmates.
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowReviewForm(true)}
+                      className="rounded-xl text-xs shrink-0"
+                    >
+                      <Star className="h-3.5 w-3.5 mr-1.5 fill-current" />
+                      Write a Review
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmitReview} className="space-y-4 text-xs">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-sm text-foreground">Rate this product</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowReviewForm(false)}
+                        className="text-xs h-7"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-muted-foreground">Rating</label>
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReviewRating(star)}
+                            className="p-1 hover:scale-110 transition-transform"
+                          >
+                            <Star
+                              className={`h-6 w-6 ${
+                                star <= reviewRating
+                                  ? 'fill-warning text-warning'
+                                  : 'text-muted-foreground/30'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        <span className="ml-2 font-bold text-sm text-foreground">
+                          {reviewRating} of 5 stars
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-muted-foreground">Your Feedback Comment *</label>
+                      <textarea
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="Describe the product condition, handover experience, or usefulness for your semester..."
+                        rows={3}
+                        required
+                        className="w-full rounded-xl border border-input bg-background p-3 text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowReviewForm(false)}
+                        className="rounded-xl text-xs"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={submittingReview}
+                        size="sm"
+                        className="rounded-xl text-xs"
+                      >
+                        {submittingReview ? 'Submitting...' : 'Submit Verified Review'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+
+              {productReviews.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border p-8 text-center bg-card/50">
                   <Star className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
                   <h3 className="text-base font-semibold">No reviews yet</h3>
                   <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
-                    Verified student buyers who purchase this item can leave ratings and reviews.
+                    Be the first student to review this item after checking it out!
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {reviews.map((review) => {
+                  {productReviews.map((review) => {
                     const formattedDate = new Date(review.createdAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -478,6 +651,45 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
           </div>
         )}
       </main>
+
+      {/* Mobile Sticky Bottom Action Bar */}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border p-3 shadow-2xl animate-in slide-in-from-bottom-2">
+        <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-lg font-bold text-foreground">₹{displayPrice}</span>
+              {hasDiscount && (
+                <span className="text-xs text-muted-foreground line-through">₹{product.price}</span>
+              )}
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium">
+              {product.inventory > 0 ? `${product.inventory} in stock` : 'Out of stock'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setChatOpen(true)}
+              className="rounded-xl h-10 px-3 text-xs"
+              aria-label="Chat with seller"
+            >
+              <MessageSquare className="h-4 w-4 text-primary" />
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleAddToCart}
+              disabled={product.inventory === 0}
+              className="rounded-xl h-10 px-4 text-xs font-bold flex-1 shadow-sm"
+            >
+              <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />
+              Add to Cart
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <Footer />
 
       {/* Real-time Student Chat & Offer Dialog */}

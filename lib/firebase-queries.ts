@@ -20,18 +20,18 @@ import type {
 
 // Default categories list for instant availability & seeding
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'cat-handmade', name: 'Handmade', slug: 'handmade', icon: 'Hammer', productCount: 4 },
-  { id: 'cat-art-design', name: 'Art & Design', slug: 'art-design', icon: 'Palette', productCount: 3 },
-  { id: 'cat-electronics', name: 'Electronics', slug: 'electronics', icon: 'Cpu', productCount: 5 },
-  { id: 'cat-digital', name: 'Digital Products', slug: 'digital', icon: 'Monitor', productCount: 6 },
-  { id: 'cat-books', name: 'Books', slug: 'books', icon: 'BookOpen', productCount: 4 },
-  { id: 'cat-fashion', name: 'Fashion', slug: 'fashion', icon: 'Shirt', productCount: 2 },
-  { id: 'cat-accessories', name: 'Accessories', slug: 'accessories', icon: 'Watch', productCount: 3 },
-  { id: 'cat-stationery', name: 'Stationery', slug: 'stationery', icon: 'PenTool', productCount: 3 },
-  { id: 'cat-food', name: 'Food', slug: 'food', icon: 'Cookie', productCount: 2 },
-  { id: 'cat-college-supplies', name: 'College Supplies', slug: 'college-supplies', icon: 'Backpack', productCount: 4 },
-  { id: 'cat-services', name: 'Services', slug: 'services', icon: 'Wrench', productCount: 8 },
-  { id: 'cat-other', name: 'Other', slug: 'other', icon: 'Package', productCount: 2 },
+  { id: 'cat-handmade', name: 'Handmade', slug: 'handmade', icon: 'Hammer', productCount: 0 },
+  { id: 'cat-art-design', name: 'Art & Design', slug: 'art-design', icon: 'Palette', productCount: 0 },
+  { id: 'cat-electronics', name: 'Electronics', slug: 'electronics', icon: 'Cpu', productCount: 0 },
+  { id: 'cat-digital', name: 'Digital Products', slug: 'digital', icon: 'Monitor', productCount: 0 },
+  { id: 'cat-books', name: 'Books', slug: 'books', icon: 'BookOpen', productCount: 0 },
+  { id: 'cat-fashion', name: 'Fashion', slug: 'fashion', icon: 'Shirt', productCount: 0 },
+  { id: 'cat-accessories', name: 'Accessories', slug: 'accessories', icon: 'Watch', productCount: 0 },
+  { id: 'cat-stationery', name: 'Stationery', slug: 'stationery', icon: 'PenTool', productCount: 0 },
+  { id: 'cat-food', name: 'Food', slug: 'food', icon: 'Cookie', productCount: 0 },
+  { id: 'cat-college-supplies', name: 'College Supplies', slug: 'college-supplies', icon: 'Backpack', productCount: 0 },
+  { id: 'cat-services', name: 'Services', slug: 'services', icon: 'Wrench', productCount: 0 },
+  { id: 'cat-other', name: 'Other', slug: 'other', icon: 'Package', productCount: 0 },
 ];
 
 export const GIG_CATEGORIES = [
@@ -55,8 +55,8 @@ export const DEFAULT_SELLERS: Seller[] = [
     year: '4th Year (Final Year)',
     bio: 'Full-stack developer, IoT builder, and founder of CampusCart SVCET.',
     skills: ['Next.js', 'React', 'Python', 'IoT', 'UI/UX Design'],
-    rating: 4.9,
-    productCount: 4,
+    rating: 0,
+    productCount: 0,
     joinedAt: '2024-01-10T00:00:00Z',
   },
 ];
@@ -77,8 +77,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
     ],
     inventory: 8,
     status: 'active',
-    rating: 4.8,
-    reviewCount: 14,
+    rating: 0,
+    reviewCount: 0,
     seller: DEFAULT_SELLERS[0],
     pickupAvailable: true,
     deliveryAvailable: true,
@@ -101,8 +101,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
     ],
     inventory: 999,
     status: 'active',
-    rating: 5.0,
-    reviewCount: 32,
+    rating: 0,
+    reviewCount: 0,
     seller: DEFAULT_SELLERS[0],
     pickupAvailable: false,
     deliveryAvailable: false,
@@ -125,8 +125,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
     ],
     inventory: 15,
     status: 'active',
-    rating: 4.7,
-    reviewCount: 9,
+    rating: 0,
+    reviewCount: 0,
     seller: DEFAULT_SELLERS[0],
     pickupAvailable: true,
     deliveryAvailable: true,
@@ -148,8 +148,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
     ],
     inventory: 6,
     status: 'active',
-    rating: 4.9,
-    reviewCount: 21,
+    rating: 0,
+    reviewCount: 0,
     seller: DEFAULT_SELLERS[0],
     pickupAvailable: true,
     deliveryAvailable: false,
@@ -171,8 +171,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
     ],
     inventory: 999,
     status: 'active',
-    rating: 4.9,
-    reviewCount: 18,
+    rating: 0,
+    reviewCount: 0,
     seller: DEFAULT_SELLERS[0],
     pickupAvailable: false,
     deliveryAvailable: false,
@@ -195,8 +195,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
     ],
     inventory: 20,
     status: 'active',
-    rating: 4.8,
-    reviewCount: 12,
+    rating: 0,
+    reviewCount: 0,
     seller: DEFAULT_SELLERS[0],
     pickupAvailable: true,
     deliveryAvailable: true,
@@ -224,8 +224,8 @@ export const DEFAULT_GIGS: ServiceGig[] = [
       'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
       'https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     ],
-    rating: 4.9,
-    reviewCount: 19,
+    rating: 0,
+    reviewCount: 0,
     isVerified: true,
     status: 'active',
     createdAt: '2024-05-01T00:00:00Z',
@@ -246,8 +246,8 @@ export const DEFAULT_GIGS: ServiceGig[] = [
     portfolioImages: [
       'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     ],
-    rating: 5.0,
-    reviewCount: 14,
+    rating: 0,
+    reviewCount: 0,
     isVerified: true,
     status: 'active',
     createdAt: '2024-05-03T00:00:00Z',
@@ -268,8 +268,8 @@ export const DEFAULT_GIGS: ServiceGig[] = [
     portfolioImages: [
       'https://images.pexels.com/photos/3862132/pexels-photo-3862132.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     ],
-    rating: 4.8,
-    reviewCount: 8,
+    rating: 0,
+    reviewCount: 0,
     isVerified: true,
     status: 'active',
     createdAt: '2024-05-04T00:00:00Z',
@@ -290,8 +290,8 @@ export const DEFAULT_GIGS: ServiceGig[] = [
     portfolioImages: [
       'https://images.pexels.com/photos/2510428/pexels-photo-2510428.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     ],
-    rating: 4.9,
-    reviewCount: 11,
+    rating: 0,
+    reviewCount: 0,
     isVerified: true,
     status: 'active',
     createdAt: '2024-05-06T00:00:00Z',
@@ -310,7 +310,7 @@ export const DEFAULT_GIG_REQUESTS: GigRequest[] = [
     budget: 150,
     deadlineDays: 1,
     status: 'open',
-    proposalsCount: 3,
+    proposalsCount: 0,
     createdAt: '2024-05-20T10:00:00Z',
   },
   {
@@ -324,7 +324,7 @@ export const DEFAULT_GIG_REQUESTS: GigRequest[] = [
     budget: 250,
     deadlineDays: 2,
     status: 'open',
-    proposalsCount: 2,
+    proposalsCount: 0,
     createdAt: '2024-05-21T14:30:00Z',
   },
 ];
@@ -332,6 +332,7 @@ export const DEFAULT_GIG_REQUESTS: GigRequest[] = [
 // ---------- Reviews ----------
 
 export async function getProductReviews(productId: string): Promise<Review[]> {
+  const reviews: Review[] = [];
   try {
     const q = query(
       collection(db, 'reviews'),
@@ -339,39 +340,81 @@ export async function getProductReviews(productId: string): Promise<Review[]> {
     );
     const snap = await getDocs(q);
     if (!snap.empty) {
-      const reviews: Review[] = [];
       snap.forEach((docSnap) => {
         const d = docSnap.data();
         reviews.push({
           id: docSnap.id,
           author: d.author || d.display_name || 'Student Buyer',
+          authorAvatar: d.author_avatar || d.authorAvatar || '',
           rating: Number(d.rating) || 5,
           comment: d.comment || '',
-          createdAt: d.created_at || new Date().toISOString(),
+          createdAt: d.created_at || d.createdAt || new Date().toISOString(),
+          isVerifiedPurchase: d.is_verified_purchase ?? true,
         });
       });
-      return reviews;
     }
   } catch (err) {
-    console.warn('Notice in getProductReviews:', err);
+    console.warn('Notice in getProductReviews from Firestore:', err);
   }
 
-  return [
-    {
-      id: 'rev-1',
-      author: 'Kavitha R',
-      rating: 5,
-      comment: 'Super fast delivery at Central Library! The quality is great and matches the description perfectly.',
-      createdAt: '2024-05-16T12:00:00Z',
-    },
-    {
-      id: 'rev-2',
-      author: 'Vignesh M',
-      rating: 5,
-      comment: 'Very helpful student creator. Verified original item and great communication on chat!',
-      createdAt: '2024-05-18T15:30:00Z',
-    },
-  ];
+  // Merge client storage reviews
+  if (typeof window !== 'undefined') {
+    try {
+      const localReviewsStr = localStorage.getItem(`campuscart_reviews_${productId}`);
+      if (localReviewsStr) {
+        const localReviews = JSON.parse(localReviewsStr);
+        if (Array.isArray(localReviews)) {
+          localReviews.forEach((r: Review) => {
+            if (!reviews.some((ex) => ex.id === r.id)) {
+              reviews.push(r);
+            }
+          });
+        }
+      }
+    } catch {}
+  }
+
+  return reviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function addProductReview(
+  productId: string,
+  review: { author: string; authorAvatar?: string; rating: number; comment: string; userId?: string }
+): Promise<Review> {
+  const newReview: Review = {
+    id: 'rev_' + Date.now(),
+    author: review.author || 'Student Buyer',
+    authorAvatar: review.authorAvatar || '',
+    rating: Number(review.rating) || 5,
+    comment: review.comment || '',
+    createdAt: new Date().toISOString(),
+    isVerifiedPurchase: true,
+  };
+
+  // 1. Client storage
+  if (typeof window !== 'undefined') {
+    try {
+      const key = `campuscart_reviews_${productId}`;
+      const raw = localStorage.getItem(key);
+      const list = raw ? JSON.parse(raw) : [];
+      list.unshift(newReview);
+      localStorage.setItem(key, JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('campuscart_review_updated', { detail: { productId, review: newReview } }));
+    } catch {}
+  }
+
+  // 2. Firestore
+  try {
+    await setDoc(doc(db, 'reviews', newReview.id), {
+      ...newReview,
+      product_id: productId,
+      user_id: review.userId || '',
+    });
+  } catch (err) {
+    console.warn('Firestore addProductReview notice:', err);
+  }
+
+  return newReview;
 }
 
 // ---------- Freelance Gigs & Services ----------
@@ -603,7 +646,10 @@ function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product {
 
 // ---------- Categories ----------
 
+// ---------- Categories ----------
+
 export async function getCategories(): Promise<Category[]> {
+  let baseCats = DEFAULT_CATEGORIES;
   try {
     const snap = await getDocs(collection(db, 'categories'));
     if (!snap.empty) {
@@ -615,16 +661,40 @@ export async function getCategories(): Promise<Category[]> {
           name: d.name,
           slug: d.slug,
           icon: d.icon || 'Package',
-          productCount: Number(d.productCount) || 0,
+          productCount: 0,
         });
       });
-      return cats;
+      if (cats.length > 0) baseCats = cats;
     }
   } catch (err) {
     console.warn('Firestore getCategories notice:', err);
   }
 
-  return DEFAULT_CATEGORIES;
+  try {
+    const [products, gigs] = await Promise.all([getAllProducts(), getAllGigs()]);
+    return baseCats.map((cat) => {
+      const catSlug = cat.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const catName = cat.name.toLowerCase();
+
+      let count = 0;
+      if (catSlug === 'services' || catName === 'services') {
+        count = gigs.length;
+      } else {
+        count = products.filter((p) => {
+          const pCatSlug = (p.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const pCatName = (p.category || '').toLowerCase();
+          return pCatSlug === catSlug || pCatName === catName;
+        }).length;
+      }
+
+      return {
+        ...cat,
+        productCount: count,
+      };
+    });
+  } catch {
+    return baseCats;
+  }
 }
 
 // ---------- Products (All / Admin / Public) ----------
@@ -633,7 +703,7 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
   const prodMap = new Map<string, Product>();
 
   // 1. Base verified catalog
-  DEFAULT_PRODUCTS.forEach((p) => prodMap.set(p.id, p));
+  DEFAULT_PRODUCTS.forEach((p) => prodMap.set(p.id, { ...p }));
 
   // 2. Fetch from Firestore
   try {
@@ -663,7 +733,27 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
     } catch {}
   }
 
-  return Array.from(prodMap.values());
+  const products = Array.from(prodMap.values());
+
+  // 4. Attach dynamically computed reviews & ratings to every product from client session
+  if (typeof window !== 'undefined') {
+    products.forEach((p) => {
+      try {
+        const key = `campuscart_reviews_${p.id}`;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const list: Review[] = JSON.parse(raw);
+          if (Array.isArray(list) && list.length > 0) {
+            p.reviewCount = list.length;
+            const sum = list.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
+            p.rating = Number((sum / list.length).toFixed(1));
+          }
+        }
+      } catch {}
+    });
+  }
+
+  return products;
 }
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -789,12 +879,15 @@ export async function rejectGig(gigId: string, reason = 'Freelance gig details n
 
 export async function getFeaturedProducts(limitCount = 4): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.filter((p) => p.rating >= 4.5).slice(0, limitCount);
+  return all.filter((p) => p.isVerified || p.inventory > 0).slice(0, limitCount);
 }
 
 export async function getTrendingProducts(limitCount = 4): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.sort((a, b) => b.reviewCount - a.reviewCount).slice(0, limitCount);
+  return all.sort((a, b) => {
+    if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  }).slice(0, limitCount);
 }
 
 export async function getNewArrivals(limitCount = 4): Promise<Product[]> {
@@ -818,12 +911,24 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
 
 export async function getProductsBySeller(username: string): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.filter((p) => p.seller.username === username);
+  return all.filter((p) => p.seller.username.toLowerCase() === username.toLowerCase());
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
   const all = await getAllProducts();
-  return all.find((p) => p.slug === slug || p.id === slug);
+  const prod = all.find((p) => p.slug === slug || p.id === slug);
+  if (prod) {
+    const reviews = await getProductReviews(prod.id);
+    if (reviews.length > 0) {
+      prod.reviewCount = reviews.length;
+      const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+      prod.rating = Number((sum / reviews.length).toFixed(1));
+    } else {
+      prod.reviewCount = 0;
+      prod.rating = 0;
+    }
+  }
+  return prod;
 }
 
 export async function getProductsByIds(ids: string[]): Promise<Product[]> {
@@ -845,7 +950,7 @@ export async function getAllSellers(): Promise<Seller[]> {
   const sellersMap = new Map<string, Seller>();
 
   // 1. Founding verified creator (Guhan M)
-  sellersMap.set(DEFAULT_SELLERS[0].username.toLowerCase(), DEFAULT_SELLERS[0]);
+  sellersMap.set(DEFAULT_SELLERS[0].username.toLowerCase(), { ...DEFAULT_SELLERS[0] });
 
   // 2. Query Firestore profiles for registered sellers
   try {
@@ -879,8 +984,8 @@ export async function getAllSellers(): Promise<Seller[]> {
             year: p.year || 'Student',
             bio: p.bio || 'Student Creator building on CampusCart.',
             skills: Array.isArray(p.skills) && p.skills.length > 0 ? p.skills : ['Campus Seller', 'Student Creator'],
-            rating: 5.0,
-            productCount: 1,
+            rating: 0,
+            productCount: 0,
             joinedAt: p.created_at || new Date().toISOString(),
           });
         }
@@ -902,8 +1007,8 @@ export async function getAllSellers(): Promise<Seller[]> {
                 year: p.year || 'Student',
                 bio: p.bio || 'Student Creator building on CampusCart.',
                 skills: Array.isArray(p.skills) && p.skills.length > 0 ? p.skills : ['Campus Seller', 'Student Creator'],
-                rating: 5.0,
-                productCount: 1,
+                rating: 0,
+                productCount: 0,
                 joinedAt: p.created_at || new Date().toISOString(),
               });
             }
@@ -913,7 +1018,44 @@ export async function getAllSellers(): Promise<Seller[]> {
     } catch {}
   }
 
-  return Array.from(sellersMap.values());
+  const allSellers = Array.from(sellersMap.values());
+
+  // Dynamically compute real productCount and average rating for each seller
+  try {
+    const [allProducts, allGigs] = await Promise.all([getAllProducts(), getAllGigs()]);
+    return allSellers.map((seller) => {
+      const u = seller.username.toLowerCase();
+      const sId = seller.id;
+      const isGuhan = u.includes('guhan') || sId === 'seller-guhan';
+
+      const sProducts = allProducts.filter((p) => {
+        const pU = (p.seller?.username || '').toLowerCase();
+        const pId = p.seller?.id || '';
+        return pId === sId || pU === u || (isGuhan && (pU === 'guhan' || pId === 'seller-guhan'));
+      });
+
+      const sGigs = allGigs.filter((g) => {
+        const gU = (g.seller?.username || '').toLowerCase();
+        const gId = g.sellerId || g.seller?.id || '';
+        return gId === sId || gU === u || (isGuhan && (gU === 'guhan' || gId === 'seller-guhan'));
+      });
+
+      const totalItems = sProducts.length + sGigs.length;
+      const ratedItems = [...sProducts, ...sGigs].filter((i) => i.reviewCount > 0 && i.rating > 0);
+      const avgRating =
+        ratedItems.length > 0
+          ? Number((ratedItems.reduce((acc, i) => acc + i.rating, 0) / ratedItems.length).toFixed(1))
+          : 0;
+
+      return {
+        ...seller,
+        productCount: totalItems,
+        rating: avgRating,
+      };
+    });
+  } catch {
+    return allSellers;
+  }
 }
 
 export async function getSellerByUsername(username: string): Promise<Seller | undefined> {
@@ -969,23 +1111,9 @@ export const DEFAULT_REQUESTS: ProductRequest[] = [
     budget: 450,
     deadlineDate: 'Within 3 days',
     status: 'open',
-    offersCount: 2,
+    offersCount: 0,
     createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    offers: [
-      {
-        id: 'off-1',
-        requestId: 'req-eg-board',
-        sellerId: 'student-karthik',
-        sellerName: 'Karthik Raja',
-        sellerUsername: 'karthik_r',
-        sellerAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
-        sellerDepartment: 'Civil Engineering (CIVIL)',
-        price: 400,
-        message: 'I have my Omega mini drafter and board from last semester in excellent condition. Can deliver at Canteen.',
-        status: 'pending',
-        createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-      },
-    ],
+    offers: [],
   },
   {
     id: 'req-scientific-calc',
@@ -1001,8 +1129,9 @@ export const DEFAULT_REQUESTS: ProductRequest[] = [
     budget: 700,
     deadlineDate: 'Tomorrow morning',
     status: 'open',
-    offersCount: 1,
+    offersCount: 0,
     createdAt: new Date(Date.now() - 3600000 * 10).toISOString(),
+    offers: [],
   },
   {
     id: 'req-lab-coat',
@@ -1014,24 +1143,26 @@ export const DEFAULT_REQUESTS: ProductRequest[] = [
     requesterYear: '1st Year',
     title: 'White Lab Coat (Size M)',
     description: 'Need clean white lab coat for chemistry practical sessions.',
-    category: 'Academic Materials',
+    category: 'College Supplies',
     budget: 200,
     deadlineDate: 'This Friday',
     status: 'open',
     offersCount: 0,
     createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    offers: [],
   },
 ];
 
 export async function getAllProductRequests(): Promise<ProductRequest[]> {
   const reqMap = new Map<string, ProductRequest>();
-  DEFAULT_REQUESTS.forEach((r) => reqMap.set(r.id, r));
+  DEFAULT_REQUESTS.forEach((r) => reqMap.set(r.id, { ...r }));
 
   try {
     const snap = await getDocs(collection(db, 'product_requests'));
     if (!snap.empty) {
       snap.forEach((docSnap) => {
         const d = docSnap.data();
+        const offers = Array.isArray(d.offers) ? d.offers : [];
         reqMap.set(docSnap.id, {
           id: docSnap.id,
           requesterId: d.requester_id || d.requesterId,
@@ -1046,9 +1177,9 @@ export async function getAllProductRequests(): Promise<ProductRequest[]> {
           budget: Number(d.budget) || 0,
           deadlineDate: d.deadline_date || d.deadlineDate,
           status: d.status || 'open',
-          offersCount: Number(d.offers_count || d.offersCount) || 0,
+          offersCount: offers.length,
           createdAt: d.created_at || d.createdAt,
-          offers: d.offers || [],
+          offers,
         });
       });
     }
@@ -1063,7 +1194,10 @@ export async function getAllProductRequests(): Promise<ProductRequest[]> {
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
           list.forEach((r: ProductRequest) => {
-            if (r.id) reqMap.set(r.id, r);
+            if (r.id) {
+              const count = Array.isArray(r.offers) ? r.offers.length : Number(r.offersCount) || 0;
+              reqMap.set(r.id, { ...r, offersCount: count });
+            }
           });
         }
       }
@@ -1145,8 +1279,9 @@ export const DEFAULT_COMMUNITY_POSTS: CommunityPost[] = [
     title: 'Tips for Project Presentation & Circuit Demo at IEEE Symposium',
     content: 'For everyone presenting in the upcoming symposium, make sure to bring extra breadboards and jumper wires. If you need any 3D printed sensor casings, check out the CAD gigs on CampusCart.',
     tags: ['Symposium', 'Projects', 'CSE', 'Tips'],
-    likes: 24,
-    commentsCount: 6,
+    likes: 0,
+    likedBy: [],
+    commentsCount: 0,
     createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
   },
   {
@@ -1160,8 +1295,9 @@ export const DEFAULT_COMMUNITY_POSTS: CommunityPost[] = [
     title: 'Looking for a UI/UX Designer for Smart Campus App Hackathon',
     content: 'We are a team of 2 backend developers building an IoT automated campus parking solver. Need a creative UI designer with Figma experience to team up! Drop a comment or message me directly.',
     tags: ['Hackathon', 'TeamUp', 'UIUX', 'Figma'],
-    likes: 19,
-    commentsCount: 4,
+    likes: 0,
+    likedBy: [],
+    commentsCount: 0,
     createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
   },
   {
@@ -1175,15 +1311,16 @@ export const DEFAULT_COMMUNITY_POSTS: CommunityPost[] = [
     title: 'Weekly Competitive Programming & LeetCode Meetup this Thursday',
     content: 'Join us at CSE Lab 3 at 4:30 PM. We will cover dynamic programming and graph algorithms for campus placements.',
     tags: ['CodingClub', 'LeetCode', 'Placements'],
-    likes: 31,
-    commentsCount: 8,
+    likes: 0,
+    likedBy: [],
+    commentsCount: 0,
     createdAt: new Date(Date.now() - 3600000 * 32).toISOString(),
   },
 ];
 
 export async function getCommunityPosts(category?: string): Promise<CommunityPost[]> {
   const postsMap = new Map<string, CommunityPost>();
-  DEFAULT_COMMUNITY_POSTS.forEach((p) => postsMap.set(p.id, p));
+  DEFAULT_COMMUNITY_POSTS.forEach((p) => postsMap.set(p.id, { ...p }));
 
   try {
     const snap = await getDocs(collection(db, 'community_posts'));
@@ -1271,7 +1408,7 @@ export async function likeCommunityPost(postId: string, userId: string): Promise
         if (p.id === postId) {
           const liked = p.likedBy?.includes(userId);
           const likedBy = liked ? p.likedBy?.filter((u) => u !== userId) : [...(p.likedBy || []), userId];
-          return { ...p, likes: liked ? p.likes - 1 : p.likes + 1, likedBy };
+          return { ...p, likes: liked ? Math.max(0, p.likes - 1) : p.likes + 1, likedBy };
         }
         return p;
       });
@@ -1297,7 +1434,7 @@ export const DEFAULT_EVENTS: CampusEvent[] = [
     organizerClub: 'ACM & CSI',
     image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
     price: 0,
-    registeredCount: 84,
+    registeredCount: 0,
     createdAt: new Date().toISOString(),
   },
   {
@@ -1311,7 +1448,7 @@ export const DEFAULT_EVENTS: CampusEvent[] = [
     organizer: 'Department of Mechanical Engineering',
     image: 'https://images.pexels.com/photos/3862632/pexels-photo-3862632.jpeg?auto=compress&cs=tinysrgb&w=800',
     price: 150,
-    registeredCount: 42,
+    registeredCount: 0,
     createdAt: new Date().toISOString(),
   },
   {
@@ -1325,7 +1462,7 @@ export const DEFAULT_EVENTS: CampusEvent[] = [
     organizer: 'Campus Tech Club',
     image: 'https://images.pexels.com/photos/2599244/pexels-photo-2599244.jpeg?auto=compress&cs=tinysrgb&w=800',
     price: 99,
-    registeredCount: 36,
+    registeredCount: 0,
     createdAt: new Date().toISOString(),
   },
 ];

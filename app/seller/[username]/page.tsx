@@ -69,11 +69,18 @@ export default async function SellerProfilePage({ params }: Props) {
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <Star className="h-4 w-4 fill-warning text-warning" />
-                  <span className="font-semibold">{seller.rating.toFixed(1)}</span>
-                  <span className="text-muted-foreground">rating</span>
-                </div>
+                {seller.rating > 0 ? (
+                  <div className="flex items-center gap-1.5">
+                    <Star className="h-4 w-4 fill-warning text-warning" />
+                    <span className="font-semibold">{seller.rating.toFixed(1)}</span>
+                    <span className="text-muted-foreground">rating</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Star className="h-4 w-4 text-muted-foreground/40" />
+                    <span>New Creator</span>
+                  </div>
+                )}
                 <Separator orientation="vertical" className="h-4" />
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Store className="h-4 w-4" />
@@ -114,23 +121,23 @@ export default async function SellerProfilePage({ params }: Props) {
         </div>
 
         {/* Store Offerings Tabs */}
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
           <Tabs defaultValue="products" className="w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-border pb-3">
-              <TabsList className="bg-secondary/50 p-1 rounded-xl">
-                <TabsTrigger value="products" className="rounded-lg text-xs gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-border pb-3">
+              <TabsList className="bg-secondary/50 p-1 rounded-xl w-full sm:w-auto grid grid-cols-2 sm:flex">
+                <TabsTrigger value="products" className="rounded-lg text-xs gap-1.5 py-2">
                   <Package className="h-3.5 w-3.5" />
-                  Campus Products ({sellerProducts.length})
+                  Products ({sellerProducts.length})
                 </TabsTrigger>
-                <TabsTrigger value="services" className="rounded-lg text-xs gap-1.5">
+                <TabsTrigger value="services" className="rounded-lg text-xs gap-1.5 py-2">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Freelance Services ({sellerGigs.length})
+                  Gigs ({sellerGigs.length})
                 </TabsTrigger>
               </TabsList>
 
               <Link
                 href="/products"
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:gap-2 transition-all"
+                className="hidden sm:flex items-center gap-1 text-xs font-medium text-primary hover:gap-2 transition-all"
               >
                 Browse Marketplace
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -139,7 +146,7 @@ export default async function SellerProfilePage({ params }: Props) {
 
             <TabsContent value="products" className="mt-0">
               {sellerProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-14 px-4 text-center">
                   <Store className="h-10 w-10 text-muted-foreground/40 mb-3" />
                   <h3 className="text-base font-semibold">No products listed yet</h3>
                   <p className="mt-1 text-xs text-muted-foreground max-w-sm">
@@ -147,7 +154,7 @@ export default async function SellerProfilePage({ params }: Props) {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
                   {sellerProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

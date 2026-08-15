@@ -186,23 +186,23 @@ export default function CheckoutPage() {
 
         <h1 className="font-display text-3xl font-bold tracking-tight mb-6">Checkout</h1>
 
-        <div className="flex items-center gap-2 mb-8">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-6 sm:mb-8 overflow-x-auto pb-1 scrollbar-none">
           {steps.map((s, idx) => (
-            <div key={s} className="flex items-center gap-2">
+            <div key={s} className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all ${
+                className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs sm:text-sm font-semibold transition-all ${
                   idx <= stepIndex
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-secondary text-muted-foreground'
                 }`}
               >
-                {idx < stepIndex ? <Check className="h-4 w-4" /> : idx + 1}
+                {idx < stepIndex ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : idx + 1}
               </div>
-              <span className={`text-sm font-medium ${idx <= stepIndex ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <span className={`text-xs sm:text-sm font-medium whitespace-nowrap ${idx <= stepIndex ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
                 {s}
               </span>
               {idx < steps.length - 1 && (
-                <div className={`h-px w-8 sm:w-12 ${idx < stepIndex ? 'bg-primary' : 'bg-border'}`} />
+                <div className={`h-px w-4 sm:w-12 ${idx < stepIndex ? 'bg-primary' : 'bg-border'}`} />
               )}
             </div>
           ))}
