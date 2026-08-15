@@ -355,6 +355,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(updated));
     saveStoredAccount(updated);
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('campuscart_seller_updated'));
+    }
+
     try {
       await setDoc(doc(db, 'profiles', profile.id), updated, { merge: true });
     } catch (err) {

@@ -44,52 +44,13 @@ export const DEFAULT_SELLERS: Seller[] = [
     username: 'guhan',
     displayName: 'Guhan M',
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-    department: 'Computer Science & Engineering',
-    year: '4th Year',
+    department: 'Computer Science & Engineering (CSE)',
+    year: '4th Year (Final Year)',
     bio: 'Full-stack developer, IoT builder, and founder of CampusCart SVCET.',
     skills: ['Next.js', 'React', 'Python', 'IoT', 'UI/UX Design'],
     rating: 4.9,
     productCount: 4,
     joinedAt: '2024-01-10T00:00:00Z',
-  },
-  {
-    id: 'seller-ananya',
-    username: 'ananya_design',
-    displayName: 'Ananya S',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
-    department: 'ECE',
-    year: '3rd Year',
-    bio: 'Poster designer, digital illustrator & Canva creator for campus fests and clubs.',
-    skills: ['Photoshop', 'Canva', 'Branding', 'Poster Design'],
-    rating: 4.8,
-    productCount: 3,
-    joinedAt: '2024-02-15T00:00:00Z',
-  },
-  {
-    id: 'seller-karthik',
-    username: 'karthik_maker',
-    displayName: 'Karthik Raja',
-    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
-    department: 'Mechanical Engineering',
-    year: '4th Year',
-    bio: 'SolidWorks 3D CAD modeling, custom 3D printing & Arduino prototyping.',
-    skills: ['3D Printing', 'CAD', 'SolidWorks', 'Arduino'],
-    rating: 4.9,
-    productCount: 3,
-    joinedAt: '2024-03-01T00:00:00Z',
-  },
-  {
-    id: 'seller-deepa',
-    username: 'deepa_notes',
-    displayName: 'Deepa Lakshmi',
-    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
-    department: 'Information Technology',
-    year: '3rd Year',
-    bio: 'Department topper handwritten notes, solved Anna University papers & lab viva guides.',
-    skills: ['Data Structures', 'DBMS', 'Operating Systems', 'Notes'],
-    rating: 5.0,
-    productCount: 3,
-    joinedAt: '2024-04-01T00:00:00Z',
   },
 ];
 
@@ -135,7 +96,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     status: 'active',
     rating: 5.0,
     reviewCount: 32,
-    seller: DEFAULT_SELLERS[3],
+    seller: DEFAULT_SELLERS[0],
     pickupAvailable: false,
     deliveryAvailable: false,
     isDigital: true,
@@ -159,7 +120,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     status: 'active',
     rating: 4.7,
     reviewCount: 9,
-    seller: DEFAULT_SELLERS[2],
+    seller: DEFAULT_SELLERS[0],
     pickupAvailable: true,
     deliveryAvailable: true,
     isDigital: false,
@@ -229,7 +190,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
     status: 'active',
     rating: 4.8,
     reviewCount: 12,
-    seller: DEFAULT_SELLERS[1],
+    seller: DEFAULT_SELLERS[0],
     pickupAvailable: true,
     deliveryAvailable: true,
     isDigital: false,
@@ -241,8 +202,8 @@ export const DEFAULT_PRODUCTS: Product[] = [
 export const DEFAULT_GIGS: ServiceGig[] = [
   {
     id: 'gig-1',
-    sellerId: DEFAULT_SELLERS[1].id,
-    seller: DEFAULT_SELLERS[1],
+    sellerId: DEFAULT_SELLERS[0].id,
+    seller: DEFAULT_SELLERS[0],
     title: 'I will design high-impact symposium posters, flyers, and club banners',
     slug: 'design-symposium-posters-flyers',
     description: 'Professional poster design for technical symposiums, sports fests, cultural nights, and club inaugurations with 24-hour turnaround in high-res PDF/PNG format.',
@@ -286,8 +247,8 @@ export const DEFAULT_GIGS: ServiceGig[] = [
   },
   {
     id: 'gig-3',
-    sellerId: DEFAULT_SELLERS[2].id,
-    seller: DEFAULT_SELLERS[2],
+    sellerId: DEFAULT_SELLERS[0].id,
+    seller: DEFAULT_SELLERS[0],
     title: 'I will model 3D CAD parts in SolidWorks and print prototype casings',
     slug: '3d-cad-solidworks-printing-prototypes',
     description: 'Precision 3D modeling for robotics chassis, sensor housings, drone arms, and mechanical fixtures. Includes slicing and direct campus delivery.',
@@ -308,8 +269,8 @@ export const DEFAULT_GIGS: ServiceGig[] = [
   },
   {
     id: 'gig-4',
-    sellerId: DEFAULT_SELLERS[1].id,
-    seller: DEFAULT_SELLERS[1],
+    sellerId: DEFAULT_SELLERS[0].id,
+    seller: DEFAULT_SELLERS[0],
     title: 'I will edit cinematic Instagram reels and event aftermovies in Premiere Pro',
     slug: 'edit-instagram-reels-aftermovies',
     description: 'Fast-paced video editing with beat-matching, transitions, subtitles, sound design, and color grading for campus clubs, dances, and college sports.',
@@ -524,6 +485,11 @@ export async function getAllGigRequests(): Promise<GigRequest[]> {
   return DEFAULT_GIG_REQUESTS;
 }
 
+export async function getGigsBySeller(username: string): Promise<ServiceGig[]> {
+  const all = await getAllGigs();
+  return all.filter((g) => g.seller?.username?.toLowerCase() === username.toLowerCase());
+}
+
 // ---------- Products & Mappers ----------
 
 function mapDocToSeller(data: any, id: string, stats?: { rating: number; productCount: number }): Seller {
@@ -688,35 +654,84 @@ export async function getRelatedProducts(product: Product, limitCount = 4): Prom
 
 // ---------- Sellers ----------
 
-export async function getSellerByUsername(username: string): Promise<Seller | undefined> {
-  try {
-    const q = query(collection(db, 'profiles'), where('username', '==', username));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const docSnap = snap.docs[0];
-      return mapDocToSeller(docSnap.data(), docSnap.id);
-    }
-  } catch (err) {
-    console.warn('Notice in getSellerByUsername:', err);
-  }
-  return DEFAULT_SELLERS.find((s) => s.username === username);
-}
-
 export async function getAllSellers(): Promise<Seller[]> {
+  const sellersMap = new Map<string, Seller>();
+
+  // 1. Founding verified creator (Guhan M)
+  sellersMap.set(DEFAULT_SELLERS[0].username.toLowerCase(), DEFAULT_SELLERS[0]);
+
+  // 2. Query Firestore profiles for registered sellers
   try {
     const q = query(collection(db, 'profiles'), where('is_seller', '==', true));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      const sellers: Seller[] = [];
       snap.forEach((docSnap) => {
-        sellers.push(mapDocToSeller(docSnap.data(), docSnap.id));
+        const s = mapDocToSeller(docSnap.data(), docSnap.id);
+        if (s.username) {
+          sellersMap.set(s.username.toLowerCase(), s);
+        }
       });
-      return sellers;
     }
   } catch (err) {
     console.warn('Notice in getAllSellers:', err);
   }
-  return DEFAULT_SELLERS;
+
+  // 3. Include any locally registered/logged-in sellers from client session
+  if (typeof window !== 'undefined') {
+    try {
+      const authProfileStr = localStorage.getItem('campuscart_auth_profile');
+      if (authProfileStr) {
+        const p = JSON.parse(authProfileStr);
+        if (p?.is_seller && p?.username) {
+          sellersMap.set(p.username.toLowerCase(), {
+            id: p.id || 'seller-' + p.username,
+            username: p.username,
+            displayName: p.display_name || p.username,
+            avatar: p.avatar_url || '',
+            department: p.department || 'SVCET Student',
+            year: p.year || 'Student',
+            bio: p.bio || 'Student Creator building on CampusCart.',
+            skills: Array.isArray(p.skills) && p.skills.length > 0 ? p.skills : ['Campus Seller', 'Student Creator'],
+            rating: 5.0,
+            productCount: 1,
+            joinedAt: p.created_at || new Date().toISOString(),
+          });
+        }
+      }
+
+      const registeredAccsStr = localStorage.getItem('campuscart_registered_accounts');
+      if (registeredAccsStr) {
+        const accs = JSON.parse(registeredAccsStr);
+        if (Array.isArray(accs)) {
+          accs.forEach((acc: any) => {
+            const p = acc.profile;
+            if (p?.is_seller && p?.username) {
+              sellersMap.set(p.username.toLowerCase(), {
+                id: p.id || 'seller-' + p.username,
+                username: p.username,
+                displayName: p.display_name || p.username,
+                avatar: p.avatar_url || '',
+                department: p.department || 'SVCET Student',
+                year: p.year || 'Student',
+                bio: p.bio || 'Student Creator building on CampusCart.',
+                skills: Array.isArray(p.skills) && p.skills.length > 0 ? p.skills : ['Campus Seller', 'Student Creator'],
+                rating: 5.0,
+                productCount: 1,
+                joinedAt: p.created_at || new Date().toISOString(),
+              });
+            }
+          });
+        }
+      }
+    } catch {}
+  }
+
+  return Array.from(sellersMap.values());
+}
+
+export async function getSellerByUsername(username: string): Promise<Seller | undefined> {
+  const all = await getAllSellers();
+  return all.find((s) => s.username.toLowerCase() === username.toLowerCase());
 }
 
 export async function getMyProducts(sellerId: string): Promise<Product[]> {

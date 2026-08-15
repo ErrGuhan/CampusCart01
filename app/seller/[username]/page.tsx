@@ -1,14 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Star, Calendar, ArrowRight, Store } from 'lucide-react';
+import { Star, Calendar, ArrowRight, Store, Sparkles, Package } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
+import { GigCard } from '@/components/gig-card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShareProfileButton } from '@/components/share-profile-button';
-import { getSellerByUsername, getProductsBySeller } from '@/lib/firebase-queries';
+import { getSellerByUsername, getProductsBySeller, getGigsBySeller } from '@/lib/firebase-queries';
 
 type Props = { params: Promise<{ username: string }> };
 
@@ -18,7 +20,10 @@ export default async function SellerProfilePage({ params }: Props) {
 
   if (!seller) notFound();
 
-  const sellerProducts = await getProductsBySeller(username);
+  const [sellerProducts, sellerGigs] = await Promise.all([
+    getProductsBySeller(username),
+    getGigsBySeller(username),
+  ]);
 
   const joinDate = new Date(seller.joinedAt).toLocaleDateString('en-US', {
     month: 'long',
@@ -37,11 +42,14 @@ export default async function SellerProfilePage({ params }: Props) {
           <span className="text-foreground">{seller.displayName}</span>
         </nav>
 
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+        {/* Creator Banner */}
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
           <div className="flex flex-col items-center text-center sm:flex-row sm:text-left sm:items-start gap-6">
             <Avatar className="h-24 w-24 ring-2 ring-border shrink-0">
               <AvatarImage src={seller.avatar} alt={seller.displayName} />
-              <AvatarFallback className="text-2xl">{seller.displayName.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                {seller.displayName.charAt(0)}
+              </AvatarFallback>
             </Avatar>
 
             <div className="flex-1">
@@ -50,79 +58,121 @@ export default async function SellerProfilePage({ params }: Props) {
                   {seller.displayName}
                 </h1>
                 <Badge className="bg-success/10 text-success hover:bg-success/10 w-fit">
-                  Verified Student
+                  Verified Student Creator
                 </Badge>
               </div>
               <p className="mt-1 text-muted-foreground">
-                @{seller.username} · {seller.department} · {seller.year}
+                @{seller.username} · {seller.department} {seller.year ? `· ${seller.year}` : ''}
               </p>
-              <p className="mt-3 text-muted-foreground leading-relaxed max-w-2xl">
+              <p className="mt-3 text-muted-foreground leading-relaxed max-w-2xl text-sm">
                 {seller.bio}
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4">
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs">
                 <div className="flex items-center gap-1.5">
                   <Star className="h-4 w-4 fill-warning text-warning" />
-                  <span className="text-sm font-medium">{seller.rating.toFixed(1)}</span>
-                  <span className="text-sm text-muted-foreground">rating</span>
+                  <span className="font-semibold">{seller.rating.toFixed(1)}</span>
+                  <span className="text-muted-foreground">rating</span>
                 </div>
                 <Separator orientation="vertical" className="h-4" />
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Store className="h-4 w-4" />
-                  {seller.productCount} products
+                  <span>{sellerProducts.length} products</span>
                 </div>
+                {sellerGigs.length > 0 && (
+                  <>
+                    <Separator orientation="vertical" className="h-4" />
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Sparkles className="h-4 w-4 text-indigo-500" />
+                      <span>{sellerGigs.length} freelance gigs</span>
+                    </div>
+                  </>
+                )}
                 <Separator orientation="vertical" className="h-4" />
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   Joined {joinDate}
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {seller.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+              {seller.skills && seller.skills.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {seller.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-lg bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <ShareProfileButton />
           </div>
         </div>
 
+        {/* Store Offerings Tabs */}
         <div className="mt-10">
-          <div className="flex items-end justify-between mb-6">
-            <h2 className="font-display text-xl font-bold tracking-tight">
-              Products by {seller.displayName}
-            </h2>
-            <Link
-              href="/products"
-              className="flex items-center gap-1 text-sm font-medium text-primary hover:gap-2 transition-all"
-            >
-              View all
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          <Tabs defaultValue="products" className="w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-border pb-3">
+              <TabsList className="bg-secondary/50 p-1 rounded-xl">
+                <TabsTrigger value="products" className="rounded-lg text-xs gap-1.5">
+                  <Package className="h-3.5 w-3.5" />
+                  Campus Products ({sellerProducts.length})
+                </TabsTrigger>
+                <TabsTrigger value="services" className="rounded-lg text-xs gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Freelance Services ({sellerGigs.length})
+                </TabsTrigger>
+              </TabsList>
 
-          {sellerProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
-              <Store className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-semibold">No products yet</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                This creator hasn't listed any products yet. Check back soon!
-              </p>
+              <Link
+                href="/products"
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:gap-2 transition-all"
+              >
+                Browse Marketplace
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {sellerProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+
+            <TabsContent value="products" className="mt-0">
+              {sellerProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+                  <Store className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                  <h3 className="text-base font-semibold">No products listed yet</h3>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+                    This creator hasn't listed physical or digital goods yet. Check their freelance services tab!
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                  {sellerProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="services" className="mt-0">
+              {sellerGigs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+                  <Sparkles className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                  <h3 className="text-base font-semibold">No freelance services offered yet</h3>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+                    This creator hasn't published freelance commissions yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {sellerGigs.map((gig) => (
+                    <GigCard key={gig.id} gig={gig} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
