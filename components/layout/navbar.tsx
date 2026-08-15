@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, ShoppingCart, Heart, Menu, Store, User,
   LayoutDashboard, Package, LogOut, Settings, ShieldCheck, Shield,
-  MessageSquare, Bell, Sparkles, HelpCircle,
+  MessageSquare, Bell, Sparkles, HelpCircle, ArrowRight,
+  ShoppingBag, Tag, Recycle, Zap, X, ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Sheet,
@@ -30,23 +32,33 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
 
-const navLinks = [
-  { href: '/marketplace', label: 'Marketplace' },
-  { href: '/used', label: 'Used Items' },
-  { href: '/services', label: 'Freelance & Gigs', badge: 'Earn' },
-  { href: '/requests', label: 'Requests', badge: 'Campus' },
-  { href: '/community', label: 'Community' },
-  { href: '/deals', label: 'Deals', badge: 'Hot' },
-  { href: '/events', label: 'Events' },
+const navItems = [
+  { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+  { href: '/used', label: 'Used Items', icon: Recycle, badge: 'Save' },
+  { href: '/services', label: 'Freelance & Gigs', icon: Sparkles, badge: 'Earn' },
+  { href: '/requests', label: 'Campus Requests', icon: Tag, badge: 'Live' },
+  { href: '/deals', label: 'Deals', icon: Zap, badge: 'Hot' },
+  { href: '/community', label: 'Community', icon: MessageSquare },
+];
+
+const mobileQuickChips = [
+  { href: '/marketplace', label: 'Marketplace', icon: '🛍️' },
+  { href: '/used', label: 'Used & Pre-Owned', icon: '♻️' },
+  { href: '/services', label: 'Freelance Gigs', icon: '⚡' },
+  { href: '/requests', label: 'Need / Requests', icon: '🙋' },
+  { href: '/deals', label: 'Deals < ₹199', icon: '🔥' },
+  { href: '/categories', label: 'All Categories', icon: '📂' },
 ];
 
 export function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { user, profile, isAdmin, loading, signOut } = useAuth();
   const { totalItems } = useCart();
-  const router = useRouter();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -63,10 +75,10 @@ export function Navbar() {
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!searchQuery.trim()) {
-      router.push('/products');
+      router.push('/marketplace');
       return;
     }
-    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    router.push(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
   }
 
   const initials = profile?.display_name
@@ -81,288 +93,431 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 w-full border-b border-transparent transition-all duration-300',
+        'sticky top-0 z-50 w-full transition-all duration-200',
         scrolled
-          ? 'border-border bg-background/80 backdrop-blur-md shadow-sm'
-          : 'bg-background'
+          ? 'border-b border-border/80 bg-background/90 backdrop-blur-xl shadow-xs'
+          : 'border-b border-border/40 bg-background/95 backdrop-blur-md'
       )}
     >
       <div className="container-px mx-auto max-w-7xl">
-        <div className="flex h-16 items-center gap-4">
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                aria-label="Open menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72">
-              <SheetHeader>
-                <SheetTitle className="text-left">CampusCart</SheetTitle>
-              </SheetHeader>
-              <form onSubmit={(e) => { setMobileOpen(false); handleSearchSubmit(e); }} className="mt-4 px-1">
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    className="pl-9 pr-3 h-9 bg-secondary/50"
-                  />
+        {/* Main Desktop & Mobile Header Bar */}
+        <div className="flex h-15 sm:h-16 items-center justify-between gap-2 sm:gap-4">
+          {/* Left: Mobile Sheet Trigger + Logo */}
+          <div className="flex items-center gap-2">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-9 w-9 rounded-xl hover:bg-secondary"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[85vw] max-w-xs p-0 flex flex-col bg-background">
+                <div className="p-5 border-b border-border bg-gradient-to-br from-primary/10 via-background to-secondary/30">
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href="/"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2.5"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-xs">
+                        <Store className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="font-display text-lg font-bold tracking-tight block leading-tight">
+                          CampusCart
+                        </span>
+                        <span className="text-[10px] font-semibold text-primary block leading-none">
+                          SVCET Student Hub
+                        </span>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {user && profile ? (
+                    <div className="mt-4 flex items-center gap-3 pt-3 border-t border-border/60">
+                      <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                        <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs truncate text-foreground">{profile.display_name}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{profile.email}</p>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-              </form>
-              <nav className="mt-4 flex flex-col gap-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {/* Search in Mobile Menu */}
+                  <form
+                    onSubmit={(e) => {
+                      setMobileOpen(false);
+                      handleSearchSubmit(e);
+                    }}
+                    className="relative"
                   >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="my-3 h-px bg-border" />
-                {loading ? null : user ? (
-                  <>
-                    <Link
-                      href="/account"
-                      onClick={() => setMobileOpen(false)}
-                      className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
-                    >
-                      My Account
-                    </Link>
-                    {isAdmin && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-4 py-3 text-sm font-semibold text-primary bg-primary/10 hover:bg-primary/15 transition-colors touch-target flex items-center gap-2"
-                      >
-                        <ShieldCheck className="h-4 w-4" />
-                        Admin Control Center
-                      </Link>
-                    )}
-                    {profile?.is_seller && (
-                      <Link
-                        href="/seller/dashboard"
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
-                      >
-                        Seller Dashboard
-                      </Link>
-                    )}
-                    {!profile?.is_seller && (
-                      <Link
-                        href="/account/settings"
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-4 py-3 text-sm font-medium text-primary hover:bg-primary/10 hover:text-primary transition-colors touch-target font-semibold"
-                      >
-                        Start Selling
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => {
-                        setMobileOpen(false);
-                        handleSignOut();
-                      }}
-                      className="rounded-lg px-4 py-3 text-left text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileOpen(false)}
-                      className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-target"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setMobileOpen(false)}
-                      className="mt-1"
-                    >
-                      <Button className="w-full h-10">Get Started</Button>
-                    </Link>
-                  </>
-                )}
-              </nav>
-            </SheetContent>
-          </Sheet>
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search books, kits, skills..."
+                      className="pl-9 pr-3 h-10 rounded-xl bg-secondary/60 text-xs border-border/60"
+                    />
+                  </form>
 
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Store className="h-5 w-5" />
-            </div>
-            <span className="font-display text-xl font-bold tracking-tight">
-              CampusCart
-            </span>
-          </Link>
+                  {/* Core Navigation */}
+                  <div className="space-y-1">
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1">
+                      Campus Marketplace
+                    </div>
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all touch-target',
+                            active
+                              ? 'bg-primary text-primary-foreground shadow-xs'
+                              : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span>{item.label}</span>
+                          </div>
+                          {item.badge && (
+                            <span
+                              className={cn(
+                                'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+                                active
+                                  ? 'bg-primary-foreground/20 text-primary-foreground'
+                                  : 'bg-primary/10 text-primary'
+                              )}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
 
-          <nav className="hidden md:flex items-center gap-1 ml-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors flex items-center gap-1.5"
-              >
-                {link.label}
-                {link.badge && (
-                  <span className="rounded-full bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 leading-none">
-                    {link.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
+                  <div className="h-px bg-border my-2" />
+
+                  {/* Account / User Section */}
+                  <div className="space-y-1">
+                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1">
+                      Student Account
+                    </div>
+                    {user ? (
+                      <>
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                        >
+                          <LayoutDashboard className="h-4 w-4 text-primary" />
+                          Student Dashboard
+                        </Link>
+                        <Link
+                          href="/account/orders"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                        >
+                          <Package className="h-4 w-4 text-emerald-500" />
+                          My Orders & Pickups
+                        </Link>
+                        <Link
+                          href="/messages"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                        >
+                          <MessageSquare className="h-4 w-4 text-indigo-500" />
+                          Campus Messages
+                        </Link>
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-primary bg-primary/10 transition-all"
+                          >
+                            <ShieldCheck className="h-4 w-4" />
+                            Admin Control Center
+                          </Link>
+                        )}
+                        {profile?.is_seller ? (
+                          <Link
+                            href="/seller/dashboard"
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-amber-600 bg-amber-500/10 transition-all"
+                          >
+                            <Store className="h-4 w-4" />
+                            Seller Studio Dashboard
+                          </Link>
+                        ) : (
+                          <Link
+                            href="/account/settings"
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-primary bg-primary/10 transition-all"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Become a Student Seller
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => {
+                            setMobileOpen(false);
+                            handleSignOut();
+                          }}
+                          className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all text-left"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <div className="pt-1 space-y-2">
+                        <Link
+                          href="/login"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-bold border border-border bg-card hover:bg-secondary transition-all"
+                        >
+                          Sign In
+                        </Link>
+                        <Link
+                          href="/register"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-bold bg-primary text-primary-foreground shadow-xs transition-all"
+                        >
+                          Join CampusCart
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Brand Logo & College Tag */}
+            <Link href="/" className="flex items-center gap-2 shrink-0 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-xs group-hover:scale-105 transition-transform">
+                <Store className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-foreground leading-none">
+                  CampusCart
+                </span>
+                <span className="text-[10px] font-semibold text-primary leading-none mt-0.5 hidden xs:block">
+                  SVCET Marketplace
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Center: Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => {
+              const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5',
+                    active
+                      ? 'bg-primary/10 text-primary font-bold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/70'
+                  )}
+                >
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="rounded-full bg-primary/15 text-primary text-[9px] font-extrabold px-1.5 py-0.5 leading-none">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
-          <form onSubmit={handleSearchSubmit} className="hidden lg:flex flex-1 max-w-md mx-auto">
+          {/* Desktop Search Bar */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-2"
+          >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products, creators, categories..."
-                className="pl-9 pr-4 bg-secondary/50 border-transparent focus-visible:border-input focus-visible:bg-background transition-all"
+                placeholder="Search products, gigs, notes..."
+                className="pl-9 pr-8 h-9 rounded-xl bg-secondary/50 border-transparent hover:bg-secondary/70 focus-visible:bg-background focus-visible:border-input text-xs transition-all"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </form>
 
-          <div className="flex items-center gap-1 ml-auto">
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
-              <Link href="/messages" aria-label="Messages">
-                <MessageSquare className="h-5 w-5" />
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {/* Mobile Search Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden h-9 w-9 rounded-xl"
+              onClick={() => setMobileSearchOpen((prev) => !prev)}
+              aria-label="Toggle mobile search"
+            >
+              <Search className="h-4.5 w-4.5" />
+            </Button>
+
+            {/* Desktop Messages shortcut */}
+            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-9 w-9 rounded-xl">
+              <Link href="/messages" aria-label="Campus Messages">
+                <MessageSquare className="h-4.5 w-4.5" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
-              <Link href="/notifications" aria-label="Notifications">
-                <Bell className="h-5 w-5" />
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
+
+            {/* Wishlist */}
+            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-9 w-9 rounded-xl">
               <Link href="/wishlist" aria-label="Wishlist">
-                <Heart className="h-5 w-5" />
+                <Heart className="h-4.5 w-4.5" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" asChild className="relative">
-              <Link href="/cart" aria-label="Cart">
-                <ShoppingCart className="h-5 w-5" />
+
+            {/* Cart Button with Counter */}
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="relative h-9 w-9 rounded-xl hover:bg-secondary"
+            >
+              <Link href="/cart" aria-label="Shopping Cart">
+                <ShoppingCart className="h-4.5 w-4.5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                    {totalItems}
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-xs animate-scale-in">
+                    {totalItems > 99 ? '99+' : totalItems}
                   </span>
                 )}
               </Link>
             </Button>
 
+            {/* User Account / Profile dropdown or Login buttons */}
             {loading ? (
-              <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse ml-1" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="ml-1 flex items-center gap-2 rounded-full p-0.5 ring-offset-background transition-all hover:ring-2 hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="ml-1 flex items-center gap-1.5 rounded-full p-0.5 ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
                     aria-label="Account menu"
                   >
                     <Avatar className="h-8 w-8">
                       {profile?.avatar_url && (
-                        <AvatarImage src={profile.avatar_url} alt={profile.display_name} />
+                        <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
                       )}
-                      <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+                      <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-60 rounded-2xl p-1.5 shadow-xl">
+                  <DropdownMenuLabel className="p-2">
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold">{profile?.display_name}</span>
-                      <span className="text-xs font-normal text-muted-foreground">
+                      <span className="text-xs font-bold text-foreground">{profile?.display_name}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground truncate">
                         {profile?.email}
                       </span>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                    <Link href="/dashboard" className="flex items-center text-xs">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
                       Student Dashboard
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/account" className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                    <Link href="/account" className="flex items-center text-xs">
+                      <User className="mr-2 h-4 w-4 text-muted-foreground" />
                       My Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/account/orders" className="cursor-pointer">
-                      <Package className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                    <Link href="/account/orders" className="flex items-center text-xs">
+                      <Package className="mr-2 h-4 w-4 text-emerald-500" />
                       My Orders
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/messages" className="cursor-pointer">
-                      <MessageSquare className="mr-2 h-4 w-4" />
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                    <Link href="/messages" className="flex items-center text-xs">
+                      <MessageSquare className="mr-2 h-4 w-4 text-indigo-500" />
                       Campus Messages
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/requests" className="cursor-pointer">
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Product Requests
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                    <Link href="/requests" className="flex items-center text-xs">
+                      <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
+                      Product Requests Board
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/account/settings" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
+
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="bg-primary/5 font-semibold text-primary focus:bg-primary/10">
-                        <Link href="/admin" className="cursor-pointer flex items-center">
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer bg-primary/5 text-primary font-semibold">
+                        <Link href="/admin" className="flex items-center text-xs">
                           <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
                           Admin Control Center
                         </Link>
                       </DropdownMenuItem>
                     </>
                   )}
-                  {profile?.is_seller && (
+
+                  {profile?.is_seller ? (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/seller/dashboard" className="cursor-pointer">
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer bg-amber-500/10 text-amber-600 font-semibold">
+                        <Link href="/seller/dashboard" className="flex items-center text-xs">
                           <Store className="mr-2 h-4 w-4" />
                           Seller Studio
                         </Link>
                       </DropdownMenuItem>
                     </>
-                  )}
-                  {!profile?.is_seller && (
+                  ) : (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/account/settings" className="cursor-pointer text-primary font-medium">
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer text-primary font-semibold">
+                        <Link href="/account/settings" className="flex items-center text-xs">
                           <Store className="mr-2 h-4 w-4" />
                           Become a Seller
                         </Link>
                       </DropdownMenuItem>
                     </>
                   )}
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleSignOut}
-                    className="cursor-pointer text-destructive focus:text-destructive"
+                    className="rounded-xl cursor-pointer text-xs text-destructive focus:text-destructive focus:bg-destructive/10"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
@@ -370,19 +525,69 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center gap-2 ml-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/login">
-                    <User className="h-4 w-4 mr-2" />
-                    Sign In
-                  </Link>
+              <div className="hidden sm:flex items-center gap-1.5 ml-1">
+                <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-8">
+                  <Link href="/login">Sign In</Link>
                 </Button>
-                <Button asChild>
-                  <Link href="/register">Get Started</Link>
+                <Button size="sm" asChild className="rounded-xl text-xs h-8 shadow-xs font-bold">
+                  <Link href="/register">Join Campus</Link>
                 </Button>
               </div>
             )}
           </div>
+        </div>
+
+        {/* Mobile Dropdown Search Input */}
+        {mobileSearchOpen && (
+          <form
+            onSubmit={(e) => {
+              setMobileSearchOpen(false);
+              handleSearchSubmit(e);
+            }}
+            className="pb-3 pt-1 md:hidden animate-fade-in"
+          >
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search textbooks, drawing boards, projects, gigs..."
+                className="pl-9 pr-8 h-10 rounded-xl bg-secondary/70 text-xs border-border/80"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+
+        {/* Mobile Quick Category Horizontal Carousel Strip */}
+        <div className="flex sm:hidden items-center gap-1.5 overflow-x-auto pb-2 pt-0.5 scrollbar-none">
+          {mobileQuickChips.map((chip) => {
+            const active = pathname === chip.href;
+            return (
+              <Link
+                key={chip.href}
+                href={chip.href}
+                className={cn(
+                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all select-none active:scale-95',
+                  active
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'bg-secondary/70 text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <span>{chip.icon}</span>
+                <span>{chip.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </header>

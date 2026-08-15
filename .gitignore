@@ -39,3 +39,4 @@ lerna-debug.log*
 *.sw?
 .vercel
 .env*
+*.tsbuildinfo

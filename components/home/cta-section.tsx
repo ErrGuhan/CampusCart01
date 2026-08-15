@@ -1,40 +1,44 @@
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function CtaSection() {
   return (
-    <section className="container-px mx-auto max-w-7xl py-16">
-      <div className="relative overflow-hidden rounded-3xl bg-foreground px-6 py-14 sm:px-12 sm:py-20 text-center">
+    <section className="container-px mx-auto max-w-7xl py-10 sm:py-14">
+      <div className="relative overflow-hidden rounded-3xl bg-foreground px-6 py-12 sm:px-12 sm:py-16 text-center shadow-xl">
         <div
-          className="absolute inset-0 opacity-[0.05]"
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
           style={{
             backgroundImage:
               'radial-gradient(circle at 1px 1px, hsl(0 0% 100%) 1px, transparent 0)',
             backgroundSize: '24px 24px',
           }}
         />
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium text-primary-foreground/90">
+        <div className="relative max-w-2xl mx-auto">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3.5 py-1 text-xs font-semibold text-primary-foreground/90 mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            Built on Campus
+            <span>Join 120+ SVCET Student Creators</span>
           </div>
-          <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-primary-foreground text-balance sm:text-4xl">
-            Turn your creativity into a campus business
+          <h2 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-primary-foreground text-balance">
+            Turn your skills, notes & unused gear into campus cash
           </h2>
-          <p className="mt-4 text-lg text-primary-foreground/70 max-w-xl mx-auto text-balance">
-            Join 120+ student creators selling their products to peers. Set up
-            your shop in minutes — no fees, no friction.
+          <p className="mt-3 text-xs sm:text-base text-primary-foreground/75 leading-relaxed text-balance">
+            Set up your student shop in 2 minutes. Sell textbooks, kits, crafts, or offer freelance services directly to classmates with zero fees.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center">
-            <Button size="lg" asChild>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Button size="lg" asChild className="rounded-2xl font-bold shadow-md h-12 text-xs sm:text-sm">
               <Link href="/register">
                 Start Selling Today
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
-              <Link href="/how-it-works">Learn More</Link>
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="rounded-2xl h-12 text-xs sm:text-sm bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            >
+              <Link href="/how-it-works">Learn How It Works</Link>
             </Button>
           </div>
         </div>

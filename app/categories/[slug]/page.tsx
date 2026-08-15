@@ -1,15 +1,17 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronRight, Package } from 'lucide-react';
+import { ChevronRight, Package, ArrowRight, Tag } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
+import { Button } from '@/components/ui/button';
 import { getCategories, getProductsByCategory } from '@/lib/firebase-queries';
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: { slug: string } | Promise<{ slug: string }> };
 
 export default async function CategoryDetailPage({ params }: Props) {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
   const categories = await getCategories();
   const category = categories.find((c) => c.slug === slug);
 
@@ -20,45 +22,47 @@ export default async function CategoryDetailPage({ params }: Props) {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-8">
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen">
+        <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 overflow-x-auto pb-1">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5" />
           <Link href="/categories" className="hover:text-foreground transition-colors">Categories</Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{category.name}</span>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="text-foreground font-semibold truncate">{category.name}</span>
         </nav>
 
-        <div className="mb-8">
+        <div className="mb-8 rounded-3xl border border-border/80 bg-gradient-to-br from-primary/10 via-card to-background p-6 sm:p-8 shadow-xs">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Package className="h-7 w-7" />
+            <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold shadow-xs">
+              <Package className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
             <div>
-              <h1 className="font-display text-3xl font-bold tracking-tight">{category.name}</h1>
-              <p className="mt-1 text-muted-foreground">
-                {categoryProducts.length} {categoryProducts.length === 1 ? 'product' : 'products'} in this category
+              <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">{category.name}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                {categoryProducts.length} {categoryProducts.length === 1 ? 'product' : 'products'} available from student creators
               </p>
             </div>
           </div>
         </div>
 
         {categoryProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
-            <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-semibold">No products yet</h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-              No products have been listed in this category yet. Check back soon or explore other categories.
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border py-16 px-4 text-center bg-card/40 my-6">
+            <Package className="h-10 w-10 text-muted-foreground/40 mb-3" />
+            <h3 className="text-base font-bold text-foreground">No products in this category yet</h3>
+            <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+              Be the first student to list notes, equipment or supplies in this category.
             </p>
-            <Link
-              href="/categories"
-              className="mt-4 text-sm font-medium text-primary hover:underline"
-            >
-              Browse all categories
-            </Link>
+            <div className="mt-5 flex gap-2">
+              <Button asChild size="sm" className="rounded-xl text-xs font-bold">
+                <Link href="/categories">Browse all categories</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
+                <Link href="/requests">Post a Request</Link>
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {categoryProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

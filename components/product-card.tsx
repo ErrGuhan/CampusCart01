@@ -1,14 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Heart, Star, ShoppingBag, BadgeCheck } from 'lucide-react';
+import { Heart, Star, ShoppingBag, BadgeCheck, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/components/cart-provider';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/types';
 
-const WISHLST_KEY = 'campuscart-wishlist';
+const WISHLIST_KEY = 'campuscart-wishlist';
 
 type ProductCardProps = {
   product: Product;
@@ -18,166 +19,164 @@ type ProductCardProps = {
 export function ProductCard({ product, className }: ProductCardProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const hasDiscount =
     product.discountPrice !== undefined && product.discountPrice < product.price;
   const discountPercent = hasDiscount
-    ? Math.round(
-        ((product.price - product.discountPrice!) / product.price) * 100
-      )
+    ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
+
+  function toggleWishlist(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const stored = localStorage.getItem(WISHLIST_KEY);
+      let list: string[] = stored ? JSON.parse(stored) : [];
+      if (list.includes(product.id)) {
+        list = list.filter((id) => id !== product.id);
+        setIsWishlisted(false);
+        toast({ title: 'Removed from wishlist', description: product.name });
+      } else {
+        list.push(product.id);
+        setIsWishlisted(true);
+        toast({ title: 'Added to wishlist! ❤️', description: product.name });
+      }
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(list));
+    } catch {}
+  }
+
+  function handleQuickAdd(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      image: product.images[0],
+      sellerName: product.seller.displayName,
+      sellerUsername: product.seller.username,
+      maxQuantity: product.inventory,
+      isDigital: product.isDigital,
+      digitalFileUrl: product.digitalFileUrl,
+    });
+    toast({ title: 'Added to cart 🛍️', description: product.name });
+  }
 
   return (
     <Link
       href={`/products/${product.slug}`}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:shadow-lg hover:border-primary/20',
+        'group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card transition-all duration-300 hover:shadow-lg hover:border-primary/40 active:scale-[0.98]',
         className
       )}
     >
-      <div className="relative aspect-square overflow-hidden bg-secondary/50">
+      {/* Product Image & Badges */}
+      <div className="relative aspect-square overflow-hidden bg-secondary/50 select-none">
         <img
           src={product.images[0]}
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
-        {product.isUsed && product.condition && (
-          <Badge
-            className="absolute top-3 left-3 bg-amber-500 text-white shadow-sm hover:bg-amber-600 capitalize text-[10px]"
-          >
-            {product.condition.replace('_', ' ')}
-          </Badge>
-        )}
-        {product.isDigital && (
-          <Badge
-            className="absolute top-3 left-3 bg-indigo-600/90 text-white shadow-sm hover:bg-indigo-600 text-[10px]"
-          >
-            Instant Digital
-          </Badge>
-        )}
-        {hasDiscount && !product.isDigital && !product.isUsed && (
-          <Badge
-            variant="destructive"
-            className="absolute top-3 left-3 shadow-sm text-[10px]"
-          >
-            {discountPercent}% OFF
-          </Badge>
-        )}
+
+        {/* Condition & Discount Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1 items-start z-10">
+          {product.isUsed && (
+            <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-white shadow-xs capitalize">
+              {product.condition ? product.condition.replace('_', ' ') : 'Used'}
+            </span>
+          )}
+          {product.isDigital && (
+            <span className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-white shadow-xs">
+              Digital
+            </span>
+          )}
+          {hasDiscount && !product.isDigital && (
+            <span className="rounded-md bg-destructive px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-destructive-foreground shadow-xs">
+              {discountPercent}% OFF
+            </span>
+          )}
+        </div>
+
+        {/* Wishlist Button */}
         <button
           type="button"
           aria-label="Add to wishlist"
-          className="absolute top-2.5 right-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-background/85 text-muted-foreground shadow-sm backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-95 group-hover:opacity-100"
-          onClick={(e) => {
-            e.preventDefault();
-            try {
-              const stored = localStorage.getItem(WISHLST_KEY);
-              const list: string[] = stored ? JSON.parse(stored) : [];
-              if (!list.includes(product.id)) {
-                list.push(product.id);
-                localStorage.setItem(WISHLST_KEY, JSON.stringify(list));
-                toast({ title: 'Added to wishlist ❤️', description: product.name });
-              } else {
-                toast({ title: 'Already in wishlist', description: product.name });
-              }
-            } catch {
-              // ignore
-            }
-          }}
+          onClick={toggleWishlist}
+          className="absolute top-2 right-2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-background/85 text-muted-foreground shadow-xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10"
         >
-          <Heart className="h-4 w-4" />
+          <Heart className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', isWishlisted && 'fill-destructive text-destructive')} />
         </button>
+
         {product.status === 'out_of_stock' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
-            <span className="rounded-full bg-foreground/90 px-3 py-1 text-[11px] font-semibold text-background">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[1px] z-10">
+            <span className="rounded-full bg-foreground/90 px-2.5 py-0.5 text-[10px] font-bold text-background">
               Out of Stock
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
-        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground">
-          <span className="truncate max-w-[80px] sm:max-w-none">{product.category}</span>
-          <span className="text-border">·</span>
-          <span className="truncate max-w-[80px] sm:max-w-none">{product.seller.displayName}</span>
+      {/* Card Content */}
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3.5">
+        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground">
+          <span className="truncate max-w-[70px] sm:max-w-[100px] font-medium">{product.category}</span>
+          <span>•</span>
+          <span className="truncate max-w-[70px] sm:max-w-[100px]">{product.seller.displayName}</span>
         </div>
 
-        <h3 className="mt-1 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
+        <h3 className="mt-1 line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
           {product.name}
         </h3>
 
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          {product.isVerified && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] sm:text-[11px] font-semibold text-success">
-              <BadgeCheck className="h-3 w-3 shrink-0" />
-              <span className="truncate">Verified</span>
-            </span>
-          )}
+        {/* Rating & Trust */}
+        <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1">
+            {product.reviewCount > 0 ? (
+              <>
+                <Star className="h-3 w-3 fill-amber-500 text-amber-500 shrink-0" />
+                <span className="font-bold text-foreground">{product.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground">({product.reviewCount})</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground text-[10px]">New listing</span>
+            )}
+          </div>
+
           {product.pickupAvailable && (
-            <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium text-muted-foreground bg-secondary/80 px-1 py-0.5 rounded">
+            <span className="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded">
               📍 Pickup
             </span>
           )}
         </div>
 
-        <div className="mt-1.5 flex items-center gap-1">
-          {product.reviewCount > 0 ? (
-            <>
-              <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-warning text-warning shrink-0" />
-              <span className="text-xs font-semibold text-foreground">
-                {product.rating.toFixed(1)}
-              </span>
-              <span className="text-[10px] sm:text-xs text-muted-foreground">
-                ({product.reviewCount})
-              </span>
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground/80">
-              <Star className="h-2.5 w-2.5 text-muted-foreground/40 shrink-0" />
-              No reviews
-            </span>
-          )}
-        </div>
-
-        <div className="mt-auto pt-2.5 sm:pt-3 flex items-end justify-between gap-1">
+        {/* Price & Quick Add Button */}
+        <div className="mt-auto pt-2 sm:pt-3 flex items-end justify-between gap-1 border-t border-border/50">
           <div className="flex flex-col min-w-0">
             {hasDiscount ? (
-              <>
-                <span className="text-sm sm:text-base font-bold text-foreground truncate">
+              <div className="flex items-baseline gap-1 flex-wrap">
+                <span className="text-sm sm:text-base font-extrabold text-foreground">
                   ₹{product.discountPrice}
                 </span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground line-through">
+                <span className="text-[10px] text-muted-foreground line-through">
                   ₹{product.price}
                 </span>
-              </>
+              </div>
             ) : (
-              <span className="text-sm sm:text-base font-bold text-foreground truncate">
+              <span className="text-sm sm:text-base font-extrabold text-foreground">
                 ₹{product.price}
               </span>
             )}
           </div>
+
           <button
             type="button"
             aria-label="Quick add to cart"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground transition-all hover:bg-primary hover:text-primary-foreground active:scale-90"
-            onClick={(e) => {
-              e.preventDefault();
-              addToCart({
-                id: product.id,
-                slug: product.slug,
-                name: product.name,
-                price: product.price,
-                discountPrice: product.discountPrice,
-                image: product.images[0],
-                sellerName: product.seller.displayName,
-                sellerUsername: product.seller.username,
-                maxQuantity: product.inventory,
-                isDigital: product.isDigital,
-                digitalFileUrl: product.digitalFileUrl,
-              });
-              toast({ title: 'Added to cart 🛍️', description: product.name });
-            }}
+            onClick={handleQuickAdd}
+            className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all hover:bg-primary hover:text-primary-foreground active:scale-90 shadow-2xs"
           >
             <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>

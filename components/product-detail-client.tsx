@@ -653,7 +653,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       </main>
 
       {/* Mobile Sticky Bottom Action Bar */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border p-3 shadow-2xl animate-in slide-in-from-bottom-2">
+      <div className="md:hidden fixed bottom-14 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border/80 p-2.5 shadow-2xl animate-fade-in-up">
         <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
           <div className="flex flex-col">
             <div className="flex items-baseline gap-1.5">

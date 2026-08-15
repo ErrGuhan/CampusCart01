@@ -173,8 +173,8 @@ export default function CampusCommunityPage() {
         </div>
 
         {/* Channels / Tags Filter */}
-        <div className="mt-8 space-y-4">
-          <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-6 sm:mt-8 space-y-4">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {channels.map((c) => (
               <Button
                 key={c.value}

@@ -17,6 +17,8 @@ import {
   getAllSellers,
 } from '@/lib/firebase-queries';
 
+export const revalidate = 60;
+
 export default async function Home() {
   const [categories, featured, trending, newArrivals, sellers] = await Promise.all([
     getCategories(),
@@ -29,27 +31,24 @@ export default async function Home() {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="min-h-screen">
         <HeroSection />
         <CategoriesSection categories={categories} />
         <DealsBannerSection />
         <ProductSection
-          title="Featured Products"
-          subtitle="Handpicked favorites loved by the campus community"
+          title="Trending Campus Favorites"
+          subtitle="Top-rated textbooks, project kits & essentials loved by students"
           products={featured.slice(0, 4)}
+          viewAllHref="/marketplace"
         />
         <ServicesSection />
         <RequestsPreviewSection />
-        <CreatorsSection sellers={sellers.slice(0, 4)} />
+        <CreatorsSection sellers={sellers.slice(0, 3)} />
         <ProductSection
-          title="Trending Now"
-          subtitle="The most popular products this week"
-          products={trending}
-        />
-        <ProductSection
-          title="New Arrivals"
-          subtitle="Fresh listings from student creators"
-          products={newArrivals}
+          title="Fresh Campus Arrivals"
+          subtitle="Latest listings and semester resources published this week"
+          products={newArrivals.slice(0, 4)}
+          viewAllHref="/marketplace"
         />
         <HowItWorksSection />
         <CtaSection />

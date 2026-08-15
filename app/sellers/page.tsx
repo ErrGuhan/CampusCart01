@@ -109,12 +109,12 @@ export default function SellersPage() {
             />
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             <Button
               variant={selectedDept === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedDept('all')}
-              className="rounded-xl text-xs whitespace-nowrap"
+              className="rounded-xl text-xs whitespace-nowrap h-8 font-semibold"
             >
               All Creators ({sellers.length})
             </Button>
@@ -124,7 +124,7 @@ export default function SellersPage() {
                 variant={selectedDept === dept ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedDept(dept)}
-                className="rounded-xl text-xs whitespace-nowrap"
+                className="rounded-xl text-xs whitespace-nowrap h-8"
               >
                 {dept.split('(')[0].trim()}
               </Button>

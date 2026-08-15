@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Sparkles, Search, SlidersHorizontal, Plus,
-  Palette, Code, Video, Box, BookOpen, FileText, Music, Wrench,
-  ArrowRight, CheckCircle2, ShieldCheck, Zap,
+  Sparkles, Search, Plus, Palette, Code, Video, Box,
+  ArrowRight, CheckCircle2, ShieldCheck, Zap, X,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -69,31 +68,31 @@ export default function ServicesPage() {
       <Navbar />
       <main className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-primary/5 via-background to-background py-14 sm:py-20">
+        <section className="relative overflow-hidden border-b border-border/70 bg-gradient-to-b from-indigo-500/10 via-background to-background py-8 sm:py-14">
           <div className="container-px mx-auto max-w-7xl relative z-10">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-4">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/15 px-3 py-0.5 text-xs font-bold text-indigo-600 mb-3">
                 <Sparkles className="h-3.5 w-3.5" />
-                <span>SVCET Student Freelancers & Creator Hub</span>
+                <span>SVCET Student Freelance & Creator Hub</span>
               </div>
-              <h1 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
                 Hire Talented Classmates for Your Next Project
               </h1>
-              <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
+              <p className="mt-2.5 text-xs sm:text-base text-muted-foreground leading-relaxed">
                 Connect with student designers, coders, video editors, 3D printing makers, and subject tutors. Fast turnarounds, student-friendly pricing, and trusted campus delivery.
               </p>
 
               {/* Action Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button size="lg" className="rounded-xl shadow-md" asChild>
+              <div className="mt-6 flex flex-wrap items-center gap-2.5">
+                <Button size="sm" className="rounded-xl h-10 px-4 font-bold text-xs shadow-xs" asChild>
                   <Link href="/services/bounties">
-                    <Zap className="h-4 w-4 mr-2" />
-                    Browse Campus Bounties
+                    <Zap className="h-4 w-4 mr-1.5" />
+                    Campus Bounties
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="rounded-xl" asChild>
+                <Button size="sm" variant="outline" className="rounded-xl h-10 px-4 text-xs font-semibold" asChild>
                   <Link href="/seller/dashboard/services">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 mr-1.5" />
                     Offer Your Skills
                   </Link>
                 </Button>
@@ -101,32 +100,32 @@ export default function ServicesPage() {
             </div>
 
             {/* Quick Benefits */}
-            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-border/60">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-border/60">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold">Verified College Students</h4>
-                  <p className="text-[11px] text-muted-foreground">Colleagues verified via @svcet.ac.in</p>
+                  <h4 className="text-xs font-bold">Verified Students</h4>
+                  <p className="text-[10px] text-muted-foreground">Classmates verified via @svcet.ac.in</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
                   <Zap className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold">Same-Day / 24h Turnaround</h4>
-                  <p className="text-[11px] text-muted-foreground">Fast turnaround for urgent deadlines</p>
+                  <h4 className="text-xs font-bold">24h Turnaround</h4>
+                  <p className="text-[10px] text-muted-foreground">Fast turnaround for urgent deadlines</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
                   <ShieldCheck className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold">Pocket-Friendly Pricing</h4>
-                  <p className="text-[11px] text-muted-foreground">Affordable rates tailored for students</p>
+                  <h4 className="text-xs font-bold">Pocket-Friendly Pricing</h4>
+                  <p className="text-[10px] text-muted-foreground">Affordable rates tailored for students</p>
                 </div>
               </div>
             </div>
@@ -134,34 +133,43 @@ export default function ServicesPage() {
         </section>
 
         {/* Browser & Filters */}
-        <section className="container-px mx-auto max-w-7xl py-10">
-          <div className="flex flex-col gap-6">
+        <section className="container-px mx-auto max-w-7xl py-8">
+          <div className="flex flex-col gap-4">
             {/* Search and Category Pills */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="relative w-full md:max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by skill, poster design, React, 3D printing..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 h-11 rounded-xl bg-card"
+                  className="pl-9 pr-8 h-10 rounded-xl bg-card text-xs border-border/80"
                 />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
 
-              <div className="text-xs text-muted-foreground self-start md:self-center">
-                Showing <strong className="text-foreground">{filtered.length}</strong> available gigs
+              <div className="text-xs text-muted-foreground self-start sm:self-center font-medium">
+                Showing <strong className="text-foreground">{filtered.length}</strong> freelance gigs
               </div>
             </div>
 
             {/* Category Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
-                className={`px-4 py-2 rounded-xl text-xs font-medium shrink-0 transition-all ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all select-none ${
                   selectedCategory === 'all'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-card border border-border/80 text-muted-foreground hover:text-foreground'
                 }`}
               >
                 All Freelance Services
@@ -173,10 +181,10 @@ export default function ServicesPage() {
                     key={cat.slug}
                     type="button"
                     onClick={() => setSelectedCategory(cat.slug)}
-                    className={`px-4 py-2 rounded-xl text-xs font-medium shrink-0 transition-all ${
+                    className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all select-none ${
                       isSelected
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-card border border-border/80 text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {cat.name}
@@ -187,38 +195,33 @@ export default function ServicesPage() {
 
             {/* Gigs Grid */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 py-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-4">
                 {[1, 2, 3, 4].map((n) => (
-                  <div key={n} className="h-72 animate-pulse rounded-2xl bg-secondary/50" />
+                  <div key={n} className="h-64 animate-pulse rounded-2xl bg-secondary/50" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20 text-center bg-card/50">
-                <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                  <Sparkles className="h-7 w-7" />
+              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border py-16 text-center bg-card/40 my-6">
+                <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mb-3">
+                  <Sparkles className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-bold">No freelance gigs found</h3>
-                <p className="mt-1 text-sm text-muted-foreground max-w-md">
+                <h3 className="text-base font-bold">No freelance gigs found</h3>
+                <p className="mt-1 text-xs text-muted-foreground max-w-md">
                   {search || selectedCategory !== 'all'
                     ? 'Try searching with different keywords or switch categories.'
                     : 'Be the first student to offer freelance services on campus!'}
                 </p>
-                <div className="mt-6 flex gap-3">
-                  <Button asChild>
+                <div className="mt-5 flex gap-2">
+                  <Button asChild size="sm" className="rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
                     <Link href="/seller/dashboard/services">
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-4 w-4 mr-1" />
                       Create a Gig
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link href="/services/bounties">
-                      Post a Request
                     </Link>
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 pt-2">
                 {filtered.map((gig) => (
                   <GigCard key={gig.id} gig={gig} />
                 ))}

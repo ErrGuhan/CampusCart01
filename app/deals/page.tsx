@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Flame, Zap, Percent, ArrowRight, Search, Sparkles,
-  ShoppingBag, Check,
+  ShoppingBag, Check, X,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -56,7 +56,6 @@ export default function StudentDealsPage() {
       } else if (dealBracket === 'discounts') {
         matchesBracket = hasDiscount;
       } else {
-        // 'all': either discounted or under 499
         matchesBracket = hasDiscount || activePrice <= 499;
       }
 
@@ -77,100 +76,113 @@ export default function StudentDealsPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-8 sm:py-12 min-h-screen">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen">
         {/* Header */}
-        <div className="rounded-3xl border border-border bg-gradient-to-br from-rose-500/10 via-background to-orange-500/5 p-6 sm:p-10 mb-10">
+        <div className="rounded-3xl border border-rose-500/25 bg-gradient-to-br from-rose-500/10 via-card to-orange-500/5 p-5 sm:p-8 mb-8 shadow-xs">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3.5 py-1 text-xs font-semibold text-rose-600 mb-3">
-              <Flame className="h-4 w-4" />
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/15 px-3 py-0.5 text-xs font-bold text-rose-600 mb-2.5">
+              <Flame className="h-3.5 w-3.5" />
               <span>Campus Student Deals</span>
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+            <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
               Pocket-Friendly Student Bargains
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
               Snag study resources, stationery, handmade accessories, and electronics at student-discounted rates.
             </p>
           </div>
         </div>
 
         {/* Quick Deal Brackets */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
           <button
+            type="button"
             onClick={() => setDealBracket('under99')}
-            className={`p-4 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all active:scale-95 ${
               dealBracket === 'under99'
-                ? 'border-rose-500 bg-rose-500/10 shadow-sm'
-                : 'border-border bg-card hover:bg-accent/40'
+                ? 'border-rose-500 bg-rose-500/10 shadow-xs'
+                : 'border-border/80 bg-card hover:bg-secondary/60'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Budget Pick</span>
-              <Zap className="h-4 w-4 text-rose-500" />
+              <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Budget Pick</span>
+              <Zap className="h-3.5 w-3.5 text-rose-500" />
             </div>
-            <div className="mt-2 text-xl font-bold text-foreground">Under ₹99</div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{under99Count} items</p>
+            <div className="mt-1.5 text-lg sm:text-xl font-extrabold text-foreground">Under ₹99</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{under99Count} items</p>
           </button>
 
           <button
+            type="button"
             onClick={() => setDealBracket('under199')}
-            className={`p-4 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all active:scale-95 ${
               dealBracket === 'under199'
-                ? 'border-orange-500 bg-orange-500/10 shadow-sm'
-                : 'border-border bg-card hover:bg-accent/40'
+                ? 'border-orange-500 bg-orange-500/10 shadow-xs'
+                : 'border-border/80 bg-card hover:bg-secondary/60'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Sweet Spot</span>
-              <Flame className="h-4 w-4 text-orange-500" />
+              <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Sweet Spot</span>
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
             </div>
-            <div className="mt-2 text-xl font-bold text-foreground">Under ₹199</div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{under199Count} items</p>
+            <div className="mt-1.5 text-lg sm:text-xl font-extrabold text-foreground">Under ₹199</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{under199Count} items</p>
           </button>
 
           <button
+            type="button"
             onClick={() => setDealBracket('under499')}
-            className={`p-4 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all active:scale-95 ${
               dealBracket === 'under499'
-                ? 'border-primary bg-primary/10 shadow-sm'
-                : 'border-border bg-card hover:bg-accent/40'
+                ? 'border-primary bg-primary/10 shadow-xs'
+                : 'border-border/80 bg-card hover:bg-secondary/60'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Mid Tier</span>
-              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Mid Tier</span>
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
             </div>
-            <div className="mt-2 text-xl font-bold text-foreground">Under ₹499</div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{under499Count} items</p>
+            <div className="mt-1.5 text-lg sm:text-xl font-extrabold text-foreground">Under ₹499</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{under499Count} items</p>
           </button>
 
           <button
+            type="button"
             onClick={() => setDealBracket('discounts')}
-            className={`p-4 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all active:scale-95 ${
               dealBracket === 'discounts'
-                ? 'border-emerald-500 bg-emerald-500/10 shadow-sm'
-                : 'border-border bg-card hover:bg-accent/40'
+                ? 'border-emerald-500 bg-emerald-500/10 shadow-xs'
+                : 'border-border/80 bg-card hover:bg-secondary/60'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Special Drops</span>
-              <Percent className="h-4 w-4 text-emerald-500" />
+              <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground">Special Drops</span>
+              <Percent className="h-3.5 w-3.5 text-emerald-500" />
             </div>
-            <div className="mt-2 text-xl font-bold text-foreground">Discounted</div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{discountCount} items on sale</p>
+            <div className="mt-1.5 text-lg sm:text-xl font-extrabold text-foreground">Discounted</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{discountCount} on sale</p>
           </button>
         </div>
 
         {/* Search & Reset */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
           <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Search deals by name or category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 rounded-xl"
+              className="pl-9 pr-8 h-10 rounded-xl bg-card text-xs border-border/80"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           <Button
@@ -180,34 +192,34 @@ export default function StudentDealsPage() {
               setDealBracket('all');
               setSearch('');
             }}
-            className="rounded-xl text-xs w-full sm:w-auto"
+            className="rounded-xl text-xs w-full sm:w-auto h-9 font-semibold"
           >
-            View All Deals ({products.length})
+            View All ({products.length})
           </Button>
         </div>
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-secondary/50" />
             ))}
           </div>
         ) : dealProducts.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-16 text-center bg-card/40">
-            <Flame className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="font-display text-lg font-bold">No deals in this price bracket right now</h3>
+          <div className="rounded-3xl border border-dashed border-border p-14 text-center bg-card/40 my-6">
+            <Flame className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+            <h3 className="font-display text-base font-bold">No deals in this price bracket</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               Check out all marketplace items or post a product request with your budget.
             </p>
             <div className="mt-5 flex justify-center gap-3">
-              <Button asChild className="rounded-xl">
+              <Button asChild size="sm" className="rounded-xl text-xs font-bold">
                 <Link href="/marketplace">Explore Marketplace</Link>
               </Button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {dealProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

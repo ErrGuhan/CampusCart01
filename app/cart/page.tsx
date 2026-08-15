@@ -244,7 +244,7 @@ export default function CartPage() {
       </main>
 
       {/* Mobile Sticky Checkout Bar */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border p-3 shadow-2xl animate-in slide-in-from-bottom-2">
+      <div className="md:hidden fixed bottom-14 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border/80 p-2.5 shadow-2xl animate-fade-in-up">
         <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
           <div>
             <span className="text-[10px] text-muted-foreground block">Total ({totalItems} items)</span>
