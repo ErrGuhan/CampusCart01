@@ -1,0 +1,13 @@
+# Google Cloud Firebase App Hosting Configuration for Next.js
+# See: https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: NEXT_PUBLIC_COLLEGE_EMAIL_DOMAIN
+    value: svcet.ac.in
