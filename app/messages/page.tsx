@@ -38,59 +38,7 @@ export default function MessagesPage() {
   const loadUserConversations = useCallback(async () => {
     if (!user) return;
 
-    let convs = await getConversations(user.uid);
-    if (convs.length === 0) {
-      // Check if user is Guhan or regular student to avoid self-chat
-      const isGuhan =
-        user.uid === 'seller-guhan' ||
-        user.email?.toLowerCase().includes('guhan') ||
-        profile?.username === 'guhan';
-
-      const peerId = isGuhan ? 'student-priya' : 'seller-guhan';
-      const peerName = isGuhan ? 'Priya R (ECE Student)' : 'Guhan M (Founder & Admin)';
-      const peerAvatar = isGuhan
-        ? 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300'
-        : 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300';
-
-      const sampleConv: Conversation = {
-        id: `conv_${user.uid}_${peerId}`,
-        participantIds: [user.uid, peerId],
-        participantNames: {
-          [user.uid]: profile?.display_name || user.displayName || 'Student',
-          [peerId]: peerName,
-        },
-        participantAvatars: {
-          [user.uid]: profile?.avatar_url || '',
-          [peerId]: peerAvatar,
-        },
-        lastMessage: isGuhan
-          ? 'Hi Guhan! I am interested in the Mini Drafter for my Engineering Graphics class.'
-          : 'Welcome to CampusCart! Feel free to reach out if you need assistance with your store.',
-        lastMessageTimestamp: new Date().toISOString(),
-        unreadCount: { [user.uid]: 1 },
-      };
-
-      const sampleMsg: ChatMessage = {
-        id: 'msg_welcome',
-        conversationId: sampleConv.id,
-        senderId: peerId,
-        senderName: peerName.split(' ')[0],
-        senderAvatar: peerAvatar,
-        recipientId: user.uid,
-        text: isGuhan
-          ? 'Hi Guhan! I am interested in the Mini Drafter for my Engineering Graphics class. Is it still available?'
-          : 'Hey! Welcome to CampusCart. Feel free to list your products, offer freelance gigs, or chat about campus collaborations.',
-        createdAt: new Date().toISOString(),
-      };
-
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('campuscart_conversations', JSON.stringify([sampleConv]));
-          localStorage.setItem(`campuscart_msgs_${sampleConv.id}`, JSON.stringify([sampleMsg]));
-        } catch {}
-      }
-      convs = [sampleConv];
-    }
+    const convs = await getConversations(user.uid);
 
     // Sort with newest messages on top
     const sorted = [...convs].sort((a, b) => {
@@ -103,7 +51,7 @@ export default function MessagesPage() {
     if (!activeConvId && sorted.length > 0) {
       setActiveConvId(sorted[0].id);
     }
-  }, [user, profile, activeConvId]);
+  }, [user, activeConvId]);
 
   useEffect(() => {
     loadUserConversations();
