@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Check, ChevronRight, MapPin, Truck, CreditCard,
   Shield, Loader2, ArrowLeft, ShoppingBag, Lock,
@@ -147,6 +148,9 @@ export default function CheckoutPage() {
       paymentMethod: paymentMethod === 'upi' ? 'UPI' : 'Card',
       transactionId: generateTransactionId(),
       createdAt: new Date().toISOString(),
+      buyerId: user?.uid || 'guest',
+      buyerEmail: user?.email || '',
+      buyerName: user?.displayName || user?.email?.split('@')[0] || 'Student',
     };
 
     saveOrder(order);
@@ -156,6 +160,7 @@ export default function CheckoutPage() {
         ...order,
         buyer_id: user?.uid || 'guest',
         buyer_email: user?.email || '',
+        buyer_name: user?.displayName || user?.email?.split('@')[0] || 'Student',
       });
     } catch (err) {
       console.warn('Firestore order sync notice:', err);
@@ -217,8 +222,8 @@ export default function CheckoutPage() {
                   const itemPrice = item.discountPrice ?? item.price;
                   return (
                     <div key={item.id} className="flex gap-4 rounded-xl border border-border bg-card p-4">
-                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
+                        <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
                       </div>
                       <div className="flex flex-1 flex-col">
                         <Link href={`/products/${item.slug}`} className="text-sm font-semibold hover:text-primary transition-colors line-clamp-1">
@@ -370,11 +375,15 @@ export default function CheckoutPage() {
                       <div className="flex flex-col sm:flex-row items-center gap-6">
                         {/* Dynamic Live QR Code */}
                         <div className="relative bg-white p-3 rounded-2xl border shadow-md flex flex-col items-center shrink-0">
-                          <img
-                            src={qrCodeUrl}
-                            alt="Scan UPI QR Code to Pay"
-                            className="h-44 w-44 object-contain rounded-lg"
-                          />
+                          <div className="relative h-44 w-44">
+                            <Image
+                              src={qrCodeUrl}
+                              alt="Scan UPI QR Code to Pay"
+                              fill
+                              unoptimized
+                              className="object-contain rounded-lg"
+                            />
+                          </div>
                           <span className="mt-1.5 text-[10px] font-bold text-muted-foreground tracking-wider uppercase">
                             Scan to Pay ₹{total}
                           </span>
@@ -510,8 +519,8 @@ export default function CheckoutPage() {
                 <p className="text-xs font-medium text-muted-foreground">Items ({items.length})</p>
                 {items.map((item) => (
                   <div key={item.id} className="flex items-center gap-2 text-xs">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-secondary/50">
-                      <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-secondary/50">
+                      <Image src={item.image} alt={item.name} fill sizes="40px" className="object-cover" />
                     </div>
                     <span className="line-clamp-1 text-muted-foreground">{item.name} × {item.quantity}</span>
                   </div>

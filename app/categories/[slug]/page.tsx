@@ -21,7 +21,20 @@ export default async function CategoryDetailPage({ params }: Props) {
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
   const categories = await getCategories();
-  const category = categories.find((c) => c.slug === slug);
+  const normalizedSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const category =
+    categories.find(
+      (c) =>
+        c.slug.toLowerCase() === normalizedSlug ||
+        c.slug.toLowerCase() === slug.toLowerCase() ||
+        c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedSlug
+    ) ||
+    DEFAULT_CATEGORIES.find(
+      (c) =>
+        c.slug.toLowerCase() === normalizedSlug ||
+        c.slug.toLowerCase() === slug.toLowerCase() ||
+        c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === normalizedSlug
+    );
 
   if (!category) notFound();
 

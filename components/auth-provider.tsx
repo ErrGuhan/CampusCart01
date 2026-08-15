@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { secureApiRequest } from '@/lib/api-client';
 
 export const ADMIN_EMAILS = [
   'guhan24td0781@svcet.ac.in',
@@ -34,6 +35,7 @@ export type Profile = {
   avatar_url: string | null;
   is_seller: boolean;
   is_verified: boolean;
+  trustScore?: number;
 };
 
 export type AuthUser = {
@@ -61,10 +63,6 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
-const STORAGE_KEY_USER = 'campuscart_auth_user';
-const STORAGE_KEY_PROFILE = 'campuscart_auth_profile';
-const STORAGE_KEY_ACCOUNTS = 'campuscart_registered_accounts';
-
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
@@ -75,30 +73,6 @@ const AuthContext = createContext<AuthContextType>({
   updateUserProfile: async () => {},
   signOut: async () => {},
 });
-
-function getStoredAccounts(): Profile[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const data = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveStoredAccount(profile: Profile) {
-  if (typeof window === 'undefined') return;
-  try {
-    const existing = getStoredAccounts();
-    const idx = existing.findIndex((a) => a.email.toLowerCase() === profile.email.toLowerCase());
-    if (idx >= 0) {
-      existing[idx] = profile;
-    } else {
-      existing.push(profile);
-    }
-    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(existing));
-  } catch {}
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -113,64 +87,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    // 1. Initial local restore
-    const localUser = localStorage.getItem(STORAGE_KEY_USER);
-    const localProfile = localStorage.getItem(STORAGE_KEY_PROFILE);
-
-    if (localUser && localProfile) {
+    // 1. Check secure cookie-backed session via backend /api/auth/me
+    async function initSession() {
       try {
-        const u = JSON.parse(localUser);
-        const p = JSON.parse(localProfile);
-        if (isAdminEmail(u?.email) || isAdminEmail(p?.email)) {
-          p.role = 'admin';
-        }
-        setUser(u);
-        setProfile(p);
-        setLoading(false);
-      } catch {
-        setUser(null);
-        setProfile(null);
-      }
-    }
-
-    // 2. Firebase live Auth listener
-    try {
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
+        const sessionRes = await secureApiRequest('/auth/me');
+        if (sessionRes.success && sessionRes.user) {
+          const apiUser = sessionRes.user;
           const authUser: AuthUser = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
+            uid: apiUser._id || apiUser.id,
+            email: apiUser.email,
+            displayName: apiUser.displayName,
+          };
+          const userProfile: Profile = {
+            id: apiUser._id || apiUser.id,
+            email: apiUser.email,
+            display_name: apiUser.displayName,
+            username: apiUser.username || 'student',
+            role: apiUser.role || 'student',
+            department: apiUser.department || null,
+            year: apiUser.year || null,
+            bio: apiUser.bio || null,
+            skills: apiUser.skills || [],
+            avatar_url: apiUser.avatarUrl || null,
+            is_seller: true,
+            is_verified: apiUser.isVerified ?? false,
+            trustScore: apiUser.trustScore ?? 50.0,
           };
           setUser(authUser);
-          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authUser));
-          await fetchProfile(firebaseUser.uid, firebaseUser.email ?? '');
-        } else {
-          const uStr = localStorage.getItem(STORAGE_KEY_USER);
-          const pStr = localStorage.getItem(STORAGE_KEY_PROFILE);
-          if (uStr && pStr) {
-            try {
-              const u = JSON.parse(uStr);
-              const p = JSON.parse(pStr);
-              if (isAdminEmail(u?.email) || isAdminEmail(p?.email)) {
-                p.role = 'admin';
-              }
-              setUser(u);
-              setProfile(p);
-            } catch {}
+          setProfile(userProfile);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        // Fall through to Firebase auth listener
+      }
+
+      // 2. Firebase live Auth listener
+      try {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            const authUser: AuthUser = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+            };
+            setUser(authUser);
+            await fetchProfile(firebaseUser.uid, firebaseUser.email ?? '');
           } else {
             setUser(null);
             setProfile(null);
           }
-        }
-        setLoading(false);
-      });
+          setLoading(false);
+        });
 
-      return () => unsubscribe();
-    } catch (err) {
-      console.warn('Firebase auth listener notice:', err);
+        return () => unsubscribe();
+      } catch (err) {
+        console.warn('Auth initialization notice:', err);
+      }
+
+      // 3. Fallback stored session check
+      if (typeof window !== 'undefined') {
+        try {
+          const storedFallback = localStorage.getItem('campuscart_fallback_user');
+          if (storedFallback) {
+            const parsed = JSON.parse(storedFallback);
+            if (parsed?.user && parsed?.profile) {
+              setUser(parsed.user);
+              setProfile(parsed.profile);
+            }
+          }
+        } catch {}
+      }
+
       setLoading(false);
     }
+
+    initSession();
   }, []);
 
   async function fetchProfile(userId: string, userEmail: string) {
@@ -195,24 +187,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar_url: data.avatar_url || data.avatarUrl || null,
           is_seller: data.is_seller ?? true,
           is_verified: isUserAdmin ? true : (data.is_verified ?? true),
+          trustScore: data.trustScore ?? 50.0,
         };
         setProfile(p);
-        localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(p));
         return;
       }
     } catch (err) {
       console.warn('Firestore profile fetch notice:', err);
-    }
-
-    // Fallback profile if not in Firestore
-    const stored = localStorage.getItem(STORAGE_KEY_PROFILE);
-    if (stored) {
-      try {
-        const p = JSON.parse(stored);
-        if (isUserAdmin) p.role = 'admin';
-        setProfile(p);
-        return;
-      } catch {}
     }
 
     const fallback: Profile = {
@@ -228,9 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       avatar_url: isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null,
       is_seller: true,
       is_verified: true,
+      trustScore: 85.0,
     };
     setProfile(fallback);
-    localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(fallback));
     setLoading(false);
   }
 
@@ -238,6 +219,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const trimmedEmail = email.trim();
     const isUserAdmin = isAdminEmail(trimmedEmail);
 
+    // 1. Attempt secure backend API login (sets HttpOnly cookies)
+    try {
+      const backendRes = await secureApiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: trimmedEmail, password }),
+      });
+
+      if (backendRes.success && backendRes.user) {
+        const u: AuthUser = {
+          uid: backendRes.user.id || backendRes.user._id,
+          email: backendRes.user.email,
+          displayName: backendRes.user.displayName,
+        };
+        setUser(u);
+        await fetchProfile(u.uid, trimmedEmail);
+        return { success: true };
+      }
+    } catch (err) {
+      // Fall through to Firebase auth
+    }
+
+    // 2. Firebase sign-in fallback
     try {
       const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const u: AuthUser = {
@@ -246,13 +249,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         displayName: cred.user.displayName,
       };
       setUser(u);
-      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(u));
       await fetchProfile(cred.user.uid, cred.user.email ?? trimmedEmail);
       return { success: true };
     } catch (err: any) {
       console.warn('Firebase signIn notice:', err);
 
-      // Handle invalid API key / demo mode / offline seamlessly
       const isConfigIssue =
         err.code === 'auth/api-key-not-valid' ||
         err.code === 'auth/network-request-failed' ||
@@ -261,12 +262,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         err.message?.includes('API key');
 
       if (isConfigIssue) {
-        const accounts = getStoredAccounts();
-        const existing = accounts.find((a) => a.email.toLowerCase() === trimmedEmail.toLowerCase());
-
-        const uid = existing ? existing.id : 'usr_' + Math.random().toString(36).slice(2, 10);
-        const displayName = isUserAdmin ? 'Guhan M' : (existing ? existing.display_name : trimmedEmail.split('@')[0]);
-        const username = isUserAdmin ? 'guhan' : (existing ? existing.username : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const uid = 'usr_' + Math.random().toString(36).slice(2, 10);
+        const displayName = isUserAdmin ? 'Guhan M' : trimmedEmail.split('@')[0];
+        const username = isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
 
         const localUser: AuthUser = {
           uid,
@@ -279,20 +277,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: trimmedEmail,
           display_name: displayName,
           username,
-          role: isUserAdmin ? 'admin' : (existing?.role || 'student'),
-          department: existing?.department || (isUserAdmin ? 'Computer Science & Engineering' : 'Engineering'),
-          year: existing?.year || (isUserAdmin ? '4th Year' : 'Student'),
-          bio: existing?.bio || (isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null),
-          skills: existing?.skills || (isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : []),
-          avatar_url: existing?.avatar_url || (isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null),
-          is_seller: existing?.is_seller ?? true,
+          role: isUserAdmin ? 'admin' : 'student',
+          department: isUserAdmin ? 'Computer Science & Engineering' : 'Engineering',
+          year: isUserAdmin ? '4th Year' : 'Student',
+          bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
+          skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
+          avatar_url: isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null,
+          is_seller: true,
           is_verified: true,
+          trustScore: 90.0,
         };
+
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user: localUser, profile: localProfile }));
+          } catch {}
+        }
 
         setUser(localUser);
         setProfile(localProfile);
-        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(localUser));
-        localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(localProfile));
         return { success: true };
       }
 
@@ -308,8 +311,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const trimmedEmail = email.trim();
     const trimmedName = displayName.trim();
     const isUserAdmin = isAdminEmail(trimmedEmail);
-    const username = isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
 
+    // 1. Attempt secure backend API registration
+    try {
+      const backendRes = await secureApiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password,
+          displayName: trimmedName,
+          department,
+          year,
+        }),
+      });
+
+      if (backendRes.success && backendRes.user) {
+        const u: AuthUser = {
+          uid: backendRes.user.id || backendRes.user._id,
+          email: backendRes.user.email,
+          displayName: backendRes.user.displayName,
+        };
+        setUser(u);
+        await fetchProfile(u.uid, trimmedEmail);
+        return { success: true };
+      }
+    } catch (e) {
+      // Fall through to Firebase auth
+    }
+
+    // 2. Firebase sign-up fallback
     try {
       const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
       await updateFirebaseProfile(cred.user, { displayName: trimmedName });
@@ -318,7 +348,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: cred.user.uid,
         email: trimmedEmail,
         display_name: trimmedName,
-        username,
+        username: isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
         role: isUserAdmin ? 'admin' : 'student',
         department: department?.trim() || 'Computer Science & Engineering',
         year: year?.trim() || '2nd Year',
@@ -327,6 +357,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         avatar_url: null,
         is_seller: true,
         is_verified: isUserAdmin ? true : false,
+        trustScore: 50.0,
       };
 
       try {
@@ -335,7 +366,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('Profile Firestore save notice:', e);
       }
 
-      saveStoredAccount(newProfile);
       await fetchProfile(cred.user.uid, trimmedEmail);
       return { success: true };
     } catch (err: any) {
@@ -360,7 +390,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: uid,
           email: trimmedEmail,
           display_name: trimmedName,
-          username,
+          username: isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
           role: isUserAdmin ? 'admin' : 'student',
           department: department?.trim() || 'Computer Science & Engineering',
           year: year?.trim() || '2nd Year',
@@ -369,13 +399,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar_url: isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null,
           is_seller: true,
           is_verified: true,
+          trustScore: 50.0,
         };
 
-        saveStoredAccount(localProfile);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user: localUser, profile: localProfile }));
+          } catch {}
+        }
+
         setUser(localUser);
         setProfile(localProfile);
-        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(localUser));
-        localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(localProfile));
         return { success: true };
       }
 
@@ -396,10 +430,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: isUserAdmin ? 'admin' : (data.role || profile.role),
     };
     setProfile(updated);
-    localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(updated));
-    saveStoredAccount(updated);
 
     if (typeof window !== 'undefined') {
+      try {
+        if (user) {
+          localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user, profile: updated }));
+        }
+      } catch {}
       window.dispatchEvent(new CustomEvent('campuscart_seller_updated'));
     }
 
@@ -412,10 +449,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function handleSignOut() {
     try {
+      // Clear secure cookies on backend
+      await secureApiRequest('/auth/logout', { method: 'POST' });
+    } catch {}
+
+    try {
       await firebaseSignOut(auth);
     } catch {}
-    localStorage.removeItem(STORAGE_KEY_USER);
-    localStorage.removeItem(STORAGE_KEY_PROFILE);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('campuscart_fallback_user');
+      } catch {}
+    }
+
     setUser(null);
     setProfile(null);
   }

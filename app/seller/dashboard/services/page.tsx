@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Plus, Search, Pencil, Trash2, Clock, Sparkles,
   Eye, CheckCircle2, AlertCircle, Loader2, DollarSign,
@@ -369,8 +370,8 @@ export default function SellerServicesPage() {
                         className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-accent/10 transition-colors"
                       >
                         <div className="flex items-center gap-4 min-w-0">
-                          <div className="h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary/40 border border-border">
-                            <img src={gig.coverImage} alt={gig.title} className="h-full w-full object-cover" />
+                          <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary/40 border border-border">
+                            <Image src={gig.coverImage} alt={gig.title} fill sizes="80px" className="object-cover" />
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 mb-1">

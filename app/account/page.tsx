@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Package, ShoppingBag, Heart, TrendingUp,
   ChevronRight, ArrowRight, Store, CheckCircle2,
@@ -174,9 +175,9 @@ export default function AccountDashboardPage() {
                         {order.items.slice(0, 3).map((item) => (
                           <div
                             key={item.id}
-                            className="h-10 w-10 overflow-hidden rounded-lg border-2 border-card bg-secondary/50 shrink-0"
+                            className="relative h-10 w-10 overflow-hidden rounded-lg border-2 border-card bg-secondary/50 shrink-0"
                           >
-                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                            <Image src={item.image} alt={item.name} fill sizes="40px" className="object-cover" />
                           </div>
                         ))}
                       </div>
@@ -234,8 +235,8 @@ export default function AccountDashboardPage() {
                         href={`/products/${product.slug}`}
                         className="group flex gap-3 rounded-lg border border-border p-3 transition-all hover:border-primary/20 hover:bg-accent/30"
                       >
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
-                          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
+                          <Image src={product.images[0]} alt={product.name} fill sizes="56px" className="object-cover" />
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">

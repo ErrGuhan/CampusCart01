@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   MessageSquare, Send, X, Loader2, Sparkles,
   Check, Handshake, DollarSign, ArrowRight, LogIn,
@@ -338,7 +339,9 @@ export function ChatDialog({
           <div className="flex items-center justify-between px-4 py-2 bg-primary/5 border-b border-primary/10 text-xs">
             <div className="flex items-center gap-2 min-w-0">
               {product.image && (
-                <img src={product.image} alt={product.name} className="h-7 w-7 rounded object-cover border" />
+                <div className="relative h-7 w-7 rounded overflow-hidden border shrink-0">
+                  <Image src={product.image} alt={product.name} fill sizes="28px" className="object-cover" />
+                </div>
               )}
               <span className="font-medium truncate max-w-[200px]">{product.name}</span>
               <span className="font-bold text-primary">₹{product.price}</span>

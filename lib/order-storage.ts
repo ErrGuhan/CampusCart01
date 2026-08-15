@@ -40,6 +40,9 @@ export type Order = {
   paymentMethod: string;
   transactionId: string;
   createdAt: string;
+  buyerId?: string;
+  buyerEmail?: string;
+  buyerName?: string;
 };
 
 export const CAMPUS_PICKUP_POINTS = [

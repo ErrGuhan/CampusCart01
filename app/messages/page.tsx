@@ -133,8 +133,8 @@ export default function MessagesPage() {
     const otherId = activeConv.participantIds.find((id) => id !== user.uid) || 'seller-guhan';
     return {
       id: otherId,
-      name: activeConv.participantNames[otherId] || 'Student Peer',
-      avatar: activeConv.participantAvatars[otherId] || '',
+      name: activeConv.participantNames?.[otherId] || 'Student Peer',
+      avatar: activeConv.participantAvatars?.[otherId] || '',
     };
   }, [activeConv, user]);
 

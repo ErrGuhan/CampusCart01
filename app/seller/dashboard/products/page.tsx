@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Plus, Search, Pencil, Trash2, Package, Eye,
   AlertCircle, X, Loader2,
@@ -40,7 +41,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { getAllProducts, getMyProducts, getCategories } from '@/lib/firebase-queries';
+import { getAllProductsAdmin, getMyProducts, getCategories } from '@/lib/firebase-queries';
 import type { Category, Product, ProductStatus } from '@/lib/types';
 
 type SellerProduct = Product & { _editing?: boolean };
@@ -74,9 +75,9 @@ export default function SellerProductsPage() {
 
   const [sellerProducts, setSellerProducts] = useState<SellerProduct[]>([]);
 
-  useEffect(() => {
+  const loadSellerProducts = () => {
     if (user?.uid) {
-      getAllProducts().then((all) => {
+      getAllProductsAdmin().then((all) => {
         const username = profile?.username?.toLowerCase() || '';
         const isGuhan = username.includes('guhan') || user?.email?.toLowerCase().includes('guhan');
         const myProds = all.filter(
@@ -87,6 +88,22 @@ export default function SellerProductsPage() {
         );
         setSellerProducts(myProds);
       });
+    }
+  };
+
+  useEffect(() => {
+    loadSellerProducts();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_product_updated', loadSellerProducts);
+      window.addEventListener('storage', loadSellerProducts);
+      window.addEventListener('focus', loadSellerProducts);
+
+      return () => {
+        window.removeEventListener('campuscart_product_updated', loadSellerProducts);
+        window.removeEventListener('storage', loadSellerProducts);
+        window.removeEventListener('focus', loadSellerProducts);
+      };
     }
   }, [user?.uid, profile?.username]);
 
@@ -437,8 +454,8 @@ export default function SellerProductsPage() {
                     return (
                       <div key={product.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-accent/20 transition-colors">
                         <div className="col-span-5 flex items-center gap-3">
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
-                            <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
+                            <Image src={product.images[0]} alt={product.name} fill sizes="48px" className="object-cover" />
                           </div>
                           <div className="min-w-0">
                             <Link href={`/products/${product.slug}`} className="text-sm font-medium hover:text-primary transition-colors line-clamp-1">

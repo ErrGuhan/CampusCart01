@@ -12,10 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShareProfileButton } from '@/components/share-profile-button';
 import { getSellerByUsername, getProductsBySeller, getGigsBySeller } from '@/lib/firebase-queries';
 
-type Props = { params: Promise<{ username: string }> };
+type Props = { params: { username: string } | Promise<{ username: string }> };
 
 export default async function SellerProfilePage({ params }: Props) {
-  const { username } = await params;
+  const resolved = await params;
+  const username = resolved.username;
   const seller = await getSellerByUsername(username);
 
   if (!seller) notFound();

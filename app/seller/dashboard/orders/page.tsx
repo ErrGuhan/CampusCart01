@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ShoppingBag, Search, ChevronRight, MapPin, Truck,
   Package, Eye, ShieldCheck, KeyRound, Check, Loader2,
@@ -244,9 +245,13 @@ export default function SellerOrdersPage() {
             ) : (
               <div className="space-y-3">
                 {filtered.map((order) => {
-                  const sellerItems = order.items.filter(
-                    (i) => i.sellerUsername === profile?.username
-                  );
+                  const sellerItems = order.items.filter((i) => {
+                    const itemUser = i.sellerUsername?.toLowerCase() || '';
+                    return (
+                      itemUser === username ||
+                      (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
+                    );
+                  });
                   const sellerTotal = sellerItems.reduce(
                     (s, i) => s + (i.discountPrice ?? i.price) * i.quantity, 0
                   );
@@ -302,8 +307,8 @@ export default function SellerOrdersPage() {
                       <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                         {sellerItems.map((item) => (
                           <div key={item.id} className="flex items-center gap-2 rounded-lg border border-border p-2 shrink-0">
-                            <div className="h-10 w-10 overflow-hidden rounded-md bg-secondary/50">
-                              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                            <div className="relative h-10 w-10 overflow-hidden rounded-md bg-secondary/50 shrink-0">
+                              <Image src={item.image} alt={item.name} fill sizes="40px" className="object-cover" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-medium line-clamp-1 max-w-[140px]">{item.name}</p>

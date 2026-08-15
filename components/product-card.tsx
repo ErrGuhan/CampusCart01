@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, Star, ShoppingBag, BadgeCheck, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +15,10 @@ const WISHLIST_KEY = 'campuscart-wishlist';
 type ProductCardProps = {
   product: Product;
   className?: string;
+  priority?: boolean;
 };
 
-export function ProductCard({ product, className }: ProductCardProps) {
+export function ProductCard({ product, className, priority = false }: ProductCardProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -73,13 +75,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
         className
       )}
     >
-      {/* Product Image & Badges */}
-      <div className="relative aspect-square overflow-hidden bg-secondary/50 select-none">
-        <img
-          src={product.images[0]}
+      {/* Optimized Product Image Container with zero CLS layout reservation */}
+      <div className="relative aspect-square w-full overflow-hidden bg-secondary/50 select-none">
+        <Image
+          src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          priority={priority}
         />
 
         {/* Condition & Discount Badges */}
@@ -158,7 +162,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           <div className="flex flex-col min-w-0">
             {hasDiscount ? (
               <div className="flex items-baseline gap-1 flex-wrap">
-                <span className="text-sm sm:text-base font-extrabold text-foreground">
+                <span className="text-sm sm:base font-extrabold text-foreground">
                   ₹{product.discountPrice}
                 </span>
                 <span className="text-[10px] text-muted-foreground line-through">

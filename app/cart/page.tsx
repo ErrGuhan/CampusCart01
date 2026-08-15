@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -87,10 +88,12 @@ export default function CartPage() {
                     href={`/products/${item.slug}`}
                     className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-secondary/50"
                   >
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="96px"
+                      className="object-cover"
                     />
                   </Link>
 

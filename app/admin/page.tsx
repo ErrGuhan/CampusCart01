@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ShieldCheck, ShieldAlert, CheckCircle2, XCircle, Clock,
@@ -436,11 +437,13 @@ export default function AdminDashboardPage() {
                       >
                         <div className="flex flex-col md:flex-row md:items-start gap-5">
                           {/* Image */}
-                          <div className="h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-secondary/50 border border-border">
-                            <img
-                              src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'}
+                          <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-secondary/50 border border-border">
+                            <Image
+                              src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
                               alt={product.name}
-                              className="h-full w-full object-cover"
+                              fill
+                              sizes="128px"
+                              className="object-cover"
                             />
                           </div>
 
@@ -668,8 +671,8 @@ export default function AdminDashboardPage() {
                         }`}
                       >
                         <div className="flex flex-col md:flex-row md:items-start gap-5">
-                          <div className="h-28 w-40 shrink-0 overflow-hidden rounded-xl bg-secondary/50 border border-border">
-                            <img src={gig.coverImage} alt={gig.title} className="h-full w-full object-cover" />
+                          <div className="relative h-28 w-40 shrink-0 overflow-hidden rounded-xl bg-secondary/50 border border-border">
+                            <Image src={gig.coverImage} alt={gig.title} fill sizes="160px" className="object-cover" />
                           </div>
 
                           <div className="flex-1 min-w-0">

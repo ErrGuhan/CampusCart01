@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Sparkles, MessageSquare, X, Send, Bot,
   ShoppingBag, ArrowRight, CornerDownLeft, ExternalLink,
@@ -186,11 +187,15 @@ export function CampusCartAIAssistant() {
                           onClick={() => setOpen(false)}
                           className="flex items-center gap-2.5 p-2 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-colors"
                         >
-                          <img
-                            src={p.images[0]}
-                            alt={p.name}
-                            className="h-10 w-10 rounded-lg object-cover bg-secondary shrink-0"
-                          />
+                          <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-secondary shrink-0">
+                            <Image
+                              src={p.images[0]}
+                              alt={p.name}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-xs truncate text-foreground">{p.name}</h4>
                             <p className="text-[11px] text-primary font-bold">
@@ -213,11 +218,15 @@ export function CampusCartAIAssistant() {
                           onClick={() => setOpen(false)}
                           className="flex items-center gap-2.5 p-2 rounded-xl border border-border/80 bg-card hover:border-indigo-500/40 transition-colors"
                         >
-                          <img
-                            src={g.coverImage}
-                            alt={g.title}
-                            className="h-10 w-10 rounded-lg object-cover bg-secondary shrink-0"
-                          />
+                          <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-secondary shrink-0">
+                            <Image
+                              src={g.coverImage}
+                              alt={g.title}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-xs truncate text-foreground">{g.title}</h4>
                             <p className="text-[11px] text-indigo-600 font-bold">

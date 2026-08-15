@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams, notFound } from 'next/navigation';
 import {
   Check, ChevronRight, MapPin, Truck, CreditCard,
@@ -185,9 +186,9 @@ export default function OrderDetailPage() {
                     <div key={item.id} className="flex gap-4">
                       <Link
                         href={`/products/${item.slug}`}
-                        className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary/50"
+                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary/50"
                       >
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
                       </Link>
                       <div className="flex flex-1 flex-col">
                         <Link href={`/products/${item.slug}`} className="text-sm font-medium hover:text-primary transition-colors line-clamp-1">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Clock, RotateCcw, CheckCircle2, Star, ShieldCheck,
   Send, Sparkles, MessageSquare, ArrowLeft, Loader2,
@@ -198,10 +199,13 @@ export default function GigDetailPage() {
 
               {/* Cover Image */}
               <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-border bg-secondary/30">
-                <img
-                  src={gig.coverImage}
+                <Image
+                  src={gig.coverImage || 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg'}
                   alt={gig.title}
-                  className="h-full w-full object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 60vw"
+                  className="object-cover"
                 />
               </div>
 

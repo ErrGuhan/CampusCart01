@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Calendar, MapPin, Clock, Users, ExternalLink,
   Sparkles, CheckCircle2, Award, Search, Tag,
@@ -151,8 +152,8 @@ export default function CampusEventsPage() {
                   className="rounded-3xl border border-border bg-card overflow-hidden transition-all hover:border-primary/40 hover:shadow-md flex flex-col"
                 >
                   <div className="aspect-[16/9] w-full overflow-hidden bg-secondary/50 relative">
-                    <img src={event.image} alt={event.title} className="h-full w-full object-cover" />
-                    <Badge className="absolute top-3 left-3 bg-background/90 text-foreground backdrop-blur capitalize text-xs">
+                    <Image src={event.image} alt={event.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                    <Badge className="absolute top-3 left-3 bg-background/90 text-foreground backdrop-blur capitalize text-xs z-10">
                       {event.category}
                     </Badge>
                     <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-bold">

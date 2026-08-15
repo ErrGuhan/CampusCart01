@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Star, Heart, ShoppingBag, Minus, Plus, Truck, MapPin,
@@ -175,13 +176,16 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
           <div className="space-y-3">
             <div className="relative overflow-hidden rounded-2xl border border-border bg-secondary/30 aspect-square">
-              <img
-                src={product.images[selectedImage]}
+              <Image
+                src={product.images[selectedImage] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
                 alt={product.name}
-                className="h-full w-full object-cover transition-all duration-300"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition-all duration-300"
               />
               {hasDiscount && (
-                <Badge variant="destructive" className="absolute top-3 left-3 shadow-md text-xs">
+                <Badge variant="destructive" className="absolute top-3 left-3 shadow-md text-xs z-10">
                   {discountPercent}% OFF
                 </Badge>
               )}
@@ -212,7 +216,13 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
                       selectedImage === idx ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground/30'
                     }`}
                   >
-                    <img src={img} alt={`${product.name} view ${idx + 1}`} className="h-full w-full object-cover" />
+                    <Image
+                      src={img}
+                      alt={`${product.name} view ${idx + 1}`}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
                   </button>
                 ))}
               </div>

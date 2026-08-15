@@ -2,10 +2,11 @@ import { notFound } from 'next/navigation';
 import { getProductBySlug, getRelatedProducts, getProductReviews } from '@/lib/firebase-queries';
 import { ProductDetailClient } from '@/components/product-detail-client';
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: { slug: string } | Promise<{ slug: string }> };
 
 export default async function ProductDetailPage({ params }: Props) {
-  const { slug } = await params;
+  const resolved = await params;
+  const slug = resolved.slug;
   const product = await getProductBySlug(slug);
 
   if (!product) notFound();

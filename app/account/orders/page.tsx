@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Package, ChevronRight, MapPin, Truck,
   ShoppingBag, ArrowRight,
@@ -152,9 +153,9 @@ export default function OrdersPage() {
                   {order.items.slice(0, 5).map((item) => (
                     <div
                       key={item.id}
-                      className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary/50"
+                      className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary/50"
                     >
-                      <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                      <Image src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
                     </div>
                   ))}
                   {order.items.length > 5 && (

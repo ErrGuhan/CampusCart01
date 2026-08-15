@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import {
   Upload, X, Loader2, Image as ImageIcon, CheckCircle2,
   AlertCircle, Link2, Sparkles, RefreshCw, Camera,
@@ -25,7 +26,7 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.82): Promi
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let width = img.width;
@@ -242,7 +243,14 @@ export function ImageUploader({
       ) : value ? (
         <div className="relative group overflow-hidden rounded-2xl border border-border bg-card p-3 flex items-center gap-3.5 shadow-sm">
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-secondary/40">
-            <img src={value} alt="Product Preview" className="h-full w-full object-cover" />
+            <Image
+              src={value}
+              alt="Product Preview"
+              fill
+              sizes="80px"
+              className="object-cover"
+              unoptimized={value.startsWith('data:')}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold mb-1">

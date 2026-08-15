@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Package, TrendingUp, IndianRupee, ShoppingCart,
   Star, ArrowRight, Plus, AlertCircle, Eye,
@@ -18,7 +19,7 @@ import {
   getOrders, statusLabels, statusColors,
   type Order,
 } from '@/lib/order-storage';
-import { getAllProducts, getAllGigs } from '@/lib/firebase-queries';
+import { getAllProductsAdmin, getAllGigsAdmin } from '@/lib/firebase-queries';
 import type { Product, ServiceGig } from '@/lib/types';
 
 export default function SellerDashboardPage() {
@@ -31,7 +32,7 @@ export default function SellerDashboardPage() {
   // Refresh all seller stats
   const refreshData = useCallback(() => {
     setOrders(getOrders());
-    Promise.all([getAllProducts(), getAllGigs()]).then(([prods, gigs]) => {
+    Promise.all([getAllProductsAdmin(), getAllGigsAdmin()]).then(([prods, gigs]) => {
       setAllProducts(prods);
       setAllGigs(gigs);
       setLoaded(true);
@@ -41,14 +42,18 @@ export default function SellerDashboardPage() {
   useEffect(() => {
     refreshData();
 
-    // Auto-update on order updates or storage changes
+    // Auto-update on order updates, product updates, gig updates or storage changes
     if (typeof window !== 'undefined') {
       window.addEventListener('campuscart_order_updated', refreshData);
+      window.addEventListener('campuscart_product_updated', refreshData);
+      window.addEventListener('campuscart_gig_updated', refreshData);
       window.addEventListener('storage', refreshData);
       window.addEventListener('focus', refreshData);
 
       return () => {
         window.removeEventListener('campuscart_order_updated', refreshData);
+        window.removeEventListener('campuscart_product_updated', refreshData);
+        window.removeEventListener('campuscart_gig_updated', refreshData);
         window.removeEventListener('storage', refreshData);
         window.removeEventListener('focus', refreshData);
       };
@@ -425,7 +430,9 @@ export default function SellerDashboardPage() {
                   {lowStockProducts.map((p) => (
                     <div key={p.id} className="flex items-center justify-between bg-card p-2.5 rounded-xl border border-border text-xs">
                       <div className="flex items-center gap-2 truncate">
-                        <img src={p.images[0]} alt={p.name} className="h-7 w-7 rounded object-cover" />
+                        <div className="relative h-7 w-7 rounded overflow-hidden shrink-0">
+                          <Image src={p.images[0]} alt={p.name} fill sizes="28px" className="object-cover" />
+                        </div>
                         <span className="font-medium truncate">{p.name}</span>
                       </div>
                       <Badge variant="destructive" className="text-[10px] ml-2 shrink-0">

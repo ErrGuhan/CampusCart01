@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, Clock, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -13,15 +14,16 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
 
   return (
     <div className="group relative flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-500/40 hover:-translate-y-0.5 active:scale-[0.98]">
-      {/* Cover Image */}
+      {/* Optimized Cover Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/40 select-none">
-        <img
-          src={gig.coverImage}
+        <Image
+          src={gig.coverImage || 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg'}
           alt={gig.title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-2.5 left-2.5">
+        <div className="absolute top-2.5 left-2.5 z-10">
           <Badge className="bg-background/90 backdrop-blur-md text-foreground font-semibold text-[10px] sm:text-[11px] shadow-xs border-0">
             {gig.category}
           </Badge>

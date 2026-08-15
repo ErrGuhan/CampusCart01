@@ -248,9 +248,19 @@ export async function getGigBySlug(slug: string): Promise<ServiceGig | undefined
   return all.find((g) => g.slug === slug || g.id === slug);
 }
 
-export async function getMyGigs(sellerId: string): Promise<ServiceGig[]> {
-  const all = await getAllGigs();
-  return all.filter((g) => g.sellerId === sellerId || g.seller?.id === sellerId);
+export async function getMyGigs(sellerId: string, username?: string): Promise<ServiceGig[]> {
+  const all = await getAllGigsAdmin();
+  const u = username?.toLowerCase() || '';
+  const isGuhan = u.includes('guhan') || sellerId === 'seller-guhan';
+  return all.filter((g) => {
+    const gSellerId = g.sellerId || g.seller?.id || '';
+    const gUser = (g.seller?.username || '').toLowerCase();
+    return (
+      gSellerId === sellerId ||
+      (u && gUser === u) ||
+      (isGuhan && (gUser === 'guhan' || gSellerId === 'seller-guhan'))
+    );
+  });
 }
 
 // ---------- Campus Bounties / Service Requests ----------
@@ -797,21 +807,19 @@ export async function getSellerByUsername(username: string): Promise<Seller | un
   return all.find((s) => s.username.toLowerCase() === username.toLowerCase());
 }
 
-export async function getMyProducts(sellerId: string): Promise<Product[]> {
-  try {
-    const q = query(collection(db, 'products'), where('seller_id', '==', sellerId));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const products: Product[] = [];
-      snap.forEach((docSnap) => {
-        products.push(mapDocToProduct(docSnap.data(), docSnap.id));
-      });
-      return products;
-    }
-  } catch (err) {
-    console.warn('Notice in getMyProducts:', err);
-  }
-  return [];
+export async function getMyProducts(sellerId: string, username?: string): Promise<Product[]> {
+  const all = await getAllProductsAdmin();
+  const u = username?.toLowerCase() || '';
+  const isGuhan = u.includes('guhan') || sellerId === 'seller-guhan';
+  return all.filter((p) => {
+    const pSellerId = p.seller?.id || '';
+    const pUser = (p.seller?.username || '').toLowerCase();
+    return (
+      pSellerId === sellerId ||
+      (u && pUser === u) ||
+      (isGuhan && (pUser === 'guhan' || pSellerId === 'seller-guhan'))
+    );
+  });
 }
 
 // ---------- Used & Deals Queries ----------
