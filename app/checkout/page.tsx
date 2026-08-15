@@ -155,6 +155,7 @@ export default function CheckoutPage() {
 
     saveOrder(order);
 
+    // Sync order to Firestore
     try {
       await setDoc(doc(db, 'orders', order.id), {
         ...order,
@@ -166,11 +167,37 @@ export default function CheckoutPage() {
       console.warn('Firestore order sync notice:', err);
     }
 
+    // Automatically update product stock in real time
+    if (typeof window !== 'undefined') {
+      try {
+        const rawProds = localStorage.getItem('campuscart_products');
+        if (rawProds) {
+          let prodList = JSON.parse(rawProds);
+          if (Array.isArray(prodList)) {
+            prodList = prodList.map((p: any) => {
+              const bought = orderItems.find((item) => item.productId === p.id);
+              if (bought) {
+                const newInv = Math.max(0, (p.inventory ?? 1) - bought.quantity);
+                return {
+                  ...p,
+                  inventory: newInv,
+                  status: newInv === 0 ? 'out_of_stock' : p.status,
+                };
+              }
+              return p;
+            });
+            localStorage.setItem('campuscart_products', JSON.stringify(prodList));
+            window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+          }
+        }
+      } catch {}
+    }
+
     clearCart();
     setProcessing(false);
 
     toast({
-      title: 'Order placed successfully!',
+      title: 'Order placed successfully! 🎉',
       description: `Order ${order.id} confirmed. Your Security Pickup PIN is ${pickupPin}.`,
     });
 

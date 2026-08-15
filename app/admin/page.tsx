@@ -99,18 +99,23 @@ export default function AdminDashboardPage() {
     }
   }, [loadAdminData]);
 
-  // Product Actions
+  // Product Actions with optimistic UI updates
   async function handleApproveProduct(product: Product) {
+    // Optimistic update
+    setProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, status: 'active', isVerified: true } : p))
+    );
     setActionInProgress(true);
     try {
       await approveProduct(product.id);
       toast({
         title: 'Product Approved & Live! 🎉',
-        description: `"${product.name}" has been verified and published to the public marketplace.`,
+        description: `"${product.name}" is now live on the public marketplace.`,
       });
       loadAdminData();
     } catch (err: any) {
       toast({ title: 'Approval failed', variant: 'destructive' });
+      loadAdminData();
     } finally {
       setActionInProgress(false);
     }
@@ -118,26 +123,38 @@ export default function AdminDashboardPage() {
 
   async function handleRejectProduct() {
     if (!selectedProduct) return;
+    const targetId = selectedProduct.id;
+    const reason = rejectReason.trim() || 'Product details need revision before marketplace approval.';
+    // Optimistic update
+    setProducts((prev) =>
+      prev.map((p) => (p.id === targetId ? { ...p, status: 'rejected', isVerified: false, rejectionReason: reason } : p))
+    );
+    setRejectProductModalOpen(false);
+    setSelectedProduct(null);
+    setRejectReason('');
+
     setActionInProgress(true);
     try {
-      await rejectProduct(selectedProduct.id, rejectReason.trim() || 'Product details need revision before marketplace approval.');
+      await rejectProduct(targetId, reason);
       toast({
-        title: 'Product Rejected / Revision Requested',
-        description: `Seller will see your feedback in their dashboard.`,
+        title: 'Revision Requested',
+        description: `Seller notified with review feedback.`,
       });
-      setRejectProductModalOpen(false);
-      setSelectedProduct(null);
-      setRejectReason('');
       loadAdminData();
     } catch (err: any) {
       toast({ title: 'Rejection failed', variant: 'destructive' });
+      loadAdminData();
     } finally {
       setActionInProgress(false);
     }
   }
 
-  // Gig Actions
+  // Gig Actions with optimistic UI updates
   async function handleApproveGig(gig: ServiceGig) {
+    // Optimistic update
+    setGigs((prev) =>
+      prev.map((g) => (g.id === gig.id ? { ...g, status: 'active', isVerified: true } : g))
+    );
     setActionInProgress(true);
     try {
       await approveGig(gig.id);
@@ -148,6 +165,7 @@ export default function AdminDashboardPage() {
       loadAdminData();
     } catch (err: any) {
       toast({ title: 'Approval failed', variant: 'destructive' });
+      loadAdminData();
     } finally {
       setActionInProgress(false);
     }
@@ -155,19 +173,27 @@ export default function AdminDashboardPage() {
 
   async function handleRejectGig() {
     if (!selectedGig) return;
+    const targetId = selectedGig.id;
+    const reason = gigRejectReason.trim() || 'Gig details require modification.';
+    // Optimistic update
+    setGigs((prev) =>
+      prev.map((g) => (g.id === targetId ? { ...g, status: 'rejected', isVerified: false, rejectionReason: reason } : g))
+    );
+    setRejectGigModalOpen(false);
+    setSelectedGig(null);
+    setGigRejectReason('');
+
     setActionInProgress(true);
     try {
-      await rejectGig(selectedGig.id, gigRejectReason.trim() || 'Gig details require modification.');
+      await rejectGig(targetId, reason);
       toast({
-        title: 'Freelance Gig Rejected / Revision Requested',
+        title: 'Gig Revision Requested',
         description: `Creator notified with review feedback.`,
       });
-      setRejectGigModalOpen(false);
-      setSelectedGig(null);
-      setGigRejectReason('');
       loadAdminData();
     } catch (err: any) {
       toast({ title: 'Rejection failed', variant: 'destructive' });
+      loadAdminData();
     } finally {
       setActionInProgress(false);
     }

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, ShoppingCart, Heart, Menu, Store, User,
   LayoutDashboard, Package, LogOut, Settings, ShieldCheck, Shield,
-  MessageSquare, Bell, Sparkles, HelpCircle, ArrowRight,
+  MessageSquare, Bell, Sparkles, HelpCircle, ArrowRight, Plus,
   ShoppingBag, Tag, Recycle, Zap, X, ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -387,6 +387,34 @@ export function Navbar() {
             >
               <Search className="h-5 w-5" />
             </Button>
+
+            {/* Quick Access: Admin Approval Center & Sell Item */}
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="hidden lg:inline-flex rounded-xl text-xs font-bold border-primary/40 bg-primary/5 text-primary hover:bg-primary/15 h-9 px-3 gap-1.5 shadow-2xs"
+              >
+                <Link href="/admin">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Approval Center</span>
+                </Link>
+              </Button>
+            )}
+
+            {user && (
+              <Button
+                size="sm"
+                asChild
+                className="hidden sm:inline-flex rounded-xl text-xs font-bold shadow-xs h-9 px-3.5 gap-1.5"
+              >
+                <Link href="/seller/dashboard/products">
+                  <Plus className="h-4 w-4" />
+                  <span>Sell Item</span>
+                </Link>
+              </Button>
+            )}
 
             {/* Desktop Messages shortcut */}
             <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-2xl">
