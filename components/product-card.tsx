@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Star, ShoppingBag } from 'lucide-react';
+import { Heart, Star, ShoppingBag, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/components/cart-provider';
@@ -92,6 +92,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <h3 className="mt-1.5 line-clamp-2 text-sm sm:text-base font-semibold leading-snug text-foreground group-hover:text-primary transition-colors">
           {product.name}
         </h3>
+
+        {product.isVerified && (
+          <span className="mt-1 inline-flex w-fit items-center gap-1 text-[11px] font-medium text-success">
+            <BadgeCheck className="h-3 w-3" />
+            Verified original
+          </span>
+        )}
 
         <div className="mt-2 flex items-center gap-1">
           <Star className="h-3.5 w-3.5 fill-warning text-warning" />

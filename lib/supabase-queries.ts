@@ -54,6 +54,7 @@ function mapProduct(row: any): Product {
     pickupAvailable: row.pickup_available,
     deliveryAvailable: row.delivery_available,
     createdAt: row.created_at,
+    isVerified: row.is_verified ?? false,
   };
 }
 

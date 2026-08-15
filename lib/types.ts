@@ -18,6 +18,7 @@ export type Product = {
   pickupAvailable: boolean;
   deliveryAvailable: boolean;
   createdAt: string;
+  isVerified: boolean;
 };
 
 export type Seller = {

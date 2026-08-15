@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Star, Heart, ShoppingBag, Minus, Plus, Truck, MapPin,
-  ChevronRight, Store, Share2, Shield, Check,
+  ChevronRight, Store, Share2, Shield, Check, BadgeCheck,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -132,6 +132,12 @@ export function ProductDetailClient({ product, relatedProducts }: Props) {
                     </Badge>
                   ) : (
                     <Badge variant="destructive">Out of Stock</Badge>
+                  )}
+                  {product.isVerified && (
+                    <Badge className="bg-success/10 text-success hover:bg-success/10">
+                      <BadgeCheck className="h-3 w-3 mr-1" />
+                      Verified Original
+                    </Badge>
                   )}
                 </div>
                 <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
