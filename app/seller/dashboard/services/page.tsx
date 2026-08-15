@@ -1,0 +1,451 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  Plus, Search, Pencil, Trash2, Clock, Sparkles,
+  Eye, CheckCircle2, AlertCircle, Loader2, DollarSign,
+  FileText, ArrowRight,
+} from 'lucide-react';
+import {
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
+import { Navbar } from '@/components/layout/navbar';
+import { Footer } from '@/components/layout/footer';
+import { SellerSidebar } from '@/components/seller-sidebar';
+import { ImageUploader } from '@/components/image-uploader';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useAuth } from '@/components/auth-provider';
+import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { getMyGigs, GIG_CATEGORIES } from '@/lib/firebase-queries';
+import type { ServiceGig, GigStatus } from '@/lib/types';
+
+export default function SellerServicesPage() {
+  const { user, profile, loading } = useAuth();
+  const { toast } = useToast();
+
+  const [gigs, setGigs] = useState<ServiceGig[]>([]);
+  const [fetching, setFetching] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editGig, setEditGig] = useState<ServiceGig | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ServiceGig | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Form fields
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState(GIG_CATEGORIES[0].name);
+  const [price, setPrice] = useState('250');
+  const [deliveryDays, setDeliveryDays] = useState('2');
+  const [revisions, setRevisions] = useState('2');
+  const [tags, setTags] = useState('');
+  const [coverImage, setCoverImage] = useState('');
+  const [status, setStatus] = useState<GigStatus>('active');
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadGigs();
+    }
+  }, [user?.uid]);
+
+  function loadGigs() {
+    if (!user) return;
+    getMyGigs(user.uid)
+      .then((data) => {
+        setGigs(data);
+        setFetching(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setFetching(false);
+      });
+  }
+
+  function openCreate() {
+    setEditGig(null);
+    setTitle('');
+    setDescription('');
+    setCategory(GIG_CATEGORIES[0].name);
+    setPrice('250');
+    setDeliveryDays('2');
+    setRevisions('2');
+    setTags('');
+    setCoverImage('');
+    setStatus('active');
+    setDialogOpen(true);
+  }
+
+  function openEdit(gig: ServiceGig) {
+    setEditGig(gig);
+    setTitle(gig.title);
+    setDescription(gig.description);
+    setCategory(gig.category);
+    setPrice(gig.startingPrice.toString());
+    setDeliveryDays(gig.deliveryTimeDays.toString());
+    setRevisions(gig.revisions.toString());
+    setTags(gig.tags.join(', '));
+    setCoverImage(gig.coverImage);
+    setStatus(gig.status);
+    setDialogOpen(true);
+  }
+
+  async function handleSave() {
+    if (!user || !profile) return;
+    if (!title.trim()) {
+      toast({ title: 'Title required', description: 'Please enter a title for your gig.', variant: 'destructive' });
+      return;
+    }
+    const priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      toast({ title: 'Valid price required', description: 'Please enter a valid starting price.', variant: 'destructive' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const slug = editGig?.slug || (
+        title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) +
+        '-' + Math.floor(1000 + Math.random() * 9000)
+      );
+
+      const gigPayload = {
+        seller_id: user.uid,
+        sellerName: profile.display_name,
+        sellerUsername: profile.username,
+        sellerAvatar: profile.avatar_url || '',
+        sellerDepartment: profile.department || '',
+        sellerYear: profile.year || '',
+        title: title.trim(),
+        slug,
+        description: description.trim(),
+        category,
+        starting_price: priceNum,
+        delivery_time_days: parseInt(deliveryDays, 10) || 2,
+        revisions: parseInt(revisions, 10) || 2,
+        tags: tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean),
+        cover_image: coverImage || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+        status,
+        rating: editGig?.rating ?? 5.0,
+        review_count: editGig?.reviewCount ?? 0,
+        is_verified: profile.is_verified ?? true,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (editGig) {
+        await setDoc(doc(db, 'gigs', editGig.id), gigPayload, { merge: true });
+        toast({ title: 'Gig updated', description: `"${title}" has been saved.` });
+      } else {
+        await addDoc(collection(db, 'gigs'), {
+          ...gigPayload,
+          created_at: new Date().toISOString(),
+        });
+        toast({ title: 'Gig created!', description: `"${title}" is now live on Campus Freelance.` });
+      }
+
+      setDialogOpen(false);
+      loadGigs();
+    } catch (err: any) {
+      console.error('Error saving gig:', err);
+      toast({
+        title: 'Could not save gig',
+        description: err.message || 'Please check your inputs.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    try {
+      await deleteDoc(doc(db, 'gigs', deleteTarget.id));
+      toast({ title: 'Gig deleted', description: deleteTarget.title });
+      setDeleteTarget(null);
+      loadGigs();
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Could not delete gig', variant: 'destructive' });
+    }
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-8">
+          <div className="h-96 animate-pulse rounded-xl bg-secondary" />
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-16 text-center">
+          <h1 className="text-2xl font-bold">Sign in required</h1>
+          <Button className="mt-4" asChild><Link href="/login">Sign In</Link></Button>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <main className="container-px mx-auto max-w-7xl py-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary mb-1">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Student Freelance Studio</span>
+            </div>
+            <h1 className="font-display text-3xl font-bold tracking-tight">Freelance Services</h1>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Offer your specialized skills (posters, code, video editing, CAD) to classmates and college clubs.
+            </p>
+          </div>
+          <Button onClick={openCreate} className="rounded-xl">
+            <Plus className="h-4 w-4 mr-2" />
+            Offer a Service
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+          <aside className="hidden lg:block">
+            <SellerSidebar />
+          </aside>
+
+          <div className="lg:col-span-3 space-y-6">
+            {fetching ? (
+              <div className="h-64 animate-pulse rounded-2xl bg-secondary/50" />
+            ) : gigs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center bg-card/40">
+                <Sparkles className="h-12 w-12 text-primary/40 mb-3" />
+                <h3 className="text-lg font-bold">No active freelance gigs yet</h3>
+                <p className="mt-1 text-sm text-muted-foreground max-w-md">
+                  Turn your design, coding, or video editing skills into cash by creating your first campus gig.
+                </p>
+                <Button className="mt-5 rounded-xl" onClick={openCreate}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Gig
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="divide-y divide-border">
+                  {gigs.map((gig) => (
+                    <div
+                      key={gig.id}
+                      className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-accent/10 transition-colors"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary/40 border border-border">
+                          <img src={gig.coverImage} alt={gig.title} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="min-w-0">
+                          <Badge variant="outline" className="text-[10px] mb-1 font-medium">
+                            {gig.category}
+                          </Badge>
+                          <Link
+                            href={`/services/${gig.slug}`}
+                            className="block font-semibold text-sm hover:text-primary transition-colors truncate"
+                          >
+                            {gig.title}
+                          </Link>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Starting at <strong className="text-foreground">₹{gig.startingPrice}</strong> • {gig.deliveryTimeDays} days delivery
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(gig)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => setDeleteTarget(gig)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      <Footer />
+
+      {/* Create / Edit Gig Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editGig ? 'Edit Freelance Gig' : 'Offer a New Freelance Service'}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            <div className="space-y-1.5">
+              <Label htmlFor="g-title">Service Title *</Label>
+              <Input
+                id="g-title"
+                placeholder="e.g., I will design eye-catching posters for your college symposium"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="g-desc">Service Details & Inclusions *</Label>
+              <Textarea
+                id="g-desc"
+                placeholder="Explain what is included in your service, software used (Figma, Canva, Premiere Pro, SolidWorks), required inputs from the client, and deliverables..."
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="g-cat">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="g-cat">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GIG_CATEGORIES.map((c) => (
+                      <SelectItem key={c.slug} value={c.name}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="g-price">Starting Price (₹) *</Label>
+                <Input
+                  id="g-price"
+                  type="number"
+                  placeholder="250"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="g-days">Turnaround Time (Days)</Label>
+                <Input
+                  id="g-days"
+                  type="number"
+                  placeholder="2"
+                  value={deliveryDays}
+                  onChange={(e) => setDeliveryDays(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="g-revs">Revisions Included</Label>
+                <Input
+                  id="g-revs"
+                  type="number"
+                  placeholder="2"
+                  value={revisions}
+                  onChange={(e) => setRevisions(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="g-tags">Tags (comma-separated)</Label>
+              <Input
+                id="g-tags"
+                placeholder="poster, symposium, canva, figma, photoshop"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+              />
+            </div>
+
+            {/* Direct Image Uploader */}
+            <div className="space-y-1.5">
+              <ImageUploader
+                label="Gig Cover Image / Work Sample"
+                value={coverImage}
+                onChange={setCoverImage}
+                folder="gigs"
+                userId={user.uid}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 'Save Service Gig'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this service gig?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove "{deleteTarget?.title}" from the freelance catalog.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}

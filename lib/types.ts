@@ -65,3 +65,65 @@ export type Review = {
   comment: string;
   createdAt: string;
 };
+
+// ----------------- Campus Freelance & Gigs Types -----------------
+
+export type GigStatus = 'active' | 'paused' | 'draft';
+
+export type ServiceGig = {
+  id: string;
+  sellerId: string;
+  seller: Seller;
+  title: string;
+  slug: string;
+  description: string;
+  category: string;
+  startingPrice: number;
+  deliveryTimeDays: number;
+  revisions: number;
+  tags: string[];
+  coverImage: string;
+  portfolioImages?: string[];
+  rating: number;
+  reviewCount: number;
+  isVerified: boolean;
+  status: GigStatus;
+  createdAt: string;
+};
+
+export type GigOrderStatus = 'pending' | 'in_progress' | 'delivered' | 'completed' | 'cancelled';
+
+export type GigOrder = {
+  id: string;
+  gigId: string;
+  gigTitle: string;
+  buyerId: string;
+  buyerName: string;
+  buyerEmail: string;
+  sellerId: string;
+  sellerName: string;
+  price: number;
+  requirements: string;
+  status: GigOrderStatus;
+  deliveryNotes?: string;
+  deliveryFileUrl?: string;
+  createdAt: string;
+  completedAt?: string;
+};
+
+export type GigRequestStatus = 'open' | 'assigned' | 'completed';
+
+export type GigRequest = {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  requesterEmail: string;
+  title: string;
+  description: string;
+  category: string;
+  budget: number;
+  deadlineDays: number;
+  status: GigRequestStatus;
+  proposalsCount: number;
+  createdAt: string;
+};

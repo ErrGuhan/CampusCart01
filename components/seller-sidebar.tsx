@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Package, ShoppingBag, Settings,
-  Store, TrendingUp,
+  Store, TrendingUp, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 const navItems = [
   { href: '/seller/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/seller/dashboard/products', label: 'Products', icon: Package },
+  { href: '/seller/dashboard/services', label: 'Freelance Gigs', icon: Sparkles },
   { href: '/seller/dashboard/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/seller/dashboard/settings', label: 'Store Settings', icon: Settings },
 ];

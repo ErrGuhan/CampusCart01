@@ -31,6 +31,7 @@ import { useCart } from '@/components/cart-provider';
 
 const navLinks = [
   { href: '/products', label: 'Products' },
+  { href: '/services', label: 'Freelance & Gigs', badge: 'New' },
   { href: '/categories', label: 'Categories' },
   { href: '/sellers', label: 'Creators' },
   { href: '/how-it-works', label: 'How It Works' },
@@ -196,9 +197,14 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors flex items-center gap-1.5"
               >
                 {link.label}
+                {link.badge && (
+                  <span className="rounded-full bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

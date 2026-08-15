@@ -9,7 +9,7 @@ import {
   limit as firestoreLimit,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Category, Product, Seller, Review } from './types';
+import type { Category, Product, Seller, Review, ServiceGig, GigOrder, GigRequest } from './types';
 
 // Default categories list for instant availability & seeding
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -26,6 +26,154 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-services', name: 'Services', slug: 'services', icon: 'Wrench', productCount: 0 },
   { id: 'cat-other', name: 'Other', slug: 'other', icon: 'Package', productCount: 0 },
 ];
+
+export const GIG_CATEGORIES = [
+  { name: 'Design & Posters', slug: 'design-posters', icon: 'Palette', description: 'Symposium posters, Instagram banners, club logos & UI/UX' },
+  { name: 'Coding & Tech Projects', slug: 'coding-tech', icon: 'Code', description: 'Fullstack web, React, Python scripting, Arduino & IoT circuits' },
+  { name: 'Video & Photography', slug: 'video-photography', icon: 'Video', description: 'Reels editing, campus photography, drone shots & promo clips' },
+  { name: '3D Printing & CAD', slug: '3d-printing-cad', icon: 'Box', description: 'SolidWorks, AutoCAD blueprints, 3D printing slicing & models' },
+  { name: 'Tutoring & Academics', slug: 'tutoring-academics', icon: 'BookOpen', description: 'Exam prep, lab records assistance, coding tutoring & math' },
+  { name: 'Writing & Resumes', slug: 'writing-resumes', icon: 'FileText', description: 'ATS resume formatting, SOP writing, project reports & content' },
+  { name: 'Music & Events', slug: 'music-events', icon: 'Music', description: 'Event DJing, emceeing/anchoring, sound mixing & live music' },
+  { name: 'Other Freelance', slug: 'other-freelance', icon: 'Sparkles', description: 'Custom student commissions and miscellaneous gigs' },
+];
+
+// ---------- Reviews ----------
+
+export async function getProductReviews(productId: string): Promise<Review[]> {
+  try {
+    const q = query(
+      collection(db, 'reviews'),
+      where('product_id', '==', productId)
+    );
+    const snap = await getDocs(q);
+    const reviews: Review[] = [];
+    snap.forEach((docSnap) => {
+      const d = docSnap.data();
+      reviews.push({
+        id: docSnap.id,
+        author: d.author || d.display_name || 'Student Buyer',
+        rating: Number(d.rating) || 5,
+        comment: d.comment || '',
+        createdAt: d.created_at || new Date().toISOString(),
+      });
+    });
+    return reviews;
+  } catch (err) {
+    console.error('Error in getProductReviews:', err);
+    return [];
+  }
+}
+
+// ---------- Freelance Gigs & Services ----------
+
+function mapDocToGig(data: any, id: string): ServiceGig {
+  const seller: Seller = {
+    id: data.seller_id || data.sellerId || 'seller',
+    username: data.sellerUsername || data.seller_username || 'freelancer',
+    displayName: data.sellerName || data.seller_name || 'Student Freelancer',
+    avatar: data.sellerAvatar || '',
+    department: data.sellerDepartment || '',
+    year: data.sellerYear || '',
+    bio: '',
+    skills: data.tags || [],
+    rating: Number(data.rating) || 5.0,
+    productCount: 1,
+    joinedAt: data.created_at || new Date().toISOString(),
+  };
+
+  return {
+    id: id || data.id,
+    sellerId: data.seller_id || data.sellerId,
+    seller,
+    title: data.title || 'Student Freelance Service',
+    slug: data.slug || id,
+    description: data.description || '',
+    category: data.category || 'Design & Posters',
+    startingPrice: Number(data.starting_price ?? data.startingPrice) || 200,
+    deliveryTimeDays: Number(data.delivery_time_days ?? data.deliveryTimeDays) || 2,
+    revisions: Number(data.revisions) || 2,
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    coverImage: data.cover_image || data.coverImage || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+    portfolioImages: Array.isArray(data.portfolio_images) ? data.portfolio_images : [],
+    rating: Number(data.rating) || 5.0,
+    reviewCount: Number(data.review_count ?? data.reviewCount) || 0,
+    isVerified: data.is_verified ?? true,
+    status: data.status || 'active',
+    createdAt: data.created_at || new Date().toISOString(),
+  };
+}
+
+export async function getAllGigs(): Promise<ServiceGig[]> {
+  try {
+    const q = query(collection(db, 'gigs'), where('status', '==', 'active'));
+    const snap = await getDocs(q);
+    const gigs: ServiceGig[] = [];
+    snap.forEach((docSnap) => {
+      gigs.push(mapDocToGig(docSnap.data(), docSnap.id));
+    });
+    return gigs;
+  } catch (err) {
+    console.error('Error fetching gigs from Firestore:', err);
+    return [];
+  }
+}
+
+export async function getFeaturedGigs(limitCount = 4): Promise<ServiceGig[]> {
+  const all = await getAllGigs();
+  return all.slice(0, limitCount);
+}
+
+export async function getGigBySlug(slug: string): Promise<ServiceGig | undefined> {
+  const all = await getAllGigs();
+  return all.find((g) => g.slug === slug || g.id === slug);
+}
+
+export async function getMyGigs(sellerId: string): Promise<ServiceGig[]> {
+  try {
+    const q = query(collection(db, 'gigs'), where('seller_id', '==', sellerId));
+    const snap = await getDocs(q);
+    const gigs: ServiceGig[] = [];
+    snap.forEach((docSnap) => {
+      gigs.push(mapDocToGig(docSnap.data(), docSnap.id));
+    });
+    return gigs;
+  } catch (err) {
+    console.error('Error fetching my gigs:', err);
+    return [];
+  }
+}
+
+// ---------- Campus Bounties / Service Requests ----------
+
+export async function getAllGigRequests(): Promise<GigRequest[]> {
+  try {
+    const q = query(collection(db, 'gig_requests'), where('status', '==', 'open'));
+    const snap = await getDocs(q);
+    const requests: GigRequest[] = [];
+    snap.forEach((docSnap) => {
+      const d = docSnap.data();
+      requests.push({
+        id: docSnap.id,
+        requesterId: d.requester_id || d.requesterId,
+        requesterName: d.requester_name || d.requesterName || 'Student',
+        requesterEmail: d.requester_email || d.requesterEmail || '',
+        title: d.title,
+        description: d.description,
+        category: d.category,
+        budget: Number(d.budget) || 500,
+        deadlineDays: Number(d.deadline_days ?? d.deadlineDays) || 3,
+        status: d.status || 'open',
+        proposalsCount: Number(d.proposals_count ?? d.proposalsCount) || 0,
+        createdAt: d.created_at || new Date().toISOString(),
+      });
+    });
+    return requests;
+  } catch (err) {
+    console.error('Error fetching gig requests:', err);
+    return [];
+  }
+}
 
 function mapDocToSeller(data: any, id: string, stats?: { rating: number; productCount: number }): Seller {
   return {
@@ -226,33 +374,6 @@ export async function getMyProducts(sellerId: string): Promise<Product[]> {
     return products;
   } catch (err) {
     console.error('Error in getMyProducts:', err);
-    return [];
-  }
-}
-
-// ---------- Reviews ----------
-
-export async function getProductReviews(productId: string): Promise<Review[]> {
-  try {
-    const q = query(
-      collection(db, 'reviews'),
-      where('product_id', '==', productId)
-    );
-    const snap = await getDocs(q);
-    const reviews: Review[] = [];
-    snap.forEach((docSnap) => {
-      const d = docSnap.data();
-      reviews.push({
-        id: docSnap.id,
-        author: d.author || d.display_name || 'Student Buyer',
-        rating: Number(d.rating) || 5,
-        comment: d.comment || '',
-        createdAt: d.created_at || new Date().toISOString(),
-      });
-    });
-    return reviews;
-  } catch (err) {
-    console.error('Error in getProductReviews:', err);
     return [];
   }
 }

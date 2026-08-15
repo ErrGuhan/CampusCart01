@@ -4,6 +4,7 @@ import { HeroSection } from '@/components/home/hero-section';
 import { CategoriesSection } from '@/components/home/categories-section';
 import { ProductSection } from '@/components/home/product-section';
 import { CreatorsSection } from '@/components/home/creators-section';
+import { ServicesSection } from '@/components/home/services-section';
 import { HowItWorksSection } from '@/components/home/how-it-works-section';
 import { CtaSection } from '@/components/home/cta-section';
 import {
@@ -29,6 +30,7 @@ export default async function Home() {
       <main>
         <HeroSection />
         <CategoriesSection categories={categories} />
+        <ServicesSection />
         <ProductSection
           title="Featured Products"
           subtitle="Handpicked favorites loved by the campus community"
