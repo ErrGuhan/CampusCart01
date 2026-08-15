@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, SlidersHorizontal, X, Sparkles, Tag, ArrowRight, Check } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Sparkles, Tag, ArrowRight, Check, Plus } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
@@ -398,13 +398,19 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 <p className="mt-1 text-xs text-muted-foreground max-w-sm">
                   Try adjusting your search terms, changing categories, or post a request on the campus board.
                 </p>
-                <div className="mt-5 flex flex-wrap gap-2 justify-center">
+                <div className="mt-5 flex flex-wrap gap-2.5 justify-center">
                   {activeFilterCount > 0 && (
                     <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={clearFilters}>
                       Clear all filters
                     </Button>
                   )}
-                  <Button asChild size="sm" className="rounded-xl text-xs">
+                  <Button asChild size="sm" className="rounded-xl text-xs font-bold shadow-xs">
+                    <Link href="/seller/dashboard/products">
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      List a Product
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
                     <Link href="/requests">Post Product Request</Link>
                   </Button>
                 </div>

@@ -214,35 +214,44 @@ export default function AccountDashboardPage() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {deals.map((product) => {
-                  const hasDiscount = product.discountPrice !== undefined;
-                  const discountPercent = hasDiscount
-                    ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
-                    : 0;
-                  return (
-                    <Link
-                      key={product.id}
-                      href={`/products/${product.slug}`}
-                      className="group flex gap-3 rounded-lg border border-border p-3 transition-all hover:border-primary/20 hover:bg-accent/30"
-                    >
-                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
-                        <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                          {product.name}
-                        </span>
-                        <div className="mt-auto flex items-center gap-2">
-                          <span className="text-sm font-bold">₹{product.discountPrice}</span>
-                          <span className="text-xs text-muted-foreground line-through">₹{product.price}</span>
-                          <Badge variant="destructive" className="text-[10px]">{discountPercent}%</Badge>
+              {deals.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">
+                  No active discount deals at the moment.{' '}
+                  <Link href="/marketplace" className="text-primary font-semibold hover:underline">
+                    Explore all products
+                  </Link>
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {deals.map((product) => {
+                    const hasDiscount = product.discountPrice !== undefined;
+                    const discountPercent = hasDiscount
+                      ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
+                      : 0;
+                    return (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.slug}`}
+                        className="group flex gap-3 rounded-lg border border-border p-3 transition-all hover:border-primary/20 hover:bg-accent/30"
+                      >
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary/50">
+                          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
                         </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
+                            {product.name}
+                          </span>
+                          <div className="mt-auto flex items-center gap-2">
+                            <span className="text-sm font-bold">₹{product.discountPrice}</span>
+                            <span className="text-xs text-muted-foreground line-through">₹{product.price}</span>
+                            <Badge variant="destructive" className="text-[10px]">{discountPercent}%</Badge>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {!profile?.is_seller && (

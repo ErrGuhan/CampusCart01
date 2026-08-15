@@ -81,7 +81,7 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 <a
-                  href="mailto:support@campuscart.com?subject=Password%20Reset%20Request"
+                  href="mailto:campuscartsvcet@gmail.com?subject=CampusCart%20Password%20Reset%20Request"
                   className="text-xs text-primary hover:underline"
                 >
                   Forgot password?

@@ -41,7 +41,7 @@ export function Footer() {
         { href: user ? '/dashboard' : '/login', label: user ? 'Student Dashboard' : 'Sign In' },
         { href: user ? '/account/orders' : '/register', label: user ? 'My Orders' : 'Join CampusCart' },
         { href: '/messages', label: 'Messages' },
-        { href: 'mailto:support@campuscart.com?subject=CampusCart%20Support', label: 'Help & Support' },
+        { href: 'mailto:campuscartsvcet@gmail.com?subject=CampusCart%20Support%20%26%20Feedback', label: 'Help & Feedback' },
       ],
     },
   ];
@@ -106,12 +106,25 @@ export function Footer() {
             <p className="mt-3 text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed">
               The official student marketplace, freelance hub, and request board for Sri Venkateswara College of Engineering and Technology.
             </p>
+
+            {/* Official Feedback Contact Badge */}
+            <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-card border border-border/80 px-3 py-1.5 text-xs text-muted-foreground">
+              <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>Feedback: </span>
+              <a
+                href="mailto:campuscartsvcet@gmail.com"
+                className="font-semibold text-foreground hover:text-primary transition-colors underline decoration-primary/40 underline-offset-2"
+              >
+                campuscartsvcet@gmail.com
+              </a>
+            </div>
+
             <div className="mt-4 flex items-center gap-2">
               {[
                 { Icon: Instagram, label: 'Instagram', href: 'https://instagram.com' },
                 { Icon: Twitter, label: 'Twitter', href: 'https://x.com' },
                 { Icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com' },
-                { Icon: Mail, label: 'Email', href: 'mailto:hello@campuscart.com' },
+                { Icon: Mail, label: 'Email Feedback', href: 'mailto:campuscartsvcet@gmail.com' },
               ].map(({ Icon, label, href }) => (
                 <a
                   key={label}
@@ -160,9 +173,9 @@ export function Footer() {
             <Link href="/how-it-works" className="hover:text-primary transition-colors">
               Privacy & Trust
             </Link>
-            <Link href="/how-it-works" className="hover:text-primary transition-colors">
-              Campus Guidelines
-            </Link>
+            <a href="mailto:campuscartsvcet@gmail.com" className="hover:text-primary transition-colors">
+              Contact Support
+            </a>
           </div>
         </div>
       </div>

@@ -61,150 +61,8 @@ export const DEFAULT_SELLERS: Seller[] = [
   },
 ];
 
-export const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: 'prod-1',
-    slug: 'handmade-engineering-drawing-board-cover',
-    name: 'Handmade Engineering Drawing Board Cover & Strap',
-    description: 'Durable waterproof canvas bag tailored for A2/A1 engineering drawing boards with pencil pouch and shoulder strap.',
-    price: 350,
-    discountPrice: 280,
-    category: 'Handmade',
-    tags: ['drawing-board', 'engineering', 'canvas', 'handmade'],
-    images: [
-      'https://images.pexels.com/photos/1765033/pexels-photo-1765033.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-      'https://images.pexels.com/photos/6263162/pexels-photo-6263162.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    inventory: 8,
-    status: 'active',
-    rating: 0,
-    reviewCount: 0,
-    seller: DEFAULT_SELLERS[0],
-    pickupAvailable: true,
-    deliveryAvailable: true,
-    isDigital: false,
-    createdAt: '2024-05-10T00:00:00Z',
-    isVerified: true,
-  },
-  {
-    id: 'prod-2',
-    slug: 'data-structures-algorithms-handwritten-topper-notes',
-    name: 'Data Structures & Algorithms Complete Handwritten Topper Notes',
-    description: 'Comprehensive handwritten color-coded notes covering Trees, Graphs, Dynamic Programming, Sorting, and Time Complexity with solved semester exam questions.',
-    price: 199,
-    discountPrice: 129,
-    category: 'Digital Products',
-    tags: ['dsa', 'notes', 'cse', 'it', 'digital-download'],
-    images: [
-      'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-      'https://images.pexels.com/photos/267586/pexels-photo-267586.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    inventory: 999,
-    status: 'active',
-    rating: 0,
-    reviewCount: 0,
-    seller: DEFAULT_SELLERS[0],
-    pickupAvailable: false,
-    deliveryAvailable: false,
-    isDigital: true,
-    digitalFileUrl: 'https://drive.google.com/drive/folders/campuscart-svcet-dsa-notes',
-    createdAt: '2024-05-12T00:00:00Z',
-    isVerified: true,
-  },
-  {
-    id: 'prod-3',
-    slug: 'custom-3d-printed-phone-stand-with-cable-organizer',
-    name: 'Custom 3D Printed Phone Stand with Cable Organizer',
-    description: 'Sturdy PLA+ 3D printed phone and tablet holder with integrated USB cable channel. Available in black, white, and neon blue.',
-    price: 220,
-    discountPrice: 160,
-    category: 'Electronics',
-    tags: ['3d-printed', 'phone-stand', 'accessories', 'desk-setup'],
-    images: [
-      'https://images.pexels.com/photos/3825586/pexels-photo-3825586.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    inventory: 15,
-    status: 'active',
-    rating: 0,
-    reviewCount: 0,
-    seller: DEFAULT_SELLERS[0],
-    pickupAvailable: true,
-    deliveryAvailable: true,
-    isDigital: false,
-    createdAt: '2024-05-14T00:00:00Z',
-    isVerified: true,
-  },
-  {
-    id: 'prod-4',
-    slug: 'arduino-iot-smart-home-starter-kit-with-sensors',
-    name: 'Arduino IoT Smart Home Starter Kit with 12 Sensors',
-    description: 'Complete student IoT lab kit including Arduino Uno R3, ESP8266 Wi-Fi module, DHT11 temp/humidity, Relay, OLED Display, and jumper wires.',
-    price: 850,
-    discountPrice: 699,
-    category: 'Electronics',
-    tags: ['arduino', 'iot', 'hardware', 'sensors', 'project'],
-    images: [
-      'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    inventory: 6,
-    status: 'active',
-    rating: 0,
-    reviewCount: 0,
-    seller: DEFAULT_SELLERS[0],
-    pickupAvailable: true,
-    deliveryAvailable: false,
-    isDigital: false,
-    createdAt: '2024-05-15T00:00:00Z',
-    isVerified: true,
-  },
-  {
-    id: 'prod-5',
-    slug: 'full-stack-mern-ecommerce-final-year-project-code',
-    name: 'Full-Stack MERN E-Commerce Final Year Project Source Code & Documentation',
-    description: 'Complete production-ready React + Node.js + MongoDB repository with JWT authentication, Stripe integration, admin dashboard, and 60-page IEEE project report.',
-    price: 499,
-    discountPrice: 349,
-    category: 'Digital Products',
-    tags: ['react', 'mern', 'final-year-project', 'source-code', 'fullstack'],
-    images: [
-      'https://images.pexels.com/photos/574071/pexels-photo-574071.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    inventory: 999,
-    status: 'active',
-    rating: 0,
-    reviewCount: 0,
-    seller: DEFAULT_SELLERS[0],
-    pickupAvailable: false,
-    deliveryAvailable: false,
-    isDigital: true,
-    digitalFileUrl: 'https://github.com/campuscart-project-source-code',
-    createdAt: '2024-05-18T00:00:00Z',
-    isVerified: true,
-  },
-  {
-    id: 'prod-6',
-    slug: 'handcrafted-resin-keychains-with-custom-initials',
-    name: 'Handcrafted Resin Keychains with Gold Foil & Custom Initials',
-    description: 'Aesthetic crystal clear epoxy resin letter keychains customized with dried flowers, gold flake leaf, and stainless steel rings.',
-    price: 150,
-    discountPrice: 110,
-    category: 'Handmade',
-    tags: ['resin', 'keychains', 'custom', 'gifts', 'accessories'],
-    images: [
-      'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    inventory: 20,
-    status: 'active',
-    rating: 0,
-    reviewCount: 0,
-    seller: DEFAULT_SELLERS[0],
-    pickupAvailable: true,
-    deliveryAvailable: true,
-    isDigital: false,
-    createdAt: '2024-05-20T00:00:00Z',
-    isVerified: true,
-  },
-];
+export const DEFAULT_PRODUCTS: Product[] = [];
+
 
 export const DEFAULT_GIGS: ServiceGig[] = [
   {
@@ -1077,9 +935,7 @@ export async function getMyProducts(sellerId: string): Promise<Product[]> {
   } catch (err) {
     console.warn('Notice in getMyProducts:', err);
   }
-  return DEFAULT_PRODUCTS.filter(
-    (p) => p.seller.id === sellerId || p.seller.username === 'guhan' || p.seller.id === 'seller-guhan'
-  );
+  return [];
 }
 
 // ---------- Used & Deals Queries ----------
