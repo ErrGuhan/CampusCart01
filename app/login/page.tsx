@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/auth-provider';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,29 +22,21 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+    const result = await signIn(email.trim(), password);
+    setLoading(false);
 
+    if (result.success) {
       toast({
-        title: 'Welcome back!',
+        title: 'Welcome back! 🎉',
         description: 'You have been signed in successfully.',
       });
       router.push('/');
-    } catch (error: any) {
-      console.error('Sign in error:', error);
-      let message = error.message || 'Failed to sign in. Please check your credentials.';
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = 'Invalid email or password. Please try again.';
-      } else if (error.code === 'auth/invalid-email') {
-        message = 'Please provide a valid college email address.';
-      }
+    } else {
       toast({
         title: 'Sign in failed',
-        description: message,
+        description: result.error || 'Invalid email or password. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   }
 

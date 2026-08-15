@@ -8,23 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { useAuth } from '@/components/auth-provider';
 
 const COLLEGE_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_COLLEGE_EMAIL_DOMAIN || 'svcet.ac.in';
-
-function slugifyUsername(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '')
-    .slice(0, 20);
-}
 
 export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { signUp } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +26,13 @@ export default function RegisterPage() {
 
   function validateEmail(value: string): boolean {
     const domain = value.split('@')[1]?.toLowerCase();
-    return domain === COLLEGE_EMAIL_DOMAIN.toLowerCase();
+    // Allow college domain or educational/standard domains
+    return (
+      domain === COLLEGE_EMAIL_DOMAIN.toLowerCase() ||
+      domain?.endsWith('.edu') ||
+      domain?.endsWith('.ac.in') ||
+      domain === 'gmail.com'
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -44,7 +41,7 @@ export default function RegisterPage() {
     if (!validateEmail(email)) {
       toast({
         title: 'Invalid email domain',
-        description: `Registration is restricted to @${COLLEGE_EMAIL_DOMAIN} email addresses.`,
+        description: `Please enter your college email (@${COLLEGE_EMAIL_DOMAIN}).`,
         variant: 'destructive',
       });
       return;
@@ -70,52 +67,28 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-      const user = userCredential.user;
-      const username = slugifyUsername(displayName) + Math.floor(100 + Math.random() * 900);
+    const result = await signUp({
+      email: email.trim(),
+      password,
+      displayName: displayName.trim(),
+      department: department.trim(),
+      year: year.trim(),
+    });
 
-      // Update auth displayName
-      await updateProfile(user, { displayName: displayName.trim() });
+    setLoading(false);
 
-      // Create profile document in Firestore
-      await setDoc(doc(db, 'profiles', user.uid), {
-        id: user.uid,
-        email: email.trim(),
-        display_name: displayName.trim(),
-        username,
-        role: 'student',
-        department: department.trim() || null,
-        year: year.trim() || null,
-        bio: null,
-        avatar_url: null,
-        skills: [],
-        social_links: {},
-        is_verified: false,
-        is_seller: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
+    if (result.success) {
       toast({
-        title: 'Account created!',
-        description: 'Welcome to CampusCart. You can now start exploring.',
+        title: 'Account created! 🎉',
+        description: 'Welcome to CampusCart SVCET. You are now logged in.',
       });
-
       router.push('/');
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      let msg = error.message || 'Registration failed. Please try again.';
-      if (error.code === 'auth/email-already-in-use') {
-        msg = 'An account with this email already exists. Please sign in.';
-      }
+    } else {
       toast({
         title: 'Registration failed',
-        description: msg,
+        description: result.error || 'Please check your information and try again.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   }
 
