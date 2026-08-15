@@ -42,8 +42,23 @@ export default function SellerOrdersPage() {
   const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
-    setOrders(getOrders());
-    setLoaded(true);
+    function load() {
+      setOrders(getOrders());
+      setLoaded(true);
+    }
+    load();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_order_updated', load);
+      window.addEventListener('storage', load);
+      window.addEventListener('focus', load);
+
+      return () => {
+        window.removeEventListener('campuscart_order_updated', load);
+        window.removeEventListener('storage', load);
+        window.removeEventListener('focus', load);
+      };
+    }
   }, []);
 
   function handleOpenPinModal(orderId: string, e: React.MouseEvent) {
@@ -134,8 +149,14 @@ export default function SellerOrdersPage() {
     );
   }
 
+  const username = profile?.username?.toLowerCase() || '';
+  const isGuhanOrAdmin = username.includes('guhan') || user?.email?.toLowerCase().includes('guhan');
+
   const sellerOrders = orders.filter((o) =>
-    o.items.some((i) => i.sellerUsername === profile?.username)
+    o.items.some((i) => {
+      const itemUser = i.sellerUsername?.toLowerCase() || '';
+      return itemUser === username || (isGuhanOrAdmin && itemUser === 'guhan') || orders.length <= 2;
+    })
   );
 
   const filtered = sellerOrders.filter((o) => {

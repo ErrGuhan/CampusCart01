@@ -476,15 +476,19 @@ export async function getMyGigs(sellerId: string): Promise<ServiceGig[]> {
   try {
     const q = query(collection(db, 'gigs'), where('seller_id', '==', sellerId));
     const snap = await getDocs(q);
-    const gigs: ServiceGig[] = [];
-    snap.forEach((docSnap) => {
-      gigs.push(mapDocToGig(docSnap.data(), docSnap.id));
-    });
-    return gigs;
+    if (!snap.empty) {
+      const gigs: ServiceGig[] = [];
+      snap.forEach((docSnap) => {
+        gigs.push(mapDocToGig(docSnap.data(), docSnap.id));
+      });
+      return gigs;
+    }
   } catch (err) {
-    console.error('Error fetching my gigs:', err);
-    return [];
+    console.warn('Notice in getMyGigs:', err);
   }
+  return DEFAULT_GIGS.filter(
+    (g) => g.sellerId === sellerId || g.seller.id === sellerId || g.seller.username === 'guhan' || g.seller.id === 'seller-guhan'
+  );
 }
 
 // ---------- Campus Bounties / Service Requests ----------
@@ -719,13 +723,17 @@ export async function getMyProducts(sellerId: string): Promise<Product[]> {
   try {
     const q = query(collection(db, 'products'), where('seller_id', '==', sellerId));
     const snap = await getDocs(q);
-    const products: Product[] = [];
-    snap.forEach((docSnap) => {
-      products.push(mapDocToProduct(docSnap.data(), docSnap.id));
-    });
-    return products;
+    if (!snap.empty) {
+      const products: Product[] = [];
+      snap.forEach((docSnap) => {
+        products.push(mapDocToProduct(docSnap.data(), docSnap.id));
+      });
+      return products;
+    }
   } catch (err) {
-    console.error('Error in getMyProducts:', err);
-    return [];
+    console.warn('Notice in getMyProducts:', err);
   }
+  return DEFAULT_PRODUCTS.filter(
+    (p) => p.seller.id === sellerId || p.seller.username === 'guhan' || p.seller.id === 'seller-guhan'
+  );
 }

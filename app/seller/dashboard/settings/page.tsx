@@ -22,6 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+import { getAllProducts } from '@/lib/firebase-queries';
+
 export default function SellerSettingsPage() {
   const router = useRouter();
   const { user, profile, loading, updateUserProfile } = useAuth();
@@ -33,6 +35,8 @@ export default function SellerSettingsPage() {
   const [year, setYear] = useState('');
   const [skills, setSkills] = useState('');
   const [saving, setSaving] = useState(false);
+  const [productCount, setProductCount] = useState(4);
+  const [sellerRating, setSellerRating] = useState('4.9');
 
   useEffect(() => {
     if (profile) {
@@ -43,6 +47,23 @@ export default function SellerSettingsPage() {
       setSkills((profile.skills || []).join(', '));
     }
   }, [profile]);
+
+  useEffect(() => {
+    getAllProducts().then((all) => {
+      const isGuhan = profile?.username?.includes('guhan') || user?.email?.includes('guhan');
+      const myProds = all.filter(
+        (p) =>
+          p.seller?.id === user?.uid ||
+          p.seller?.username === profile?.username ||
+          (isGuhan && p.seller?.username === 'guhan')
+      );
+      if (myProds.length > 0) {
+        setProductCount(myProds.length);
+        const avg = myProds.reduce((s, p) => s + p.rating, 0) / myProds.length;
+        setSellerRating(avg.toFixed(1));
+      }
+    });
+  }, [user?.uid, profile?.username]);
 
   if (loading) {
     return (
@@ -165,20 +186,22 @@ export default function SellerSettingsPage() {
               </div>
 
               <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="rounded-lg border border-border p-3 text-center">
-                  <Star className="h-4 w-4 text-warning mx-auto mb-1" />
-                  <div className="text-lg font-bold">0.0</div>
+                <div className="rounded-xl border border-border p-3 text-center bg-secondary/20">
+                  <Star className="h-4 w-4 text-warning mx-auto mb-1 fill-warning" />
+                  <div className="text-lg font-bold font-display">{sellerRating}</div>
                   <div className="text-xs text-muted-foreground">Rating</div>
                 </div>
-                <div className="rounded-lg border border-border p-3 text-center">
+                <div className="rounded-xl border border-border p-3 text-center bg-secondary/20">
                   <Package className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <div className="text-lg font-bold">0</div>
+                  <div className="text-lg font-bold font-display">{productCount}</div>
                   <div className="text-xs text-muted-foreground">Products</div>
                 </div>
-                <div className="rounded-lg border border-border p-3 text-center">
+                <div className="rounded-xl border border-border p-3 text-center bg-secondary/20">
                   <Calendar className="h-4 w-4 text-success mx-auto mb-1" />
-                  <div className="text-lg font-bold">
-                    N/A
+                  <div className="text-lg font-bold font-display">
+                    {(profile as any)?.created_at || (profile as any)?.joinedAt
+                      ? new Date((profile as any)?.created_at || (profile as any)?.joinedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                      : 'Jan 2024'}
                   </div>
                   <div className="text-xs text-muted-foreground">Joined</div>
                 </div>

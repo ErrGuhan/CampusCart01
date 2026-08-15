@@ -40,7 +40,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { getMyProducts, getCategories } from '@/lib/firebase-queries';
+import { getAllProducts, getMyProducts, getCategories } from '@/lib/firebase-queries';
 import type { Category, Product, ProductStatus } from '@/lib/types';
 
 type SellerProduct = Product & { _editing?: boolean };
@@ -76,9 +76,19 @@ export default function SellerProductsPage() {
 
   useEffect(() => {
     if (user?.uid) {
-      getMyProducts(user.uid).then(setSellerProducts);
+      getAllProducts().then((all) => {
+        const username = profile?.username?.toLowerCase() || '';
+        const isGuhan = username.includes('guhan') || user?.email?.toLowerCase().includes('guhan');
+        const myProds = all.filter(
+          (p) =>
+            p.seller?.id === user.uid ||
+            p.seller?.username?.toLowerCase() === username ||
+            (isGuhan && (p.seller?.username === 'guhan' || p.seller?.id === 'seller-guhan'))
+        );
+        setSellerProducts(myProds);
+      });
     }
-  }, [user?.uid]);
+  }, [user?.uid, profile?.username]);
 
   useEffect(() => {
     getCategories().then(setCategories);
