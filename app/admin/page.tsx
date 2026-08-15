@@ -764,32 +764,44 @@ export default function AdminDashboardPage() {
 
             {/* TAB 3: CREATORS DIRECTORY */}
             <TabsContent value="creators" className="space-y-6 mt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {sellers.map((seller) => (
-                  <div key={seller.id} className="rounded-2xl border border-border bg-card p-5">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 ring-2 ring-border">
-                        <AvatarImage src={seller.avatar} alt={seller.displayName} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                          {seller.displayName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-bold text-sm truncate">{seller.displayName}</h4>
-                        <p className="text-xs text-muted-foreground truncate">{seller.department} • {seller.year}</p>
+              {sellers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-base font-bold text-foreground">No registered student creators yet</h3>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                    When students register on CampusCart and list products or gigs, their verified creator profiles will appear here automatically.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sellers.map((seller) => (
+                    <div key={seller.id} className="rounded-2xl border border-border bg-card p-5 hover:border-primary/40 transition-colors shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 ring-2 ring-border">
+                          <AvatarImage src={seller.avatar} alt={seller.displayName} />
+                          <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                            {seller.displayName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-sm truncate">{seller.displayName}</h4>
+                          <p className="text-xs text-muted-foreground truncate">{seller.department} • {seller.year}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Listings: <strong>{seller.productCount}</strong></span>
+                        <Link href={`/seller/${seller.username}`} className="text-primary font-semibold hover:underline flex items-center gap-1">
+                          Store Page
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
                       </div>
                     </div>
-
-                    <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Rating: <strong>{seller.rating.toFixed(1)} ★</strong></span>
-                      <Link href={`/seller/${seller.username}`} className="text-primary font-semibold hover:underline flex items-center gap-1">
-                        Store Page
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

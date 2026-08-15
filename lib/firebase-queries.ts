@@ -45,21 +45,7 @@ export const GIG_CATEGORIES = [
   { name: 'Other Freelance', slug: 'other-freelance', icon: 'Sparkles', description: 'Custom student commissions and miscellaneous gigs' },
 ];
 
-export const DEFAULT_SELLERS: Seller[] = [
-  {
-    id: 'seller-guhan',
-    username: 'guhan',
-    displayName: 'Guhan M',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede',
-    department: 'Computer Science & Engineering (CSE)',
-    year: '4th Year (Final Year)',
-    bio: 'Full-stack developer, IoT builder, and founder of CampusCart SVCET.',
-    skills: ['Next.js', 'React', 'Python', 'IoT', 'UI/UX Design'],
-    rating: 0,
-    productCount: 0,
-    joinedAt: '2024-01-10T00:00:00Z',
-  },
-];
+export const DEFAULT_SELLERS: Seller[] = [];
 
 export const DEFAULT_PRODUCTS: Product[] = [];
 
@@ -323,19 +309,33 @@ export async function getGigsBySeller(username: string): Promise<ServiceGig[]> {
 
 // ---------- Products & Mappers ----------
 
-function mapDocToSeller(data: any, id: string, stats?: { rating: number; productCount: number }): Seller {
+export function mapDocToSeller(data: any, id: string, stats?: { rating?: number; productCount?: number }): Seller {
+  const isGuhan =
+    data.email?.toLowerCase().includes('guhan') ||
+    data.username?.toLowerCase().includes('guhan') ||
+    data.display_name?.toLowerCase().includes('guhan') ||
+    data.displayName?.toLowerCase().includes('guhan');
+
+  const cleanUsername = (data.username || (isGuhan ? 'guhan' : data.email?.split('@')[0] || 'student'))
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '');
+
   return {
-    id: id || data.id,
-    username: data.username || 'student',
-    displayName: data.display_name || data.displayName || 'Student',
-    avatar: data.avatar_url || data.avatar || '',
-    department: data.department || '',
-    year: data.year || '',
-    bio: data.bio || '',
-    skills: data.skills || [],
-    rating: stats?.rating ?? data.rating ?? 5.0,
-    productCount: stats?.productCount ?? data.productCount ?? 1,
-    joinedAt: data.created_at || data.createdAt || new Date().toISOString(),
+    id: id || data.id || 'seller-' + cleanUsername,
+    username: cleanUsername,
+    displayName: data.display_name || data.displayName || (isGuhan ? 'Guhan M' : 'Student Creator'),
+    avatar:
+      data.avatar_url ||
+      data.avatarUrl ||
+      data.avatar ||
+      `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanUsername)}&backgroundColor=b6e3f4,c0aede`,
+    department: data.department || (isGuhan ? 'Computer Science & Engineering (CSE)' : 'Engineering'),
+    year: data.year || (isGuhan ? '4th Year (Final Year)' : 'Student'),
+    bio: data.bio || (isGuhan ? 'Founder & Platform Administrator of CampusCart SVCET.' : 'Student creator building on CampusCart.'),
+    skills: Array.isArray(data.skills) && data.skills.length > 0 ? data.skills : (isGuhan ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : ['Campus Seller']),
+    rating: typeof stats?.rating === 'number' ? stats.rating : typeof data.rating === 'number' ? data.rating : 0,
+    productCount: typeof stats?.productCount === 'number' ? stats.productCount : typeof data.productCount === 'number' ? data.productCount : 0,
+    joinedAt: data.created_at || data.createdAt || data.joinedAt || new Date().toISOString(),
   };
 }
 
@@ -687,75 +687,42 @@ export async function getRelatedProducts(product: Product, limitCount = 4): Prom
     .slice(0, limitCount);
 }
 
-// ---------- Sellers ----------
+// ---------- Sellers / Creators ----------
 
 export async function getAllSellers(): Promise<Seller[]> {
   const sellersMap = new Map<string, Seller>();
 
-  // 1. Founding verified creator (Guhan M)
-  sellersMap.set(DEFAULT_SELLERS[0].username.toLowerCase(), { ...DEFAULT_SELLERS[0] });
-
-  // 2. Query Firestore profiles for registered sellers
+  // 1. Query Firestore profiles for registered accounts
   try {
-    const q = query(collection(db, 'profiles'), where('is_seller', '==', true));
-    const snap = await getDocs(q);
+    const snap = await getDocs(collection(db, 'profiles'));
     if (!snap.empty) {
       snap.forEach((docSnap) => {
-        const s = mapDocToSeller(docSnap.data(), docSnap.id);
-        if (s.username) {
-          sellersMap.set(s.username.toLowerCase(), s);
+        const d = docSnap.data();
+        if (d.display_name || d.displayName || d.email || d.username) {
+          const s = mapDocToSeller(d, docSnap.id);
+          // Canonical key by email or username to ensure 0 duplicates
+          const canonicalKey = (d.email || s.username || s.id).toLowerCase();
+          sellersMap.set(canonicalKey, s);
         }
       });
     }
   } catch (err) {
-    console.warn('Notice in getAllSellers:', err);
+    console.warn('Notice in getAllSellers Firestore query:', err);
   }
 
-  // 3. Include any locally registered/logged-in sellers from client session
+  // 2. Include any active logged-in user from client session if not already present
   if (typeof window !== 'undefined') {
     try {
-      const authProfileStr = localStorage.getItem('campuscart_auth_profile');
-      if (authProfileStr) {
-        const p = JSON.parse(authProfileStr);
-        if (p?.is_seller && p?.username) {
-          sellersMap.set(p.username.toLowerCase(), {
-            id: p.id || 'seller-' + p.username,
-            username: p.username,
-            displayName: p.display_name || p.username,
-            avatar: p.avatar_url || '',
-            department: p.department || 'SVCET Student',
-            year: p.year || 'Student',
-            bio: p.bio || 'Student Creator building on CampusCart.',
-            skills: Array.isArray(p.skills) && p.skills.length > 0 ? p.skills : ['Campus Seller', 'Student Creator'],
-            rating: 0,
-            productCount: 0,
-            joinedAt: p.created_at || new Date().toISOString(),
-          });
-        }
-      }
-
-      const registeredAccsStr = localStorage.getItem('campuscart_registered_accounts');
-      if (registeredAccsStr) {
-        const accs = JSON.parse(registeredAccsStr);
-        if (Array.isArray(accs)) {
-          accs.forEach((acc: any) => {
-            const p = acc.profile;
-            if (p?.is_seller && p?.username) {
-              sellersMap.set(p.username.toLowerCase(), {
-                id: p.id || 'seller-' + p.username,
-                username: p.username,
-                displayName: p.display_name || p.username,
-                avatar: p.avatar_url || '',
-                department: p.department || 'SVCET Student',
-                year: p.year || 'Student',
-                bio: p.bio || 'Student Creator building on CampusCart.',
-                skills: Array.isArray(p.skills) && p.skills.length > 0 ? p.skills : ['Campus Seller', 'Student Creator'],
-                rating: 0,
-                productCount: 0,
-                joinedAt: p.created_at || new Date().toISOString(),
-              });
-            }
-          });
+      const storedFallback = localStorage.getItem('campuscart_fallback_user');
+      if (storedFallback) {
+        const parsed = JSON.parse(storedFallback);
+        const p = parsed?.profile;
+        if (p && (p.display_name || p.email || p.username)) {
+          const s = mapDocToSeller(p, p.id || parsed?.user?.uid || 'seller-user');
+          const canonicalKey = (p.email || s.username || s.id).toLowerCase();
+          if (!sellersMap.has(canonicalKey)) {
+            sellersMap.set(canonicalKey, s);
+          }
         }
       }
     } catch {}
@@ -765,22 +732,21 @@ export async function getAllSellers(): Promise<Seller[]> {
 
   // Dynamically compute real productCount and average rating for each seller
   try {
-    const [allProducts, allGigs] = await Promise.all([getAllProducts(), getAllGigs()]);
+    const [allProducts, allGigs] = await Promise.all([getAllProductsAdmin(), getAllGigsAdmin()]);
     return allSellers.map((seller) => {
       const u = seller.username.toLowerCase();
       const sId = seller.id;
-      const isGuhan = u.includes('guhan') || sId === 'seller-guhan';
 
       const sProducts = allProducts.filter((p) => {
         const pU = (p.seller?.username || '').toLowerCase();
         const pId = p.seller?.id || '';
-        return pId === sId || pU === u || (isGuhan && (pU === 'guhan' || pId === 'seller-guhan'));
+        return pId === sId || (u && pU === u);
       });
 
       const sGigs = allGigs.filter((g) => {
         const gU = (g.seller?.username || '').toLowerCase();
         const gId = g.sellerId || g.seller?.id || '';
-        return gId === sId || gU === u || (isGuhan && (gU === 'guhan' || gId === 'seller-guhan'));
+        return gId === sId || (u && gU === u);
       });
 
       const totalItems = sProducts.length + sGigs.length;
