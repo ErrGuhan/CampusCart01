@@ -99,7 +99,7 @@ export function Navbar() {
           : 'border-b border-border/50 bg-background/95 backdrop-blur-md'
       )}
     >
-      <div className="container-px mx-auto max-w-7xl">
+      <div className="container-px mx-auto max-w-7xl w-full min-w-0">
         {/* Main Desktop & Mobile Header Bar - Slightly taller & more spacious */}
         <div className="flex h-16 sm:h-18 items-center justify-between gap-3 sm:gap-5">
           {/* Left: Mobile Sheet Trigger + Logo */}
@@ -569,7 +569,7 @@ export function Navbar() {
         )}
 
         {/* Mobile Quick Category Horizontal Carousel Strip - Slightly larger and spacious */}
-        <div className="flex sm:hidden items-center gap-2 overflow-x-auto pb-2.5 pt-0.5 scrollbar-none">
+        <div className="w-full min-w-0 flex sm:hidden items-center gap-2 overflow-x-auto pb-2.5 pt-0.5 scrollbar-none">
           {mobileQuickChips.map((chip) => {
             const active = pathname === chip.href;
             return (

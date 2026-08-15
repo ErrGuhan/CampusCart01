@@ -40,12 +40,12 @@ import { useToast } from '@/hooks/use-toast';
 import { COLLEGE_DEPARTMENTS, COLLEGE_YEARS } from '@/lib/campus-constants';
 
 const AVATAR_PRESETS = [
-  { label: 'Male Student 1', url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' },
-  { label: 'Female Student 1', url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300' },
-  { label: 'Male Student 2', url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300' },
-  { label: 'Female Student 2', url: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=300' },
-  { label: 'Tech / Coder', url: 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=300' },
-  { label: 'Creative / Maker', url: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=300' },
+  { label: '3D Coder Bot', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=SVCETbot&backgroundColor=b6e3f4,c0aede' },
+  { label: 'Adventurer Felix', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix&backgroundColor=b6e3f4,d1d4f9' },
+  { label: 'Techie Zoe', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Zoe&backgroundColor=ffd5dc,ffdfbf' },
+  { label: 'Cyber Spark Bot', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=CampusSpark&backgroundColor=d1d4f9,c0aede' },
+  { label: 'Artist Maya', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Maya&backgroundColor=ffdfbf,ffd5dc' },
+  { label: '3D Cool Star', url: 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=StarVibe&backgroundColor=fef08a,fed7aa' },
 ];
 
 export default function AccountSettingsPage() {
@@ -263,15 +263,15 @@ export default function AccountSettingsPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen">
-        <div className="mb-6 sm:mb-8">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen w-full min-w-0 overflow-hidden">
+        <div className="mb-6 sm:mb-8 w-full min-w-0">
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">Account Settings</h1>
           <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Manage your student profile photo, academic info, and campus preferences
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-4 w-full min-w-0">
           <aside className="lg:block">
             <AccountSidebar />
           </aside>

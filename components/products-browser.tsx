@@ -239,10 +239,10 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-6 sm:py-8 min-h-screen">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-8 min-h-screen w-full min-w-0 overflow-hidden">
         {/* Page Header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4 w-full min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primary mb-1">
               <Sparkles className="h-3.5 w-3.5" />
               <span>Campus Marketplace</span>
@@ -255,7 +255,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button asChild size="sm" variant="outline" className="rounded-xl text-xs gap-1.5">
               <Link href="/requests">
                 <Tag className="h-3.5 w-3.5 text-emerald-600" />
@@ -266,8 +266,8 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
         </div>
 
         {/* Search, Filter Bar, and Sort */}
-        <div className="flex flex-col gap-3 mb-6">
-          <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-col gap-3 mb-6 w-full min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 w-full min-w-0">
             {/* Search Input */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

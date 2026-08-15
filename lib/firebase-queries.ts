@@ -50,7 +50,7 @@ export const DEFAULT_SELLERS: Seller[] = [
     id: 'seller-guhan',
     username: 'guhan',
     displayName: 'Guhan M',
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede',
     department: 'Computer Science & Engineering (CSE)',
     year: '4th Year (Final Year)',
     bio: 'Full-stack developer, IoT builder, and founder of CampusCart SVCET.',

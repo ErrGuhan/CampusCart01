@@ -141,9 +141,9 @@ export default function CampusCommunityPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-8 sm:py-12 min-h-screen">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen w-full min-w-0 overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-6 sm:pb-8 border-b border-border">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-6 sm:pb-8 border-b border-border w-full min-w-0">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-2.5">
               <Users className="h-4 w-4" />

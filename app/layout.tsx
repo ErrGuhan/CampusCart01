@@ -24,7 +24,13 @@ export const metadata: Metadata = {
   title: 'CampusCart — SVCET Student Marketplace & Freelance Hub',
   description:
     'Buy, sell, and discover products and freelance services created by students at Sri Venkateswara College of Engineering and Technology (SVCET).',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
   themeColor: '#09090b',
   openGraph: {
     title: 'CampusCart — Discover what your campus creates',
@@ -46,8 +52,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${sora.variable}`}>
-      <body className="font-sans antialiased pb-16 md:pb-0 min-h-screen flex flex-col">
+    <html lang="en" className={`${inter.variable} ${sora.variable} w-full max-w-[100vw] overflow-x-hidden`}>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        />
+      </head>
+      <body className="font-sans antialiased pb-16 md:pb-0 min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden">
         <AuthProvider>
           <CartProvider>
             {children}

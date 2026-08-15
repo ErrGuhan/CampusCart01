@@ -254,34 +254,34 @@ export default function AdminDashboardPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-8 min-h-screen">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-8 min-h-screen w-full min-w-0 overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-border">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 sm:pb-8 border-b border-border w-full min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-2">
               <ShieldCheck className="h-4 w-4" />
               <span>CampusCart Admin Authority</span>
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground break-words">
               Product & Quality Approval Center
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Review student submissions, maintain campus originality standards, and approve marketplace listings.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={loadAdminData}
               disabled={dataLoading}
-              className="rounded-xl gap-1.5"
+              className="rounded-xl gap-1.5 text-xs h-9"
             >
               <RefreshCw className={`h-4 w-4 ${dataLoading ? 'animate-spin' : ''}`} />
               Refresh Feed
             </Button>
-            <Button asChild size="sm" className="rounded-xl gap-1.5">
+            <Button asChild size="sm" className="rounded-xl gap-1.5 text-xs h-9">
               <Link href="/products">
                 <ExternalLink className="h-4 w-4" />
                 Live Marketplace
@@ -291,7 +291,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Top Metric Cards */}
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mt-6 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4 w-full min-w-0">
           <div className="rounded-2xl border border-warning/30 bg-warning/5 p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">Pending Products</span>
