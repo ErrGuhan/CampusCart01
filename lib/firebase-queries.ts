@@ -407,20 +407,41 @@ function mapDocToGig(data: any, id: string): ServiceGig {
 }
 
 export async function getAllGigs(): Promise<ServiceGig[]> {
+  const gigMap = new Map<string, ServiceGig>();
+
+  // 1. Initial base gigs
+  DEFAULT_GIGS.forEach((g) => gigMap.set(g.id, g));
+
+  // 2. Fetch from Firestore
   try {
     const q = query(collection(db, 'gigs'), where('status', '==', 'active'));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      const gigs: ServiceGig[] = [];
       snap.forEach((docSnap) => {
-        gigs.push(mapDocToGig(docSnap.data(), docSnap.id));
+        const gig = mapDocToGig(docSnap.data(), docSnap.id);
+        gigMap.set(gig.id, gig);
       });
-      return gigs;
     }
   } catch (err) {
     console.warn('Notice in getAllGigs from Firestore:', err);
   }
-  return DEFAULT_GIGS;
+
+  // 3. Merge locally created gigs
+  if (typeof window !== 'undefined') {
+    try {
+      const localGigsStr = localStorage.getItem('campuscart_gigs');
+      if (localGigsStr) {
+        const localGigs = JSON.parse(localGigsStr);
+        if (Array.isArray(localGigs)) {
+          localGigs.forEach((g: ServiceGig) => {
+            if (g.id) gigMap.set(g.id, g);
+          });
+        }
+      }
+    } catch {}
+  }
+
+  return Array.from(gigMap.values());
 }
 
 export async function getFeaturedGigs(limitCount = 4): Promise<ServiceGig[]> {
@@ -434,35 +455,32 @@ export async function getGigBySlug(slug: string): Promise<ServiceGig | undefined
 }
 
 export async function getMyGigs(sellerId: string): Promise<ServiceGig[]> {
-  try {
-    const q = query(collection(db, 'gigs'), where('seller_id', '==', sellerId));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const gigs: ServiceGig[] = [];
-      snap.forEach((docSnap) => {
-        gigs.push(mapDocToGig(docSnap.data(), docSnap.id));
-      });
-      return gigs;
-    }
-  } catch (err) {
-    console.warn('Notice in getMyGigs:', err);
-  }
-  return DEFAULT_GIGS.filter(
-    (g) => g.sellerId === sellerId || g.seller.id === sellerId || g.seller.username === 'guhan' || g.seller.id === 'seller-guhan'
+  const all = await getAllGigs();
+  return all.filter(
+    (g) =>
+      g.sellerId === sellerId ||
+      g.seller?.id === sellerId ||
+      g.seller?.username === 'guhan' ||
+      g.seller?.id === 'seller-guhan'
   );
 }
 
 // ---------- Campus Bounties / Service Requests ----------
 
 export async function getAllGigRequests(): Promise<GigRequest[]> {
+  const reqMap = new Map<string, GigRequest>();
+
+  // 1. Base bounties
+  DEFAULT_GIG_REQUESTS.forEach((r) => reqMap.set(r.id, r));
+
+  // 2. Fetch from Firestore
   try {
     const q = query(collection(db, 'gig_requests'), where('status', '==', 'open'));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      const requests: GigRequest[] = [];
       snap.forEach((docSnap) => {
         const d = docSnap.data();
-        requests.push({
+        const req: GigRequest = {
           id: docSnap.id,
           requesterId: d.requester_id || d.requesterId,
           requesterName: d.requester_name || d.requesterName || 'Student',
@@ -475,14 +493,30 @@ export async function getAllGigRequests(): Promise<GigRequest[]> {
           status: d.status || 'open',
           proposalsCount: Number(d.proposals_count || d.proposalsCount) || 0,
           createdAt: d.created_at || new Date().toISOString(),
-        });
+        };
+        reqMap.set(req.id, req);
       });
-      return requests;
     }
   } catch (err) {
     console.warn('Notice in getAllGigRequests:', err);
   }
-  return DEFAULT_GIG_REQUESTS;
+
+  // 3. Merge locally posted bounties from client session
+  if (typeof window !== 'undefined') {
+    try {
+      const localBountiesStr = localStorage.getItem('campuscart_gig_requests');
+      if (localBountiesStr) {
+        const localBounties = JSON.parse(localBountiesStr);
+        if (Array.isArray(localBounties)) {
+          localBounties.forEach((b: GigRequest) => {
+            if (b.id) reqMap.set(b.id, b);
+          });
+        }
+      }
+    } catch {}
+  }
+
+  return Array.from(reqMap.values());
 }
 
 export async function getGigsBySeller(username: string): Promise<ServiceGig[]> {
@@ -584,20 +618,41 @@ export async function getCategories(): Promise<Category[]> {
 // ---------- Products ----------
 
 export async function getAllProducts(): Promise<Product[]> {
+  const prodMap = new Map<string, Product>();
+
+  // 1. Base verified catalog
+  DEFAULT_PRODUCTS.forEach((p) => prodMap.set(p.id, p));
+
+  // 2. Fetch from Firestore
   try {
     const q = query(collection(db, 'products'), where('status', 'in', ['active', 'out_of_stock']));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      const products: Product[] = [];
       snap.forEach((docSnap) => {
-        products.push(mapDocToProduct(docSnap.data(), docSnap.id));
+        const prod = mapDocToProduct(docSnap.data(), docSnap.id);
+        prodMap.set(prod.id, prod);
       });
-      return products;
     }
   } catch (err) {
     console.warn('Notice in getAllProducts:', err);
   }
-  return DEFAULT_PRODUCTS;
+
+  // 3. Merge locally created/edited products
+  if (typeof window !== 'undefined') {
+    try {
+      const localProdsStr = localStorage.getItem('campuscart_products');
+      if (localProdsStr) {
+        const localProds = JSON.parse(localProdsStr);
+        if (Array.isArray(localProds)) {
+          localProds.forEach((p: Product) => {
+            if (p.id) prodMap.set(p.id, p);
+          });
+        }
+      }
+    } catch {}
+  }
+
+  return Array.from(prodMap.values());
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {

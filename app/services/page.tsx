@@ -22,7 +22,7 @@ export default function ServicesPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  useEffect(() => {
+  const refreshGigs = () => {
     getAllGigs()
       .then((data) => {
         setGigs(data);
@@ -32,6 +32,22 @@ export default function ServicesPage() {
         console.error(err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    refreshGigs();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_gig_updated', refreshGigs);
+      window.addEventListener('storage', refreshGigs);
+      window.addEventListener('focus', refreshGigs);
+
+      return () => {
+        window.removeEventListener('campuscart_gig_updated', refreshGigs);
+        window.removeEventListener('storage', refreshGigs);
+        window.removeEventListener('focus', refreshGigs);
+      };
+    }
   }, []);
 
   const filtered = gigs.filter((gig) => {

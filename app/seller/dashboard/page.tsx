@@ -91,8 +91,7 @@ export default function SellerDashboardPage() {
         const itemUser = i.sellerUsername?.toLowerCase() || '';
         return (
           itemUser === username ||
-          (isGuhanOrAdmin && itemUser === 'guhan') ||
-          orders.length <= 2
+          (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
         );
       })
     );
@@ -104,7 +103,10 @@ export default function SellerDashboardPage() {
       if (o.status === 'cancelled' || o.status === 'refunded') return sum;
       const sellerItems = o.items.filter((i) => {
         const itemUser = i.sellerUsername?.toLowerCase() || '';
-        return itemUser === username || (isGuhanOrAdmin && itemUser === 'guhan') || true;
+        return (
+          itemUser === username ||
+          (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
+        );
       });
       return sum + sellerItems.reduce((s, i) => s + (i.discountPrice ?? i.price) * i.quantity, 0);
     }, 0);
@@ -114,7 +116,10 @@ export default function SellerDashboardPage() {
     return sellerOrders.reduce((sum, o) => {
       const sellerItems = o.items.filter((i) => {
         const itemUser = i.sellerUsername?.toLowerCase() || '';
-        return itemUser === username || (isGuhanOrAdmin && itemUser === 'guhan') || true;
+        return (
+          itemUser === username ||
+          (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
+        );
       });
       return sum + sellerItems.reduce((s, i) => s + i.quantity, 0);
     }, 0);

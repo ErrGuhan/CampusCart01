@@ -227,6 +227,17 @@ export default function SellerProductsPage() {
 
       if (editProduct) {
         setSellerProducts((prev) => prev.map((p) => (p.id === editProduct.id ? localProduct : p)));
+        
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('campuscart_products');
+            let list = raw ? JSON.parse(raw) : [];
+            list = list.map((p: any) => (p.id === editProduct.id ? localProduct : p));
+            localStorage.setItem('campuscart_products', JSON.stringify(list));
+            window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+          } catch {}
+        }
+
         try {
           await setDoc(doc(db, 'products', editProduct.id), productPayload, { merge: true });
         } catch (err) {
@@ -238,6 +249,17 @@ export default function SellerProductsPage() {
         });
       } else {
         setSellerProducts((prev) => [localProduct, ...prev]);
+
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('campuscart_products');
+            const list = raw ? JSON.parse(raw) : [];
+            list.unshift(localProduct);
+            localStorage.setItem('campuscart_products', JSON.stringify(list));
+            window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+          } catch {}
+        }
+
         try {
           await addDoc(collection(db, 'products'), {
             ...productPayload,
@@ -264,6 +286,16 @@ export default function SellerProductsPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('campuscart_products');
+          let list = raw ? JSON.parse(raw) : [];
+          list = list.filter((p: any) => p.id !== deleteTarget.id);
+          localStorage.setItem('campuscart_products', JSON.stringify(list));
+          window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+        } catch {}
+      }
+
       await deleteDoc(doc(db, 'products', deleteTarget.id));
 
       setSellerProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));

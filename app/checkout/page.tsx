@@ -20,6 +20,9 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { useAuth } from '@/components/auth-provider';
+import { db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { useCart } from '@/components/cart-provider';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -33,6 +36,7 @@ type Step = (typeof steps)[number];
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const { items, subtotal, totalSavings, clearCart } = useCart();
   const { toast } = useToast();
 
@@ -146,6 +150,17 @@ export default function CheckoutPage() {
     };
 
     saveOrder(order);
+
+    try {
+      await setDoc(doc(db, 'orders', order.id), {
+        ...order,
+        buyer_id: user?.uid || 'guest',
+        buyer_email: user?.email || '',
+      });
+    } catch (err) {
+      console.warn('Firestore order sync notice:', err);
+    }
+
     clearCart();
     setProcessing(false);
 

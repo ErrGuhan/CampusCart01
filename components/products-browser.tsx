@@ -20,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { getAllProducts } from '@/lib/firebase-queries';
 import type { Product, Category } from '@/lib/types';
 
 const sortOptions = [
@@ -33,11 +34,12 @@ const sortOptions = [
 
 type Props = { products: Product[]; categories: Category[] };
 
-export function ProductsBrowser({ products, categories }: Props) {
+export function ProductsBrowser({ products: initialProducts, categories }: Props) {
   const searchParams = useSearchParams();
   const urlSearch = searchParams?.get('search') || '';
   const urlCategory = searchParams?.get('category') || '';
 
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState(urlSearch);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     urlCategory ? [urlCategory] : []
@@ -46,6 +48,28 @@ export function ProductsBrowser({ products, categories }: Props) {
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState('relevance');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
+
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
+
+  useEffect(() => {
+    const refresh = () => {
+      getAllProducts().then((data) => setProducts(data));
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_product_updated', refresh);
+      window.addEventListener('storage', refresh);
+      window.addEventListener('focus', refresh);
+
+      return () => {
+        window.removeEventListener('campuscart_product_updated', refresh);
+        window.removeEventListener('storage', refresh);
+        window.removeEventListener('focus', refresh);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const q = searchParams?.get('search');

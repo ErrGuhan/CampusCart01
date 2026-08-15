@@ -47,6 +47,18 @@ export default function CampusBountiesPage() {
 
   useEffect(() => {
     fetchBounties();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_bounty_updated', fetchBounties);
+      window.addEventListener('storage', fetchBounties);
+      window.addEventListener('focus', fetchBounties);
+
+      return () => {
+        window.removeEventListener('campuscart_bounty_updated', fetchBounties);
+        window.removeEventListener('storage', fetchBounties);
+        window.removeEventListener('focus', fetchBounties);
+      };
+    }
   }, []);
 
   function fetchBounties() {
@@ -107,6 +119,16 @@ export default function CampusBountiesPage() {
     };
 
     setBounties((prev) => [newBounty, ...prev]);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('campuscart_gig_requests');
+        const list = raw ? JSON.parse(raw) : [];
+        list.unshift(newBounty);
+        localStorage.setItem('campuscart_gig_requests', JSON.stringify(list));
+        window.dispatchEvent(new CustomEvent('campuscart_bounty_updated'));
+      } catch {}
+    }
 
     try {
       await addDoc(collection(db, 'gig_requests'), {

@@ -155,7 +155,10 @@ export default function SellerOrdersPage() {
   const sellerOrders = orders.filter((o) =>
     o.items.some((i) => {
       const itemUser = i.sellerUsername?.toLowerCase() || '';
-      return itemUser === username || (isGuhanOrAdmin && itemUser === 'guhan') || orders.length <= 2;
+      return (
+        itemUser === username ||
+        (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
+      );
     })
   );
 

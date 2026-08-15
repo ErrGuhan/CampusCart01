@@ -188,6 +188,17 @@ export default function SellerServicesPage() {
 
       if (editGig) {
         setGigs((prev) => prev.map((g) => (g.id === editGig.id ? localGig : g)));
+
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('campuscart_gigs');
+            let list = raw ? JSON.parse(raw) : [];
+            list = list.map((g: any) => (g.id === editGig.id ? localGig : g));
+            localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+            window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+          } catch {}
+        }
+
         try {
           await setDoc(doc(db, 'gigs', editGig.id), gigPayload, { merge: true });
         } catch (err) {
@@ -196,6 +207,17 @@ export default function SellerServicesPage() {
         toast({ title: 'Gig updated! 🎉', description: `"${title}" has been saved.` });
       } else {
         setGigs((prev) => [localGig, ...prev]);
+
+        if (typeof window !== 'undefined') {
+          try {
+            const raw = localStorage.getItem('campuscart_gigs');
+            const list = raw ? JSON.parse(raw) : [];
+            list.unshift(localGig);
+            localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+            window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+          } catch {}
+        }
+
         try {
           await addDoc(collection(db, 'gigs'), {
             ...gigPayload,
@@ -218,6 +240,16 @@ export default function SellerServicesPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('campuscart_gigs');
+          let list = raw ? JSON.parse(raw) : [];
+          list = list.filter((g: any) => g.id !== deleteTarget.id);
+          localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+          window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+        } catch {}
+      }
+
       await deleteDoc(doc(db, 'gigs', deleteTarget.id));
       toast({ title: 'Gig deleted', description: deleteTarget.title });
       setDeleteTarget(null);

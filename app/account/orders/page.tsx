@@ -16,9 +16,25 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
+  const refreshOrders = () => {
     setOrders(getOrders());
     setLoaded(true);
+  };
+
+  useEffect(() => {
+    refreshOrders();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_order_updated', refreshOrders);
+      window.addEventListener('storage', refreshOrders);
+      window.addEventListener('focus', refreshOrders);
+
+      return () => {
+        window.removeEventListener('campuscart_order_updated', refreshOrders);
+        window.removeEventListener('storage', refreshOrders);
+        window.removeEventListener('focus', refreshOrders);
+      };
+    }
   }, []);
 
   if (!loaded) {

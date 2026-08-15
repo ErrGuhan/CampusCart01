@@ -56,128 +56,13 @@ export const CAMPUS_PICKUP_POINTS = [
 
 const STORAGE_KEY = 'campuscart-orders';
 
-export const INITIAL_ORDERS: Order[] = [
-  {
-    id: 'CC-SVCET-1082',
-    status: 'ready_for_pickup',
-    fulfillmentType: 'pickup',
-    pickupPoint: 'Central Library Entrance',
-    pickupPin: '4821',
-    paymentStatus: 'paid',
-    paymentMethod: 'UPI (QR Code)',
-    transactionId: 'TXN984201948210',
-    subtotal: 979,
-    discount: 0,
-    deliveryFee: 0,
-    total: 979,
-    notes: 'Please meet around 4:30 PM near the library lawn.',
-    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    items: [
-      {
-        id: 'item-1',
-        productId: 'prod-1',
-        slug: 'handmade-engineering-drawing-board-cover',
-        name: 'Handmade Engineering Drawing Board Cover & Strap',
-        image: 'https://images.pexels.com/photos/1765033/pexels-photo-1765033.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        price: 350,
-        discountPrice: 280,
-        quantity: 1,
-        sellerName: 'Guhan M',
-        sellerUsername: 'guhan',
-        isDigital: false,
-      },
-      {
-        id: 'item-2',
-        productId: 'prod-4',
-        slug: 'arduino-iot-smart-home-starter-kit-with-sensors',
-        name: 'Arduino IoT Smart Home Starter Kit with 12 Sensors',
-        image: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        price: 850,
-        discountPrice: 699,
-        quantity: 1,
-        sellerName: 'Guhan M',
-        sellerUsername: 'guhan',
-        isDigital: false,
-      },
-    ],
-  },
-  {
-    id: 'CC-SVCET-1079',
-    status: 'delivered',
-    fulfillmentType: 'pickup',
-    pickupPoint: 'CSE & Tech Park Block (Ground Floor)',
-    pickupPin: '7193',
-    paymentStatus: 'paid',
-    paymentMethod: 'UPI (QR Code)',
-    transactionId: 'TXN827491028371',
-    subtotal: 698,
-    discount: 0,
-    deliveryFee: 0,
-    total: 698,
-    notes: 'Completed delivery at lab.',
-    createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-    items: [
-      {
-        id: 'item-3',
-        productId: 'prod-5',
-        slug: 'full-stack-mern-ecommerce-final-year-project-code',
-        name: 'Full-Stack MERN E-Commerce Final Year Project Source Code',
-        image: 'https://images.pexels.com/photos/574071/pexels-photo-574071.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        price: 499,
-        discountPrice: 349,
-        quantity: 2,
-        sellerName: 'Guhan M',
-        sellerUsername: 'guhan',
-        isDigital: true,
-        digitalFileUrl: 'https://github.com/campuscart-project-source-code',
-      },
-    ],
-  },
-  {
-    id: 'CC-SVCET-1075',
-    status: 'delivered',
-    fulfillmentType: 'pickup',
-    pickupPoint: 'Main Canteen / Food Court',
-    pickupPin: '9012',
-    paymentStatus: 'paid',
-    paymentMethod: 'UPI (GPay)',
-    transactionId: 'TXN716294019284',
-    subtotal: 560,
-    discount: 0,
-    deliveryFee: 0,
-    total: 560,
-    notes: '',
-    createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
-    items: [
-      {
-        id: 'item-4',
-        productId: 'prod-1',
-        slug: 'handmade-engineering-drawing-board-cover',
-        name: 'Handmade Engineering Drawing Board Cover & Strap',
-        image: 'https://images.pexels.com/photos/1765033/pexels-photo-1765033.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        price: 350,
-        discountPrice: 280,
-        quantity: 2,
-        sellerName: 'Guhan M',
-        sellerUsername: 'guhan',
-        isDigital: false,
-      },
-    ],
-  },
-];
-
 export function getOrders(): Order[] {
   if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ORDERS));
-      return INITIAL_ORDERS;
-    }
-    const parsed = JSON.parse(stored) as Order[];
-    return parsed.length > 0 ? parsed : INITIAL_ORDERS;
+    return stored ? (JSON.parse(stored) as Order[]) : [];
   } catch {
-    return INITIAL_ORDERS;
+    return [];
   }
 }
 
@@ -236,7 +121,7 @@ export function generatePickupPin(): string {
 export function generateOrderId(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `CC-${timestamp}-${random}`;
+  return `CC-SVCET-${timestamp}-${random}`;
 }
 
 export function generateTransactionId(): string {
