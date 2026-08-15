@@ -49,10 +49,8 @@ export class AuthController {
 
       const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      // Check admin status
-      const isAdmin =
-        email.toLowerCase() === 'guhan24td0781@svcet.ac.in' ||
-        email.toLowerCase() === 'guhan@svcet.ac.in';
+      // Check admin status - guhan24td0781@svcet.ac.in is the ONLY admin
+      const isAdmin = email.toLowerCase().trim() === 'guhan24td0781@svcet.ac.in';
 
       const user = new User({
         email: email.toLowerCase().trim(),

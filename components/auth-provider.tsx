@@ -14,12 +14,11 @@ import { secureApiRequest } from '@/lib/api-client';
 
 export const ADMIN_EMAILS = [
   'guhan24td0781@svcet.ac.in',
-  'guhan@svcet.ac.in',
 ];
 
 export function isAdminEmail(email?: string | null): boolean {
   if (!email) return false;
-  return ADMIN_EMAILS.some((adm) => adm.toLowerCase() === email.trim().toLowerCase());
+  return email.trim().toLowerCase() === 'guhan24td0781@svcet.ac.in';
 }
 
 export type Profile = {

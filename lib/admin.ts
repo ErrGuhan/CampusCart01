@@ -7,6 +7,6 @@ export type AdminAwareProfile = {
 
 export function isAdminUser(profile?: AdminAwareProfile | null): boolean {
   if (!profile) return false;
-  const email = profile.email?.toLowerCase() ?? '';
-  return profile.role === 'admin' || email === ADMIN_EMAIL.toLowerCase();
+  const email = profile.email?.toLowerCase().trim() ?? '';
+  return email === ADMIN_EMAIL.toLowerCase();
 }
