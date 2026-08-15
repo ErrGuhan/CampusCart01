@@ -124,6 +124,7 @@ export default function CheckoutPage() {
       price: item.price,
       discountPrice: item.discountPrice,
       quantity: item.quantity,
+      sellerId: item.sellerId,
       sellerName: item.sellerName,
       sellerUsername: item.sellerUsername,
       isDigital: item.isDigital,
@@ -162,9 +163,36 @@ export default function CheckoutPage() {
         buyer_id: user?.uid || 'guest',
         buyer_email: user?.email || '',
         buyer_name: user?.displayName || user?.email?.split('@')[0] || 'Student',
+        created_at: new Date().toISOString(),
       });
     } catch (err) {
       console.warn('Firestore order sync notice:', err);
+    }
+
+    // Notify sellers in real time
+    const sellerIds = Array.from(new Set(orderItems.map((i) => i.sellerId || i.sellerUsername).filter(Boolean)));
+    for (const sId of sellerIds) {
+      try {
+        const notifDocId = 'notif_order_' + order.id + '_' + sId;
+        const buyerLabel = user?.displayName || user?.email?.split('@')[0] || 'A student buyer';
+        const notifPayload = {
+          userId: sId,
+          title: 'New Order Received! 🛍️',
+          message: `${buyerLabel} placed an order (#${order.id}) for your product. Total: ₹${total}.`,
+          type: 'order',
+          link: '/seller/dashboard/orders',
+          isRead: false,
+          created_at: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'notifications', notifDocId), notifPayload);
+
+        if (typeof window !== 'undefined') {
+          const notifKey = `campuscart_notifs_${sId}`;
+          const existingNotifs = JSON.parse(localStorage.getItem(notifKey) || '[]');
+          existingNotifs.unshift({ id: notifDocId, ...notifPayload, isRead: false, createdAt: new Date().toISOString() });
+          localStorage.setItem(notifKey, JSON.stringify(existingNotifs));
+        }
+      } catch {}
     }
 
     // Automatically update product stock in real time

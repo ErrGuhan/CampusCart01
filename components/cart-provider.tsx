@@ -9,6 +9,7 @@ export type CartItemData = {
   price: number;
   discountPrice?: number;
   image: string;
+  sellerId?: string;
   sellerName: string;
   sellerUsername: string;
   maxQuantity: number;

@@ -24,7 +24,7 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import {
-  getOrders, statusLabels, statusColors, verifyOrderPickupPin,
+  getOrders, subscribeToOrders, statusLabels, statusColors, verifyOrderPickupPin,
   type Order,
 } from '@/lib/order-storage';
 
@@ -43,23 +43,12 @@ export default function SellerOrdersPage() {
   const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
-    function load() {
-      setOrders(getOrders());
+    const unsubscribe = subscribeToOrders((allOrders) => {
+      setOrders(allOrders);
       setLoaded(true);
-    }
-    load();
+    });
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('campuscart_order_updated', load);
-      window.addEventListener('storage', load);
-      window.addEventListener('focus', load);
-
-      return () => {
-        window.removeEventListener('campuscart_order_updated', load);
-        window.removeEventListener('storage', load);
-        window.removeEventListener('focus', load);
-      };
-    }
+    return () => unsubscribe();
   }, []);
 
   function handleOpenPinModal(orderId: string, e: React.MouseEvent) {
@@ -128,40 +117,29 @@ export default function SellerOrdersPage() {
     );
   }
 
-  if (!profile?.is_seller) {
-    return (
-      <>
-        <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-16">
-          <div className="flex flex-col items-center justify-center text-center py-16">
-            <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
-            <h1 className="font-display text-2xl font-bold tracking-tight">Orders are only for sellers</h1>
-            <p className="mt-2 text-muted-foreground max-w-md">
-              Students who are not selling products can browse products and place orders from the marketplace.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <Button asChild><Link href="/products">Go Shopping</Link></Button>
-              <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
+  const myUid = user?.uid || '';
+  const myEmail = user?.email?.toLowerCase() || '';
   const username = profile?.username?.toLowerCase() || '';
-  const isGuhanOrAdmin = username.includes('guhan') || user?.email?.toLowerCase().includes('guhan');
+  const displayName = profile?.display_name?.toLowerCase() || '';
+  const isGuhanOrAdmin = (profile?.role === 'admin') || username.includes('guhan') || myEmail.includes('guhan');
 
-  const sellerOrders = orders.filter((o) =>
-    o.items.some((i) => {
+  const sellerOrders = orders.filter((o) => {
+    // Platform Administrator can oversee all campus orders
+    if (isGuhanOrAdmin) return true;
+
+    return o.items.some((i) => {
+      const itemSellerId = i.sellerId || '';
       const itemUser = i.sellerUsername?.toLowerCase() || '';
+      const itemName = i.sellerName?.toLowerCase() || '';
+
       return (
-        itemUser === username ||
-        (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
+        (myUid && itemSellerId === myUid) ||
+        (username && itemUser === username) ||
+        (displayName && itemName === displayName) ||
+        (myEmail && itemUser === myEmail.split('@')[0])
       );
-    })
-  );
+    });
+  });
 
   const filtered = sellerOrders.filter((o) => {
     const matchesSearch = o.id.toLowerCase().includes(search.toLowerCase()) ||

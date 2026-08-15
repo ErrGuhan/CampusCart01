@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
-  getOrderById, statusLabels, statusColors,
+  subscribeToOrders, statusLabels, statusColors,
   type Order, type OrderStatus,
 } from '@/lib/order-storage';
 
@@ -33,27 +33,16 @@ export default function OrderDetailPage() {
   const [loaded, setLoaded] = useState(false);
   const { toast } = useToast();
 
-  const refreshOrder = () => {
-    if (id) {
-      setOrder(getOrderById(id));
-      setLoaded(true);
-    }
-  };
-
   useEffect(() => {
-    refreshOrder();
+    if (!id) return;
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('campuscart_order_updated', refreshOrder);
-      window.addEventListener('storage', refreshOrder);
-      window.addEventListener('focus', refreshOrder);
+    const unsubscribe = subscribeToOrders((allOrders) => {
+      const found = allOrders.find((o) => o.id === id);
+      setOrder(found);
+      setLoaded(true);
+    });
 
-      return () => {
-        window.removeEventListener('campuscart_order_updated', refreshOrder);
-        window.removeEventListener('storage', refreshOrder);
-        window.removeEventListener('focus', refreshOrder);
-      };
-    }
+    return () => unsubscribe();
   }, [id]);
 
   if (!loaded) {

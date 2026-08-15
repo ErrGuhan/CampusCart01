@@ -1,3 +1,6 @@
+import { db } from '@/lib/firebase';
+import { collection, doc, setDoc, getDocs, onSnapshot } from 'firebase/firestore';
+
 export type OrderStatus =
   | 'pending_payment'
   | 'paid'
@@ -18,6 +21,7 @@ export type OrderItem = {
   price: number;
   discountPrice?: number;
   quantity: number;
+  sellerId?: string;
   sellerName: string;
   sellerUsername: string;
   isDigital?: boolean;
@@ -73,15 +77,160 @@ export function getOrderById(id: string): Order | undefined {
   return getOrders().find((o) => o.id === id);
 }
 
+export async function fetchOrdersFromFirestore(): Promise<Order[]> {
+  const local = getOrders();
+  const orderMap = new Map<string, Order>();
+  local.forEach((o) => orderMap.set(o.id, o));
+
+  try {
+    const snap = await getDocs(collection(db, 'orders'));
+    if (!snap.empty) {
+      snap.forEach((d) => {
+        const data = d.data();
+        const ord: Order = {
+          id: d.id,
+          status: data.status || 'confirmed',
+          items: Array.isArray(data.items) ? data.items : [],
+          subtotal: Number(data.subtotal) || 0,
+          discount: Number(data.discount) || 0,
+          deliveryFee: Number(data.deliveryFee ?? data.delivery_fee) || 0,
+          total: Number(data.total) || 0,
+          fulfillmentType: data.fulfillmentType || data.fulfillment_type || 'pickup',
+          pickupPoint: data.pickupPoint || data.pickup_point || null,
+          pickupPin: data.pickupPin || data.pickup_pin,
+          notes: data.notes || null,
+          paymentStatus: data.paymentStatus || data.payment_status || 'paid',
+          paymentMethod: data.paymentMethod || data.payment_method || 'UPI',
+          transactionId: data.transactionId || data.transaction_id || '',
+          createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+          buyerId: data.buyerId || data.buyer_id,
+          buyerEmail: data.buyerEmail || data.buyer_email,
+          buyerName: data.buyerName || data.buyer_name,
+        };
+        orderMap.set(d.id, ord);
+      });
+    }
+  } catch (err) {
+    console.warn('Firestore fetchOrders notice:', err);
+  }
+
+  const allOrders = Array.from(orderMap.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allOrders));
+    } catch {}
+  }
+
+  return allOrders;
+}
+
+export function subscribeToOrders(onUpdate: (orders: Order[]) => void): () => void {
+  // 1. Send initial cached data immediately
+  onUpdate(getOrders());
+
+  // 2. Fetch fresh from Firestore
+  fetchOrdersFromFirestore().then(onUpdate).catch(() => {});
+
+  // 3. Real-time Firestore snapshot listener
+  let unsubscribeFirestore = () => {};
+  try {
+    unsubscribeFirestore = onSnapshot(collection(db, 'orders'), (snap) => {
+      const orderMap = new Map<string, Order>();
+      getOrders().forEach((o) => orderMap.set(o.id, o));
+
+      snap.forEach((d) => {
+        const data = d.data();
+        const ord: Order = {
+          id: d.id,
+          status: data.status || 'confirmed',
+          items: Array.isArray(data.items) ? data.items : [],
+          subtotal: Number(data.subtotal) || 0,
+          discount: Number(data.discount) || 0,
+          deliveryFee: Number(data.deliveryFee ?? data.delivery_fee) || 0,
+          total: Number(data.total) || 0,
+          fulfillmentType: data.fulfillmentType || data.fulfillment_type || 'pickup',
+          pickupPoint: data.pickupPoint || data.pickup_point || null,
+          pickupPin: data.pickupPin || data.pickup_pin,
+          notes: data.notes || null,
+          paymentStatus: data.paymentStatus || data.payment_status || 'paid',
+          paymentMethod: data.paymentMethod || data.payment_method || 'UPI',
+          transactionId: data.transactionId || data.transaction_id || '',
+          createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+          buyerId: data.buyerId || data.buyer_id,
+          buyerEmail: data.buyerEmail || data.buyer_email,
+          buyerName: data.buyerName || data.buyer_name,
+        };
+        orderMap.set(d.id, ord);
+      });
+
+      const updated = Array.from(orderMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+      }
+
+      onUpdate(updated);
+    });
+  } catch (err) {
+    console.warn('Real-time order snapshot notice:', err);
+  }
+
+  // 4. Local browser event listener
+  const handleLocalUpdate = () => {
+    onUpdate(getOrders());
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('campuscart_order_updated', handleLocalUpdate);
+    window.addEventListener('storage', handleLocalUpdate);
+    window.addEventListener('focus', handleLocalUpdate);
+  }
+
+  return () => {
+    unsubscribeFirestore();
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('campuscart_order_updated', handleLocalUpdate);
+      window.removeEventListener('storage', handleLocalUpdate);
+      window.removeEventListener('focus', handleLocalUpdate);
+    }
+  };
+}
+
 export function saveOrder(order: Order): void {
   const orders = getOrders();
-  orders.unshift(order);
+  const existingIndex = orders.findIndex((o) => o.id === order.id);
+  if (existingIndex >= 0) {
+    orders[existingIndex] = order;
+  } else {
+    orders.unshift(order);
+  }
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('campuscart_order_updated'));
     }
   } catch {}
+
+  // Sync to Firestore
+  try {
+    setDoc(doc(db, 'orders', order.id), {
+      ...order,
+      buyer_id: order.buyerId || 'guest',
+      buyer_email: order.buyerEmail || '',
+      buyer_name: order.buyerName || 'Student',
+      created_at: order.createdAt || new Date().toISOString(),
+    }, { merge: true }).catch((e) => console.warn('Firestore saveOrder notice:', e));
+  } catch (e) {
+    console.warn('Firestore saveOrder sync error:', e);
+  }
 }
 
 export function updateOrderStatus(orderId: string, status: OrderStatus): boolean {
@@ -95,6 +244,11 @@ export function updateOrderStatus(orderId: string, status: OrderStatus): boolean
       window.dispatchEvent(new CustomEvent('campuscart_order_updated'));
     }
   } catch {}
+
+  try {
+    setDoc(doc(db, 'orders', orderId), { status }, { merge: true }).catch(() => {});
+  } catch {}
+
   return true;
 }
 
@@ -112,6 +266,11 @@ export function verifyOrderPickupPin(orderId: string, inputPin: string): { succe
         window.dispatchEvent(new CustomEvent('campuscart_order_updated'));
       }
     } catch {}
+
+    try {
+      setDoc(doc(db, 'orders', orderId), { status: 'delivered' }, { merge: true }).catch(() => {});
+    } catch {}
+
     return { success: true, message: 'Handover PIN verified! Order marked as Delivered.' };
   }
   return { success: false, message: 'Invalid PIN. Please check the 4-digit code with the buyer.' };

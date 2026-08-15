@@ -10,34 +10,36 @@ import {
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { AccountSidebar } from '@/components/account-sidebar';
+import { useAuth } from '@/components/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
+import { subscribeToOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
 
 export default function OrdersPage() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  const refreshOrders = () => {
-    setOrders(getOrders());
-    setLoaded(true);
-  };
-
   useEffect(() => {
-    refreshOrders();
+    const unsubscribe = subscribeToOrders((allOrders) => {
+      const myUid = user?.uid || '';
+      const myEmail = user?.email?.toLowerCase() || '';
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('campuscart_order_updated', refreshOrders);
-      window.addEventListener('storage', refreshOrders);
-      window.addEventListener('focus', refreshOrders);
+      const buyerOrders = allOrders.filter((o) => {
+        if (!user) return true; // Show cached orders if guest
+        return (
+          (myUid && o.buyerId === myUid) ||
+          (myEmail && o.buyerEmail?.toLowerCase() === myEmail) ||
+          (!o.buyerId && !o.buyerEmail)
+        );
+      });
 
-      return () => {
-        window.removeEventListener('campuscart_order_updated', refreshOrders);
-        window.removeEventListener('storage', refreshOrders);
-        window.removeEventListener('focus', refreshOrders);
-      };
-    }
-  }, []);
+      setOrders(buyerOrders);
+      setLoaded(true);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   if (!loaded) {
     return (
