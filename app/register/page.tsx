@@ -3,12 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, Store, ArrowRight, Loader2, GraduationCap } from 'lucide-react';
+import { Mail, Lock, User, Store, ArrowRight, Loader2, GraduationCap, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-provider';
+import { COLLEGE_DEPARTMENTS, COLLEGE_YEARS } from '@/lib/campus-constants';
 
 const COLLEGE_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_COLLEGE_EMAIL_DOMAIN || 'svcet.ac.in';
 
@@ -156,26 +164,43 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input
-                  id="department"
-                  type="text"
-                  placeholder="e.g. CSE"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                />
+                <Label htmlFor="department" className="flex items-center gap-1 text-sm font-medium">
+                  <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  Department
+                </Label>
+                <Select value={department} onValueChange={setDepartment}>
+                  <SelectTrigger id="department" className="w-full">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLLEGE_DEPARTMENTS.map((dept) => (
+                      <SelectItem key={dept} value={dept}>
+                        {dept}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="year">Year</Label>
-                <Input
-                  id="year"
-                  type="text"
-                  placeholder="e.g. 2nd Year"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                />
+                <Label htmlFor="year" className="flex items-center gap-1 text-sm font-medium">
+                  <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
+                  Year of Study
+                </Label>
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger id="year" className="w-full">
+                    <SelectValue placeholder="Select Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLLEGE_YEARS.map((yr) => (
+                      <SelectItem key={yr} value={yr}>
+                        {yr}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

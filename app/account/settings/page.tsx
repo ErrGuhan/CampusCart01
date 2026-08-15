@@ -25,10 +25,18 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { COLLEGE_DEPARTMENTS, COLLEGE_YEARS } from '@/lib/campus-constants';
 
 export default function AccountSettingsPage() {
   const router = useRouter();
@@ -235,25 +243,37 @@ export default function AccountSettingsPage() {
                     <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                     Department
                   </Label>
-                  <Input
-                    id="department"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    placeholder="e.g., Computer Science"
-                  />
+                  <Select value={department} onValueChange={setDepartment}>
+                    <SelectTrigger id="department" className="w-full">
+                      <SelectValue placeholder="Select Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLLEGE_DEPARTMENTS.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="year" className="text-sm font-medium flex items-center gap-1.5">
                     <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
-                    Year
+                    Year of Study
                   </Label>
-                  <Input
-                    id="year"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    placeholder="e.g., 3rd Year"
-                  />
+                  <Select value={year} onValueChange={setYear}>
+                    <SelectTrigger id="year" className="w-full">
+                      <SelectValue placeholder="Select Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLLEGE_YEARS.map((yr) => (
+                        <SelectItem key={yr} value={yr}>
+                          {yr}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex items-end">

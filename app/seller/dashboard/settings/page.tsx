@@ -22,7 +22,15 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getAllProducts } from '@/lib/firebase-queries';
+import { COLLEGE_DEPARTMENTS, COLLEGE_YEARS } from '@/lib/campus-constants';
 
 export default function SellerSettingsPage() {
   const router = useRouter();
@@ -235,14 +243,36 @@ export default function SellerSettingsPage() {
                       <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                       Department
                     </Label>
-                    <Input id="store-dept" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Fine Arts" />
+                    <Select value={department} onValueChange={setDepartment}>
+                      <SelectTrigger id="store-dept" className="w-full">
+                        <SelectValue placeholder="Select Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COLLEGE_DEPARTMENTS.map((dept) => (
+                          <SelectItem key={dept} value={dept}>
+                            {dept}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="store-year" className="flex items-center gap-1.5">
                       <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
-                      Year
+                      Year of Study
                     </Label>
-                    <Input id="store-year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="3rd Year" />
+                    <Select value={year} onValueChange={setYear}>
+                      <SelectTrigger id="store-year" className="w-full">
+                        <SelectValue placeholder="Select Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COLLEGE_YEARS.map((yr) => (
+                          <SelectItem key={yr} value={yr}>
+                            {yr}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
