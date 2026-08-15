@@ -191,17 +191,17 @@ export default function ProductRequestsPage() {
       <Navbar />
       <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen">
         {/* Header Banner */}
-        <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-card to-background p-5 sm:p-8 mb-8 shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-card to-background p-5 sm:p-8 mb-6 sm:mb-8 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-600 mb-2.5">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-0.5 text-xs font-bold text-emerald-600 mb-2">
                 <Tag className="h-3.5 w-3.5" />
                 <span>Campus Student Request Board</span>
               </div>
-              <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+              <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
                 What Campus Students Need
               </h1>
-              <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 Looking for specific semester notes, engineering drafters, lab equipment, or project sensors? Post your request and classmates will offer their items.
               </p>
             </div>
@@ -214,7 +214,7 @@ export default function ProductRequestsPage() {
                 }
                 setCreateModalOpen(true);
               }}
-              className="rounded-2xl gap-2 h-11 px-5 font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shrink-0 self-start md:self-auto"
+              className="rounded-2xl gap-2 h-11 px-5 font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shrink-0 w-full sm:w-auto justify-center"
             >
               <Plus className="h-4 w-4" />
               Post a Request

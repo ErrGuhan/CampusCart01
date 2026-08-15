@@ -128,7 +128,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           <span className="truncate max-w-[70px] sm:max-w-[100px]">{product.seller.displayName}</span>
         </div>
 
-        <h3 className="mt-1 line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
+        <h3 className="mt-1 line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors min-h-[2.25rem] sm:min-h-[2.5rem]">
           {product.name}
         </h3>
 

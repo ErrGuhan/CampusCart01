@@ -64,128 +64,10 @@ export const DEFAULT_SELLERS: Seller[] = [
 export const DEFAULT_PRODUCTS: Product[] = [];
 
 
-export const DEFAULT_GIGS: ServiceGig[] = [
-  {
-    id: 'gig-1',
-    sellerId: DEFAULT_SELLERS[0].id,
-    seller: DEFAULT_SELLERS[0],
-    title: 'I will design high-impact symposium posters, flyers, and club banners',
-    slug: 'design-symposium-posters-flyers',
-    description: 'Professional poster design for technical symposiums, sports fests, cultural nights, and club inaugurations with 24-hour turnaround in high-res PDF/PNG format.',
-    category: 'Design & Posters',
-    startingPrice: 150,
-    deliveryTimeDays: 1,
-    revisions: 3,
-    tags: ['poster', 'canva', 'photoshop', 'symposium', 'banners'],
-    coverImage: 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    portfolioImages: [
-      'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-      'https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    rating: 0,
-    reviewCount: 0,
-    isVerified: true,
-    status: 'active',
-    createdAt: '2024-05-01T00:00:00Z',
-  },
-  {
-    id: 'gig-2',
-    sellerId: DEFAULT_SELLERS[0].id,
-    seller: DEFAULT_SELLERS[0],
-    title: 'I will build custom React portfolio websites and mini project web apps',
-    slug: 'build-react-portfolio-mini-project',
-    description: 'Get a clean, fast Next.js or React web app for your personal developer portfolio or semester mini-project with responsive mobile design and deployment to Vercel.',
-    category: 'Coding & Tech Projects',
-    startingPrice: 400,
-    deliveryTimeDays: 2,
-    revisions: 2,
-    tags: ['react', 'nextjs', 'portfolio', 'web-development', 'project'],
-    coverImage: 'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    portfolioImages: [
-      'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    rating: 0,
-    reviewCount: 0,
-    isVerified: true,
-    status: 'active',
-    createdAt: '2024-05-03T00:00:00Z',
-  },
-  {
-    id: 'gig-3',
-    sellerId: DEFAULT_SELLERS[0].id,
-    seller: DEFAULT_SELLERS[0],
-    title: 'I will model 3D CAD parts in SolidWorks and print prototype casings',
-    slug: '3d-cad-solidworks-printing-prototypes',
-    description: 'Precision 3D modeling for robotics chassis, sensor housings, drone arms, and mechanical fixtures. Includes slicing and direct campus delivery.',
-    category: '3D Printing & CAD',
-    startingPrice: 200,
-    deliveryTimeDays: 2,
-    revisions: 2,
-    tags: ['solidworks', '3d-cad', '3d-printing', 'robotics', 'prototyping'],
-    coverImage: 'https://images.pexels.com/photos/3862132/pexels-photo-3862132.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    portfolioImages: [
-      'https://images.pexels.com/photos/3862132/pexels-photo-3862132.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    rating: 0,
-    reviewCount: 0,
-    isVerified: true,
-    status: 'active',
-    createdAt: '2024-05-04T00:00:00Z',
-  },
-  {
-    id: 'gig-4',
-    sellerId: DEFAULT_SELLERS[0].id,
-    seller: DEFAULT_SELLERS[0],
-    title: 'I will edit cinematic Instagram reels and event aftermovies in Premiere Pro',
-    slug: 'edit-instagram-reels-aftermovies',
-    description: 'Fast-paced video editing with beat-matching, transitions, subtitles, sound design, and color grading for campus clubs, dances, and college sports.',
-    category: 'Video & Photography',
-    startingPrice: 300,
-    deliveryTimeDays: 1,
-    revisions: 3,
-    tags: ['video-editing', 'reels', 'aftermovie', 'premiere-pro', 'cinematic'],
-    coverImage: 'https://images.pexels.com/photos/2510428/pexels-photo-2510428.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    portfolioImages: [
-      'https://images.pexels.com/photos/2510428/pexels-photo-2510428.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    ],
-    rating: 0,
-    reviewCount: 0,
-    isVerified: true,
-    status: 'active',
-    createdAt: '2024-05-06T00:00:00Z',
-  },
-];
+export const DEFAULT_GIGS: ServiceGig[] = [];
 
-export const DEFAULT_GIG_REQUESTS: GigRequest[] = [
-  {
-    id: 'req-1',
-    requesterId: 'student-req-1',
-    requesterName: 'Praveen Kumar',
-    requesterEmail: 'praveen24@svcet.ac.in',
-    title: 'Need a PPT presentation formatted for tomorrow morning seminar',
-    description: 'I have the raw text for a 15-slide Cloud Computing seminar. Need someone to format it cleanly in Canva or PowerPoint with diagrams and animations.',
-    category: 'Design & Posters',
-    budget: 150,
-    deadlineDays: 1,
-    status: 'open',
-    proposalsCount: 0,
-    createdAt: '2024-05-20T10:00:00Z',
-  },
-  {
-    id: 'req-2',
-    requesterId: 'student-req-2',
-    requesterName: 'Sneha R',
-    requesterEmail: 'sneha24@svcet.ac.in',
-    title: 'Need help debugging Python OpenCV code for face detection project',
-    description: 'Getting an error with Haar Cascade bounding box coordinates on video stream. Need a 30-minute tutoring session or code fix.',
-    category: 'Coding & Tech Projects',
-    budget: 250,
-    deadlineDays: 2,
-    status: 'open',
-    proposalsCount: 0,
-    createdAt: '2024-05-21T14:30:00Z',
-  },
-];
+export const DEFAULT_GIG_REQUESTS: GigRequest[] = [];
+
 
 // ---------- Reviews ----------
 
@@ -368,13 +250,7 @@ export async function getGigBySlug(slug: string): Promise<ServiceGig | undefined
 
 export async function getMyGigs(sellerId: string): Promise<ServiceGig[]> {
   const all = await getAllGigs();
-  return all.filter(
-    (g) =>
-      g.sellerId === sellerId ||
-      g.seller?.id === sellerId ||
-      g.seller?.username === 'guhan' ||
-      g.seller?.id === 'seller-guhan'
-  );
+  return all.filter((g) => g.sellerId === sellerId || g.seller?.id === sellerId);
 }
 
 // ---------- Campus Bounties / Service Requests ----------
@@ -952,62 +828,8 @@ export async function getDealsProducts(): Promise<Product[]> {
 
 // ---------- Product Requests ("What I Need") ----------
 
-export const DEFAULT_REQUESTS: ProductRequest[] = [
-  {
-    id: 'req-eg-board',
-    requesterId: 'student-ananya',
-    requesterName: 'Ananya S.',
-    requesterUsername: 'ananya_s',
-    requesterAvatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
-    requesterDepartment: 'Mechanical Engineering (MECH)',
-    requesterYear: '2nd Year',
-    title: 'Need Engineering Graphics Board with Mini Drafter',
-    description: 'Looking for a wooden or acrylic standard drawing board in good condition for 1st/2nd sem CAD & EG classes.',
-    category: 'College Supplies',
-    budget: 450,
-    deadlineDate: 'Within 3 days',
-    status: 'open',
-    offersCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    offers: [],
-  },
-  {
-    id: 'req-scientific-calc',
-    requesterId: 'student-rahul',
-    requesterName: 'Rahul Verma',
-    requesterUsername: 'rahul_v',
-    requesterAvatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=300',
-    requesterDepartment: 'Electronics & Communication (ECE)',
-    requesterYear: '3rd Year',
-    title: 'Casio fx-991EX Classwiz Scientific Calculator',
-    description: 'Urgent for internal exams! Need a working scientific calculator with matrix and vector solver.',
-    category: 'Electronics',
-    budget: 700,
-    deadlineDate: 'Tomorrow morning',
-    status: 'open',
-    offersCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 10).toISOString(),
-    offers: [],
-  },
-  {
-    id: 'req-lab-coat',
-    requesterId: 'student-priya',
-    requesterName: 'Priya Dharshini',
-    requesterUsername: 'priya_d',
-    requesterAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
-    requesterDepartment: 'Chemistry / S&H',
-    requesterYear: '1st Year',
-    title: 'White Lab Coat (Size M)',
-    description: 'Need clean white lab coat for chemistry practical sessions.',
-    category: 'College Supplies',
-    budget: 200,
-    deadlineDate: 'This Friday',
-    status: 'open',
-    offersCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    offers: [],
-  },
-];
+export const DEFAULT_REQUESTS: ProductRequest[] = [];
+
 
 export async function getAllProductRequests(): Promise<ProductRequest[]> {
   const reqMap = new Map<string, ProductRequest>();
@@ -1123,56 +945,8 @@ export async function addRequestOffer(requestId: string, offer: Omit<RequestOffe
 
 // ---------- Campus Community & Posts ----------
 
-export const DEFAULT_COMMUNITY_POSTS: CommunityPost[] = [
-  {
-    id: 'post-symp-2026',
-    authorId: 'student-guhan',
-    authorName: 'Guhan M',
-    authorUsername: 'guhan',
-    authorAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-    authorDepartment: 'Computer Science & Engineering (CSE)',
-    category: 'academic',
-    title: 'Tips for Project Presentation & Circuit Demo at IEEE Symposium',
-    content: 'For everyone presenting in the upcoming symposium, make sure to bring extra breadboards and jumper wires. If you need any 3D printed sensor casings, check out the CAD gigs on CampusCart.',
-    tags: ['Symposium', 'Projects', 'CSE', 'Tips'],
-    likes: 0,
-    likedBy: [],
-    commentsCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-  },
-  {
-    id: 'post-hackathon-team',
-    authorId: 'student-priya',
-    authorName: 'Priya Dharshini',
-    authorUsername: 'priya_d',
-    authorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
-    authorDepartment: 'Information Technology (IT)',
-    category: 'opportunities',
-    title: 'Looking for a UI/UX Designer for Smart Campus App Hackathon',
-    content: 'We are a team of 2 backend developers building an IoT automated campus parking solver. Need a creative UI designer with Figma experience to team up! Drop a comment or message me directly.',
-    tags: ['Hackathon', 'TeamUp', 'UIUX', 'Figma'],
-    likes: 0,
-    likedBy: [],
-    commentsCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-  },
-  {
-    id: 'post-coding-club',
-    authorId: 'student-karthik',
-    authorName: 'Karthik Raja',
-    authorUsername: 'karthik_r',
-    authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
-    authorDepartment: 'Computer Science & Engineering (CSE)',
-    category: 'clubs',
-    title: 'Weekly Competitive Programming & LeetCode Meetup this Thursday',
-    content: 'Join us at CSE Lab 3 at 4:30 PM. We will cover dynamic programming and graph algorithms for campus placements.',
-    tags: ['CodingClub', 'LeetCode', 'Placements'],
-    likes: 0,
-    likedBy: [],
-    commentsCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 32).toISOString(),
-  },
-];
+export const DEFAULT_COMMUNITY_POSTS: CommunityPost[] = [];
+
 
 export async function getCommunityPosts(category?: string): Promise<CommunityPost[]> {
   const postsMap = new Map<string, CommunityPost>();
@@ -1277,51 +1051,8 @@ export async function likeCommunityPost(postId: string, userId: string): Promise
 
 // ---------- Campus Events ----------
 
-export const DEFAULT_EVENTS: CampusEvent[] = [
-  {
-    id: 'event-hackathon-2026',
-    title: 'SVCET National 24-Hour Hackathon 2026',
-    category: 'hackathon',
-    description: 'Build solutions in AI, IoT, FinTech, and Smart Campus. Cash prizes over ₹50,000 + mentor support from tech founders.',
-    date: 'March 28, 2026',
-    time: '09:00 AM - Next Day 09:00 AM',
-    venue: 'Auditorium & Innovation Labs',
-    organizer: 'SVCET ACM Student Chapter',
-    organizerClub: 'ACM & CSI',
-    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
-    price: 0,
-    registeredCount: 0,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'event-symposium-mech',
-    title: 'MechPulse 2026 - National Symposium & CAD Challenge',
-    category: 'symposium',
-    description: 'Paper presentation, SolidWorks CAD modeling contest, water rocketry, and robotics challenge.',
-    date: 'April 4, 2026',
-    time: '10:00 AM - 04:30 PM',
-    venue: 'Mechanical Department Block',
-    organizer: 'Department of Mechanical Engineering',
-    image: 'https://images.pexels.com/photos/3862632/pexels-photo-3862632.jpeg?auto=compress&cs=tinysrgb&w=800',
-    price: 150,
-    registeredCount: 0,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'event-iot-workshop',
-    title: 'Hands-on ESP32 & Cloud IoT Bootcamp',
-    category: 'workshop',
-    description: 'Learn sensor interfacing, MQTT communication, Firebase integration, and build your own smart home prototype.',
-    date: 'April 12, 2026',
-    time: '01:30 PM - 05:00 PM',
-    venue: 'IoT & Embedded Systems Lab',
-    organizer: 'Campus Tech Club',
-    image: 'https://images.pexels.com/photos/2599244/pexels-photo-2599244.jpeg?auto=compress&cs=tinysrgb&w=800',
-    price: 99,
-    registeredCount: 0,
-    createdAt: new Date().toISOString(),
-  },
-];
+export const DEFAULT_EVENTS: CampusEvent[] = [];
+
 
 export async function getCampusEvents(category?: string): Promise<CampusEvent[]> {
   const eventsMap = new Map<string, CampusEvent>();
