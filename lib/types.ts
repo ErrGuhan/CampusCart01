@@ -1,4 +1,4 @@
-export type ProductStatus = 'active' | 'draft' | 'paused' | 'out_of_stock';
+export type ProductStatus = 'active' | 'pending_approval' | 'draft' | 'paused' | 'out_of_stock' | 'rejected';
 
 export type Product = {
   id: string;
@@ -21,6 +21,7 @@ export type Product = {
   digitalFileUrl?: string;
   createdAt: string;
   isVerified: boolean;
+  rejectionReason?: string;
 };
 
 export type Seller = {
@@ -70,7 +71,7 @@ export type Review = {
 
 // ----------------- Campus Freelance & Gigs Types -----------------
 
-export type GigStatus = 'active' | 'paused' | 'draft';
+export type GigStatus = 'active' | 'pending_approval' | 'paused' | 'draft' | 'rejected';
 
 export type ServiceGig = {
   id: string;
@@ -91,6 +92,7 @@ export type ServiceGig = {
   isVerified: boolean;
   status: GigStatus;
   createdAt: string;
+  rejectionReason?: string;
 };
 
 export type GigOrderStatus = 'pending' | 'in_progress' | 'delivered' | 'completed' | 'cancelled';

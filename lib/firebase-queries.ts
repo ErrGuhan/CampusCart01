@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  setDoc,
   query,
   where,
   orderBy,
@@ -406,7 +407,7 @@ function mapDocToGig(data: any, id: string): ServiceGig {
   };
 }
 
-export async function getAllGigs(): Promise<ServiceGig[]> {
+export async function getAllGigsAdmin(): Promise<ServiceGig[]> {
   const gigMap = new Map<string, ServiceGig>();
 
   // 1. Initial base gigs
@@ -414,8 +415,7 @@ export async function getAllGigs(): Promise<ServiceGig[]> {
 
   // 2. Fetch from Firestore
   try {
-    const q = query(collection(db, 'gigs'), where('status', '==', 'active'));
-    const snap = await getDocs(q);
+    const snap = await getDocs(collection(db, 'gigs'));
     if (!snap.empty) {
       snap.forEach((docSnap) => {
         const gig = mapDocToGig(docSnap.data(), docSnap.id);
@@ -423,7 +423,7 @@ export async function getAllGigs(): Promise<ServiceGig[]> {
       });
     }
   } catch (err) {
-    console.warn('Notice in getAllGigs from Firestore:', err);
+    console.warn('Notice in getAllGigsAdmin from Firestore:', err);
   }
 
   // 3. Merge locally created gigs
@@ -442,6 +442,11 @@ export async function getAllGigs(): Promise<ServiceGig[]> {
   }
 
   return Array.from(gigMap.values());
+}
+
+export async function getAllGigs(): Promise<ServiceGig[]> {
+  const all = await getAllGigsAdmin();
+  return all.filter((g) => g.status === 'active');
 }
 
 export async function getFeaturedGigs(limitCount = 4): Promise<ServiceGig[]> {
@@ -586,6 +591,7 @@ function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product {
     digitalFileUrl: data.digital_file_url ?? data.digitalFileUrl ?? '',
     createdAt: data.created_at || data.createdAt || new Date().toISOString(),
     isVerified: data.is_verified ?? data.isVerified ?? false,
+    rejectionReason: data.rejection_reason || data.rejectionReason,
   };
 }
 
@@ -615,9 +621,9 @@ export async function getCategories(): Promise<Category[]> {
   return DEFAULT_CATEGORIES;
 }
 
-// ---------- Products ----------
+// ---------- Products (All / Admin / Public) ----------
 
-export async function getAllProducts(): Promise<Product[]> {
+export async function getAllProductsAdmin(): Promise<Product[]> {
   const prodMap = new Map<string, Product>();
 
   // 1. Base verified catalog
@@ -625,8 +631,7 @@ export async function getAllProducts(): Promise<Product[]> {
 
   // 2. Fetch from Firestore
   try {
-    const q = query(collection(db, 'products'), where('status', 'in', ['active', 'out_of_stock']));
-    const snap = await getDocs(q);
+    const snap = await getDocs(collection(db, 'products'));
     if (!snap.empty) {
       snap.forEach((docSnap) => {
         const prod = mapDocToProduct(docSnap.data(), docSnap.id);
@@ -634,7 +639,7 @@ export async function getAllProducts(): Promise<Product[]> {
       });
     }
   } catch (err) {
-    console.warn('Notice in getAllProducts:', err);
+    console.warn('Notice in getAllProductsAdmin:', err);
   }
 
   // 3. Merge locally created/edited products
@@ -653,6 +658,127 @@ export async function getAllProducts(): Promise<Product[]> {
   }
 
   return Array.from(prodMap.values());
+}
+
+export async function getAllProducts(): Promise<Product[]> {
+  const all = await getAllProductsAdmin();
+  return all.filter((p) => p.status === 'active' || p.status === 'out_of_stock');
+}
+
+export async function approveProduct(productId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_products');
+      if (raw) {
+        let list: Product[] = JSON.parse(raw);
+        list = list.map((p) =>
+          p.id === productId
+            ? { ...p, status: 'active', isVerified: true, rejectionReason: undefined }
+            : p
+        );
+        localStorage.setItem('campuscart_products', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+    } catch {}
+  }
+
+  try {
+    await setDoc(
+      doc(db, 'products', productId),
+      { status: 'active', is_verified: true, rejection_reason: null },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('Firestore approveProduct notice:', e);
+  }
+  return true;
+}
+
+export async function rejectProduct(productId: string, reason = 'Product details need revision before marketplace approval.'): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_products');
+      if (raw) {
+        let list: Product[] = JSON.parse(raw);
+        list = list.map((p) =>
+          p.id === productId
+            ? { ...p, status: 'rejected', isVerified: false, rejectionReason: reason }
+            : p
+        );
+        localStorage.setItem('campuscart_products', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+    } catch {}
+  }
+
+  try {
+    await setDoc(
+      doc(db, 'products', productId),
+      { status: 'rejected', is_verified: false, rejection_reason: reason },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('Firestore rejectProduct notice:', e);
+  }
+  return true;
+}
+
+export async function approveGig(gigId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_gigs');
+      if (raw) {
+        let list: ServiceGig[] = JSON.parse(raw);
+        list = list.map((g) =>
+          g.id === gigId
+            ? { ...g, status: 'active', isVerified: true, rejectionReason: undefined }
+            : g
+        );
+        localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+    } catch {}
+  }
+
+  try {
+    await setDoc(
+      doc(db, 'gigs', gigId),
+      { status: 'active', is_verified: true, rejection_reason: null },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('Firestore approveGig notice:', e);
+  }
+  return true;
+}
+
+export async function rejectGig(gigId: string, reason = 'Freelance gig details need revision.'): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_gigs');
+      if (raw) {
+        let list: ServiceGig[] = JSON.parse(raw);
+        list = list.map((g) =>
+          g.id === gigId
+            ? { ...g, status: 'rejected', isVerified: false, rejectionReason: reason }
+            : g
+        );
+        localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+    } catch {}
+  }
+
+  try {
+    await setDoc(
+      doc(db, 'gigs', gigId),
+      { status: 'rejected', is_verified: false, rejection_reason: reason },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('Firestore rejectGig notice:', e);
+  }
+  return true;
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Package, ShoppingBag, Settings,
-  Store, TrendingUp, Sparkles,
+  Store, TrendingUp, Sparkles, ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
@@ -21,7 +21,7 @@ const navItems = [
 
 export function SellerSidebar() {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
 
   const initials = profile?.display_name
     ? profile.display_name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
@@ -60,6 +60,20 @@ export function SellerSidebar() {
       </div>
 
       <nav className="space-y-1">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors mb-2 border border-primary/20',
+              pathname.startsWith('/admin')
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-primary/10 text-primary hover:bg-primary/15'
+            )}
+          >
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            Admin Approvals
+          </Link>
+        )}
         {navItems.map((item) => {
           const active = pathname === item.href ||
             (item.href !== '/seller/dashboard' && pathname.startsWith(item.href));

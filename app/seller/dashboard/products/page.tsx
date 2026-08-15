@@ -62,7 +62,7 @@ export type ProductFormData = {
 };
 
 export default function SellerProductsPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, isAdmin, loading } = useAuth();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -163,6 +163,12 @@ export default function SellerProductsPage() {
           .slice(0, 40) + '-' + Math.floor(1000 + Math.random() * 9000)
       );
 
+      const calculatedStatus: ProductStatus = isAdmin
+        ? (formData.status || 'active')
+        : (editProduct ? (editProduct.status === 'active' ? 'active' : 'pending_approval') : 'pending_approval');
+
+      const isProductVerified = isAdmin ? true : (editProduct?.isVerified || false);
+
       const productPayload = {
         seller_id: user.uid,
         sellerName: profile.display_name,
@@ -178,7 +184,7 @@ export default function SellerProductsPage() {
         category: formData.category,
         inventory: formData.inventory,
         tags: formData.tags,
-        status: formData.status,
+        status: calculatedStatus,
         pickup_available: formData.pickup,
         delivery_available: formData.delivery,
         is_digital: formData.isDigital || false,
@@ -186,7 +192,7 @@ export default function SellerProductsPage() {
         images: [formData.imageUrl || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'],
         rating: editProduct?.rating ?? 5.0,
         review_count: editProduct?.reviewCount ?? 0,
-        is_verified: profile.is_verified || false,
+        is_verified: isProductVerified,
         updated_at: new Date().toISOString(),
       };
 
@@ -213,7 +219,7 @@ export default function SellerProductsPage() {
         category: formData.category,
         inventory: formData.inventory,
         tags: formData.tags,
-        status: formData.status,
+        status: calculatedStatus,
         pickupAvailable: formData.pickup,
         deliveryAvailable: formData.delivery,
         isDigital: formData.isDigital || false,
@@ -221,7 +227,7 @@ export default function SellerProductsPage() {
         images: [formData.imageUrl || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'],
         rating: editProduct?.rating ?? 5.0,
         reviewCount: editProduct?.reviewCount ?? 0,
-        isVerified: profile.is_verified || false,
+        isVerified: isProductVerified,
         createdAt: editProduct?.createdAt || new Date().toISOString(),
       };
 
@@ -244,8 +250,8 @@ export default function SellerProductsPage() {
           console.warn('Firestore update product notice:', err);
         }
         toast({
-          title: 'Product updated! 🎉',
-          description: `"${formData.name}" has been updated.`,
+          title: isAdmin ? 'Product updated! 🎉' : 'Updated & Submitted for Review! ⏳',
+          description: isAdmin ? `"${formData.name}" has been updated.` : `"${formData.name}" updated. Sent to Admin for review.`,
         });
       } else {
         setSellerProducts((prev) => [localProduct, ...prev]);
@@ -269,8 +275,10 @@ export default function SellerProductsPage() {
           console.warn('Firestore add product notice:', err);
         }
         toast({
-          title: 'Product created! 🎉',
-          description: `"${formData.name}" added to your store.`,
+          title: isAdmin ? 'Product created & Live! 🎉' : 'Submitted for Approval! ⏳',
+          description: isAdmin
+            ? `"${formData.name}" is now live on CampusCart.`
+            : `"${formData.name}" submitted to Admin (Guhan M) for originality verification.`,
         });
       }
 
@@ -356,18 +364,30 @@ export default function SellerProductsPage() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] shrink-0">
+                <SelectTrigger className="w-[160px] shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="active">🟢 Live & Approved</SelectItem>
+                  <SelectItem value="pending_approval">🟡 Under Review</SelectItem>
+                  <SelectItem value="rejected">🔴 Needs Revision</SelectItem>
                   <SelectItem value="out_of_stock">Out of stock</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {sellerProducts.some((p) => p.status === 'pending_approval') && (
+              <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/5 p-4 flex items-start gap-3 text-xs">
+                <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-warning">Some products are Under Admin Review</p>
+                  <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                    To maintain product authenticity and campus quality, listings are reviewed by Administrator (<strong>Guhan M</strong>). Once approved, they will go live on the public marketplace.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
@@ -398,6 +418,8 @@ export default function SellerProductsPage() {
                   {filtered.map((product) => {
                     const hasDiscount = product.discountPrice !== undefined;
                     const isLowStock = product.inventory <= 5;
+                    const isRejected = product.status === 'rejected';
+
                     return (
                       <div key={product.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 px-5 py-4 items-center hover:bg-accent/20 transition-colors">
                         <div className="col-span-5 flex items-center gap-3">
@@ -409,6 +431,11 @@ export default function SellerProductsPage() {
                               {product.name}
                             </Link>
                             <p className="text-xs text-muted-foreground">{product.category}</p>
+                            {isRejected && product.rejectionReason && (
+                              <p className="text-[11px] text-destructive mt-1">
+                                <strong>Admin Note:</strong> {product.rejectionReason}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="col-span-2">
@@ -435,12 +462,16 @@ export default function SellerProductsPage() {
                           <Badge
                             className={
                               product.status === 'active' ? 'bg-success/10 text-success hover:bg-success/10' :
+                              product.status === 'pending_approval' ? 'bg-warning/10 text-warning hover:bg-warning/10 font-semibold' :
+                              product.status === 'rejected' ? 'bg-destructive/10 text-destructive hover:bg-destructive/10 font-semibold' :
                               product.status === 'out_of_stock' ? 'bg-destructive/10 text-destructive hover:bg-destructive/10' :
                               'bg-secondary text-muted-foreground hover:bg-secondary'
                             }
                           >
-                            {product.status === 'out_of_stock' ? 'Out of Stock' :
-                             product.status === 'active' ? 'Active' :
+                            {product.status === 'pending_approval' ? '🟡 Under Review' :
+                             product.status === 'rejected' ? '🔴 Needs Revision' :
+                             product.status === 'out_of_stock' ? 'Out of Stock' :
+                             product.status === 'active' ? '🟢 Live' :
                              product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                           </Badge>
                         </div>

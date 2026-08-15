@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, ShoppingCart, Heart, Menu, Store, User,
-  LayoutDashboard, Package, LogOut, Settings,
+  LayoutDashboard, Package, LogOut, Settings, ShieldCheck, Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +41,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, isAdmin, loading, signOut } = useAuth();
   const { totalItems } = useCart();
   const router = useRouter();
 
@@ -133,6 +133,16 @@ export function Navbar() {
                     >
                       My Account
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileOpen(false)}
+                        className="rounded-lg px-4 py-3 text-sm font-semibold text-primary bg-primary/10 hover:bg-primary/15 transition-colors touch-target flex items-center gap-2"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        Admin Control Center
+                      </Link>
+                    )}
                     {profile?.is_seller && (
                       <Link
                         href="/seller/dashboard"
@@ -285,6 +295,17 @@ export function Navbar() {
                       Settings
                     </Link>
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild className="bg-primary/5 font-semibold text-primary focus:bg-primary/10">
+                        <Link href="/admin" className="cursor-pointer flex items-center">
+                          <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
+                          Admin Control Center
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   {profile?.is_seller && (
                     <>
                       <DropdownMenuSeparator />

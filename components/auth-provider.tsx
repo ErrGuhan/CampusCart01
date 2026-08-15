@@ -11,6 +11,16 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
+export const ADMIN_EMAILS = [
+  'guhan24td0781@svcet.ac.in',
+  'guhan@svcet.ac.in',
+];
+
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.some((adm) => adm.toLowerCase() === email.trim().toLowerCase());
+}
+
 export type Profile = {
   id: string;
   email: string;
@@ -43,6 +53,7 @@ type SignUpParams = {
 type AuthContextType = {
   user: AuthUser | null;
   profile: Profile | null;
+  isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (params: SignUpParams) => Promise<{ success: boolean; error?: string }>;
@@ -57,6 +68,7 @@ const STORAGE_KEY_ACCOUNTS = 'campuscart_registered_accounts';
 const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
+  isAdmin: false,
   loading: true,
   signIn: async () => ({ success: false }),
   signUp: async () => ({ success: false }),
@@ -74,17 +86,17 @@ function getStoredAccounts(): Profile[] {
   }
 }
 
-function saveStoredAccount(account: Profile) {
+function saveStoredAccount(profile: Profile) {
   if (typeof window === 'undefined') return;
   try {
-    const accounts = getStoredAccounts();
-    const idx = accounts.findIndex((a) => a.email.toLowerCase() === account.email.toLowerCase());
+    const existing = getStoredAccounts();
+    const idx = existing.findIndex((a) => a.email.toLowerCase() === profile.email.toLowerCase());
     if (idx >= 0) {
-      accounts[idx] = account;
+      existing[idx] = profile;
     } else {
-      accounts.push(account);
+      existing.push(profile);
     }
-    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(accounts));
+    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(existing));
   } catch {}
 }
 
@@ -93,38 +105,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // 1. Instant hydration from localStorage
-    try {
-      const storedUser = localStorage.getItem(STORAGE_KEY_USER);
-      const storedProfile = localStorage.getItem(STORAGE_KEY_PROFILE);
-      if (storedUser && storedProfile) {
-        setUser(JSON.parse(storedUser));
-        setProfile(JSON.parse(storedProfile));
-        setLoading(false);
-      }
-    } catch {}
+  // Computed admin status
+  const isAdmin = Boolean(
+    profile?.role === 'admin' ||
+    isAdminEmail(user?.email) ||
+    isAdminEmail(profile?.email)
+  );
 
-    // 2. Firebase onAuthStateChanged listener
+  useEffect(() => {
+    // 1. Initial local restore
+    const localUser = localStorage.getItem(STORAGE_KEY_USER);
+    const localProfile = localStorage.getItem(STORAGE_KEY_PROFILE);
+
+    if (localUser && localProfile) {
+      try {
+        const u = JSON.parse(localUser);
+        const p = JSON.parse(localProfile);
+        if (isAdminEmail(u?.email) || isAdminEmail(p?.email)) {
+          p.role = 'admin';
+        }
+        setUser(u);
+        setProfile(p);
+        setLoading(false);
+      } catch {
+        setUser(null);
+        setProfile(null);
+      }
+    }
+
+    // 2. Firebase live Auth listener
     try {
-      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-        if (currentUser) {
-          const u: AuthUser = {
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName,
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          const authUser: AuthUser = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
           };
-          setUser(u);
-          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(u));
-          await fetchProfile(currentUser.uid, currentUser.email ?? '');
+          setUser(authUser);
+          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authUser));
+          await fetchProfile(firebaseUser.uid, firebaseUser.email ?? '');
         } else {
-          const storedUser = localStorage.getItem(STORAGE_KEY_USER);
-          if (!storedUser) {
+          const uStr = localStorage.getItem(STORAGE_KEY_USER);
+          const pStr = localStorage.getItem(STORAGE_KEY_PROFILE);
+          if (uStr && pStr) {
+            try {
+              const u = JSON.parse(uStr);
+              const p = JSON.parse(pStr);
+              if (isAdminEmail(u?.email) || isAdminEmail(p?.email)) {
+                p.role = 'admin';
+              }
+              setUser(u);
+              setProfile(p);
+            } catch {}
+          } else {
             setUser(null);
             setProfile(null);
           }
-          setLoading(false);
         }
+        setLoading(false);
       });
 
       return () => unsubscribe();
@@ -135,6 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function fetchProfile(userId: string, userEmail: string) {
+    const isUserAdmin = isAdminEmail(userEmail);
+
     try {
       const docRef = doc(db, 'profiles', userId);
       const docSnap = await getDoc(docRef);
@@ -146,14 +187,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.email || userEmail,
           display_name: data.display_name || data.displayName || 'Student',
           username: data.username || 'student',
-          role: data.role || (data.is_seller ? 'seller' : 'student'),
+          role: isUserAdmin ? 'admin' : (data.role || (data.is_seller ? 'seller' : 'student')),
           department: data.department || null,
           year: data.year || null,
           bio: data.bio || null,
           skills: data.skills || [],
           avatar_url: data.avatar_url || data.avatarUrl || null,
           is_seller: data.is_seller ?? true,
-          is_verified: data.is_verified ?? true,
+          is_verified: isUserAdmin ? true : (data.is_verified ?? true),
         };
         setProfile(p);
         localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(p));
@@ -167,7 +208,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem(STORAGE_KEY_PROFILE);
     if (stored) {
       try {
-        setProfile(JSON.parse(stored));
+        const p = JSON.parse(stored);
+        if (isUserAdmin) p.role = 'admin';
+        setProfile(p);
         return;
       } catch {}
     }
@@ -175,14 +218,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fallback: Profile = {
       id: userId,
       email: userEmail,
-      display_name: userEmail.split('@')[0] || 'Student',
-      username: userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
-      role: 'student',
-      department: 'Engineering',
-      year: 'Student',
-      bio: null,
-      skills: [],
-      avatar_url: null,
+      display_name: isUserAdmin ? 'Guhan M' : (userEmail.split('@')[0] || 'Student'),
+      username: isUserAdmin ? 'guhan' : (userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student'),
+      role: isUserAdmin ? 'admin' : 'student',
+      department: isUserAdmin ? 'Computer Science & Engineering' : 'Engineering',
+      year: isUserAdmin ? '4th Year' : 'Student',
+      bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
+      skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
+      avatar_url: isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null,
       is_seller: true,
       is_verified: true,
     };
@@ -193,6 +236,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     const trimmedEmail = email.trim();
+    const isUserAdmin = isAdminEmail(trimmedEmail);
+
     try {
       const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const u: AuthUser = {
@@ -220,8 +265,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const existing = accounts.find((a) => a.email.toLowerCase() === trimmedEmail.toLowerCase());
 
         const uid = existing ? existing.id : 'usr_' + Math.random().toString(36).slice(2, 10);
-        const displayName = existing ? existing.display_name : trimmedEmail.split('@')[0];
-        const username = existing ? existing.username : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+        const displayName = isUserAdmin ? 'Guhan M' : (existing ? existing.display_name : trimmedEmail.split('@')[0]);
+        const username = isUserAdmin ? 'guhan' : (existing ? existing.username : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, ''));
 
         const localUser: AuthUser = {
           uid,
@@ -234,12 +279,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: trimmedEmail,
           display_name: displayName,
           username,
-          role: 'student',
-          department: existing?.department || 'Engineering',
-          year: existing?.year || 'Student',
-          bio: existing?.bio || null,
-          skills: existing?.skills || [],
-          avatar_url: existing?.avatar_url || null,
+          role: isUserAdmin ? 'admin' : (existing?.role || 'student'),
+          department: existing?.department || (isUserAdmin ? 'Computer Science & Engineering' : 'Engineering'),
+          year: existing?.year || (isUserAdmin ? '4th Year' : 'Student'),
+          bio: existing?.bio || (isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null),
+          skills: existing?.skills || (isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : []),
+          avatar_url: existing?.avatar_url || (isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null),
           is_seller: existing?.is_seller ?? true,
           is_verified: true,
         };
@@ -259,44 +304,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function signUp(params: SignUpParams) {
-    const { email, password, displayName, department, year } = params;
+  async function signUp({ email, password, displayName, department, year }: SignUpParams) {
     const trimmedEmail = email.trim();
     const trimmedName = displayName.trim();
-    const username = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) + Math.floor(100 + Math.random() * 900);
+    const isUserAdmin = isAdminEmail(trimmedEmail);
+    const username = isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
 
     try {
       const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
       await updateFirebaseProfile(cred.user, { displayName: trimmedName });
 
-      // Save profile to Firestore
+      const newProfile: Profile = {
+        id: cred.user.uid,
+        email: trimmedEmail,
+        display_name: trimmedName,
+        username,
+        role: isUserAdmin ? 'admin' : 'student',
+        department: department?.trim() || 'Computer Science & Engineering',
+        year: year?.trim() || '2nd Year',
+        bio: null,
+        skills: [],
+        avatar_url: null,
+        is_seller: true,
+        is_verified: isUserAdmin ? true : false,
+      };
+
       try {
-        await setDoc(doc(db, 'profiles', cred.user.uid), {
-          id: cred.user.uid,
-          email: trimmedEmail,
-          display_name: trimmedName,
-          username,
-          role: 'student',
-          department: department?.trim() || null,
-          year: year?.trim() || null,
-          bio: null,
-          avatar_url: null,
-          skills: [],
-          is_verified: false,
-          is_seller: true,
-          created_at: new Date().toISOString(),
-        });
-      } catch (firestoreErr) {
-        console.warn('Firestore setDoc notice:', firestoreErr);
+        await setDoc(doc(db, 'profiles', cred.user.uid), newProfile);
+      } catch (e) {
+        console.warn('Profile Firestore save notice:', e);
       }
 
-      const u: AuthUser = {
-        uid: cred.user.uid,
-        email: cred.user.email,
-        displayName: trimmedName,
-      };
-      setUser(u);
-      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(u));
+      saveStoredAccount(newProfile);
       await fetchProfile(cred.user.uid, trimmedEmail);
       return { success: true };
     } catch (err: any) {
@@ -322,12 +361,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: trimmedEmail,
           display_name: trimmedName,
           username,
-          role: 'student',
+          role: isUserAdmin ? 'admin' : 'student',
           department: department?.trim() || 'Computer Science & Engineering',
           year: year?.trim() || '2nd Year',
-          bio: null,
-          skills: [],
-          avatar_url: null,
+          bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
+          skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
+          avatar_url: isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null,
           is_seller: true,
           is_verified: true,
         };
@@ -350,7 +389,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function updateUserProfile(data: Partial<Profile>) {
     if (!profile) return;
-    const updated = { ...profile, ...data };
+    const isUserAdmin = isAdminEmail(profile.email) || profile.role === 'admin';
+    const updated: Profile = {
+      ...profile,
+      ...data,
+      role: isUserAdmin ? 'admin' : (data.role || profile.role),
+    };
     setProfile(updated);
     localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(updated));
     saveStoredAccount(updated);
@@ -381,6 +425,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         profile,
+        isAdmin,
         loading,
         signIn,
         signUp,

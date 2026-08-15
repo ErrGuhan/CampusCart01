@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Plus, Search, Pencil, Trash2, Clock, Sparkles,
@@ -43,11 +43,12 @@ import { getMyGigs, GIG_CATEGORIES } from '@/lib/firebase-queries';
 import type { ServiceGig, GigStatus } from '@/lib/types';
 
 export default function SellerServicesPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
 
   const [gigs, setGigs] = useState<ServiceGig[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editGig, setEditGig] = useState<ServiceGig | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ServiceGig | null>(null);
@@ -57,43 +58,42 @@ export default function SellerServicesPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(GIG_CATEGORIES[0].name);
-  const [price, setPrice] = useState('250');
+  const [price, setPrice] = useState('200');
   const [deliveryDays, setDeliveryDays] = useState('2');
   const [revisions, setRevisions] = useState('2');
   const [tags, setTags] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [status, setStatus] = useState<GigStatus>('active');
 
-  useEffect(() => {
-    if (user?.uid) {
-      loadGigs();
-    }
-  }, [user?.uid]);
-
-  function loadGigs() {
+  const loadGigs = useCallback(async () => {
     if (!user) return;
-    getMyGigs(user.uid)
-      .then((data) => {
-        setGigs(data);
-        setFetching(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setFetching(false);
-      });
-  }
+    setFetching(true);
+    try {
+      const data = await getMyGigs(user.uid);
+      setGigs(data);
+    } catch (err) {
+      console.warn('Error fetching gigs:', err);
+    } finally {
+      setFetching(false);
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadGigs();
+  }, [loadGigs]);
 
   function openCreate() {
     setEditGig(null);
     setTitle('');
     setDescription('');
     setCategory(GIG_CATEGORIES[0].name);
-    setPrice('250');
+    setPrice('200');
     setDeliveryDays('2');
     setRevisions('2');
     setTags('');
     setCoverImage('');
-    setStatus('active');
+    setStatus(isAdmin ? 'active' : 'pending_approval');
     setDialogOpen(true);
   }
 
@@ -113,13 +113,13 @@ export default function SellerServicesPage() {
 
   async function handleSave() {
     if (!user || !profile) return;
-    if (!title.trim()) {
-      toast({ title: 'Title required', description: 'Please enter a title for your gig.', variant: 'destructive' });
+    if (!title.trim() || !description.trim()) {
+      toast({ title: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
-      toast({ title: 'Valid price required', description: 'Please enter a valid starting price.', variant: 'destructive' });
+      toast({ title: 'Please enter a valid price', variant: 'destructive' });
       return;
     }
 
@@ -129,6 +129,12 @@ export default function SellerServicesPage() {
         title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) +
         '-' + Math.floor(1000 + Math.random() * 9000)
       );
+
+      const calculatedStatus: GigStatus = isAdmin
+        ? status
+        : (editGig ? (editGig.status === 'active' ? 'active' : 'pending_approval') : 'pending_approval');
+
+      const isGigVerified: boolean = isAdmin ? true : (editGig?.isVerified || false);
 
       const gigPayload = {
         seller_id: user.uid,
@@ -146,10 +152,10 @@ export default function SellerServicesPage() {
         revisions: parseInt(revisions, 10) || 2,
         tags: tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean),
         cover_image: coverImage || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        status,
+        status: calculatedStatus,
         rating: editGig?.rating ?? 5.0,
         review_count: editGig?.reviewCount ?? 0,
-        is_verified: profile.is_verified ?? true,
+        is_verified: isGigVerified,
         updated_at: new Date().toISOString(),
       };
 
@@ -181,8 +187,8 @@ export default function SellerServicesPage() {
         portfolioImages: [],
         rating: editGig?.rating ?? 5.0,
         reviewCount: editGig?.reviewCount ?? 0,
-        isVerified: profile.is_verified ?? true,
-        status,
+        isVerified: isGigVerified,
+        status: calculatedStatus,
         createdAt: editGig?.createdAt || new Date().toISOString(),
       };
 
@@ -312,6 +318,18 @@ export default function SellerServicesPage() {
           </aside>
 
           <div className="lg:col-span-3 space-y-6">
+            {gigs.some((g) => g.status === 'pending_approval') && (
+              <div className="rounded-2xl border border-warning/30 bg-warning/5 p-4 flex items-start gap-3 text-xs">
+                <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-warning">Some services are Under Admin Review</p>
+                  <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                    Freelance services are reviewed by Administrator (<strong>Guhan M</strong>) for quality and safety. Once approved, they will appear in the Campus Freelance directory.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {fetching ? (
               <div className="h-64 animate-pulse rounded-2xl bg-secondary/50" />
             ) : gigs.length === 0 ? (
@@ -329,51 +347,76 @@ export default function SellerServicesPage() {
             ) : (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="divide-y divide-border">
-                  {gigs.map((gig) => (
-                    <div
-                      key={gig.id}
-                      className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-accent/10 transition-colors"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary/40 border border-border">
-                          <img src={gig.coverImage} alt={gig.title} className="h-full w-full object-cover" />
-                        </div>
-                        <div className="min-w-0">
-                          <Badge variant="outline" className="text-[10px] mb-1 font-medium">
-                            {gig.category}
-                          </Badge>
-                          <Link
-                            href={`/services/${gig.slug}`}
-                            className="block font-semibold text-sm hover:text-primary transition-colors truncate"
-                          >
-                            {gig.title}
-                          </Link>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Starting at <strong className="text-foreground">₹{gig.startingPrice}</strong> • {gig.deliveryTimeDays} days delivery
-                          </p>
-                        </div>
-                      </div>
+                  {gigs.map((gig) => {
+                    const isPending = gig.status === 'pending_approval';
+                    const isRejected = gig.status === 'rejected';
 
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEdit(gig)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => setDeleteTarget(gig)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    return (
+                      <div
+                        key={gig.id}
+                        className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-accent/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary/40 border border-border">
+                            <img src={gig.coverImage} alt={gig.title} className="h-full w-full object-cover" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-[10px] font-medium">
+                                {gig.category}
+                              </Badge>
+                              <Badge
+                                className={
+                                  gig.status === 'active' ? 'bg-success/10 text-success hover:bg-success/10 text-[10px]' :
+                                  isPending ? 'bg-warning/10 text-warning hover:bg-warning/10 text-[10px] font-semibold' :
+                                  isRejected ? 'bg-destructive/10 text-destructive hover:bg-destructive/10 text-[10px] font-semibold' :
+                                  'bg-secondary text-muted-foreground text-[10px]'
+                                }
+                              >
+                                {isPending ? '🟡 Under Review' :
+                                 isRejected ? '🔴 Needs Revision' :
+                                 gig.status === 'active' ? '🟢 Live' :
+                                 gig.status}
+                              </Badge>
+                            </div>
+                            <Link
+                              href={`/services/${gig.slug}`}
+                              className="block font-semibold text-sm hover:text-primary transition-colors truncate"
+                            >
+                              {gig.title}
+                            </Link>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Starting at <strong className="text-foreground">₹{gig.startingPrice}</strong> • {gig.deliveryTimeDays} days delivery
+                            </p>
+                            {isRejected && gig.rejectionReason && (
+                              <p className="text-[11px] text-destructive mt-1">
+                                <strong>Admin Note:</strong> {gig.rejectionReason}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openEdit(gig)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => setDeleteTarget(gig)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
