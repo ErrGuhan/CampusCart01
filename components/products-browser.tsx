@@ -339,7 +339,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
           </div>
 
           {/* Quick Category Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             <button
               type="button"
               onClick={() => setSelectedCategories([])}
@@ -373,7 +373,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
         </div>
 
         {/* Main Products Grid & Sidebar Layout */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 w-full">
           {/* Desktop Filter Sidebar */}
           <aside className="hidden lg:block w-60 shrink-0">
             <div className="sticky top-20 rounded-3xl border border-border/80 bg-card p-5 shadow-xs">

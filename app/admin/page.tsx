@@ -338,22 +338,24 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Main Tabs */}
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
           <Tabs defaultValue="products" className="w-full">
-            <TabsList className="bg-secondary/50 p-1 rounded-xl mb-6">
-              <TabsTrigger value="products" className="rounded-lg text-xs gap-1.5">
-                <Package className="h-3.5 w-3.5" />
-                Product Submissions ({pendingProducts.length > 0 ? `🔥 ${pendingProducts.length} Pending` : products.length})
-              </TabsTrigger>
-              <TabsTrigger value="gigs" className="rounded-lg text-xs gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" />
-                Freelance Gigs ({pendingGigs.length > 0 ? `🔥 ${pendingGigs.length} Pending` : gigs.length})
-              </TabsTrigger>
-              <TabsTrigger value="creators" className="rounded-lg text-xs gap-1.5">
-                <Users className="h-3.5 w-3.5" />
-                Student Creators ({sellers.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="w-full overflow-x-auto pb-1 mb-6 scrollbar-none">
+              <TabsList className="bg-secondary/50 p-1 rounded-2xl inline-flex w-auto min-w-full sm:w-auto h-auto gap-1">
+                <TabsTrigger value="products" className="rounded-xl text-xs gap-1.5 py-2 px-3 whitespace-nowrap">
+                  <Package className="h-3.5 w-3.5 shrink-0" />
+                  Product Submissions ({pendingProducts.length > 0 ? `🔥 ${pendingProducts.length} Pending` : products.length})
+                </TabsTrigger>
+                <TabsTrigger value="gigs" className="rounded-xl text-xs gap-1.5 py-2 px-3 whitespace-nowrap">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                  Freelance Gigs ({pendingGigs.length > 0 ? `🔥 ${pendingGigs.length} Pending` : gigs.length})
+                </TabsTrigger>
+                <TabsTrigger value="creators" className="rounded-xl text-xs gap-1.5 py-2 px-3 whitespace-nowrap">
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  Student Creators ({sellers.length})
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* TAB 1: PRODUCT APPROVALS */}
             <TabsContent value="products" className="space-y-6 mt-0">

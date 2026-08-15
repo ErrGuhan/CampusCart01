@@ -47,8 +47,8 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-border/80 bg-secondary/30 mt-16 sm:mt-24 pb-24 md:pb-12">
-      <div className="container-px mx-auto max-w-7xl py-12 sm:py-16">
+    <footer className="border-t border-border/80 bg-secondary/30 mt-16 sm:mt-24 pb-24 md:pb-12 w-full">
+      <div className="container-px mx-auto max-w-7xl py-12 sm:py-16 w-full">
         {/* Top Trust Banner */}
         <div className="mb-12 pb-10 border-b border-border/60 grid grid-cols-2 md:grid-cols-4 gap-5 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">

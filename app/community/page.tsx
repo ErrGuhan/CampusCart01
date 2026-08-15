@@ -143,16 +143,16 @@ export default function CampusCommunityPage() {
       <Navbar />
       <main className="container-px mx-auto max-w-7xl py-8 sm:py-12 min-h-screen">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 pb-6 sm:pb-8 border-b border-border">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary mb-2.5">
               <Users className="h-4 w-4" />
               <span>Campus Community & Feed</span>
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <h1 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight">
               Connect, Collaborate & Share
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <p className="mt-1.5 text-xs sm:text-base text-muted-foreground leading-relaxed">
               Find hackathon teammates, share project tips, announce club symposiums, and talk directly with student makers.
             </p>
           </div>
@@ -165,36 +165,36 @@ export default function CampusCommunityPage() {
               }
               setCreateModalOpen(true);
             }}
-            className="rounded-2xl gap-2 h-12 px-6 shadow-sm shrink-0"
+            className="rounded-2xl gap-2 h-11 px-5 shadow-xs shrink-0 w-full sm:w-auto justify-center"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
             Create a Post
           </Button>
         </div>
 
         {/* Channels / Tags Filter */}
-        <div className="mt-6 sm:mt-8 space-y-4">
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="mt-5 sm:mt-8 space-y-4">
+          <div className="w-full flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {channels.map((c) => (
               <Button
                 key={c.value}
                 variant={selectedChannel === c.value ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedChannel(c.value)}
-                className="rounded-xl text-xs whitespace-nowrap h-9"
+                className="rounded-xl text-xs whitespace-nowrap h-9 shrink-0"
               >
                 {c.label}
               </Button>
             ))}
           </div>
 
-          <div className="relative max-w-md">
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Search community discussions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 rounded-xl"
+              className="pl-10 rounded-xl bg-card text-xs h-10"
             />
           </div>
         </div>

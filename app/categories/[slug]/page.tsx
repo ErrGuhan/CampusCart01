@@ -5,7 +5,15 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
-import { getCategories, getProductsByCategory } from '@/lib/firebase-queries';
+import { getCategories, getProductsByCategory, DEFAULT_CATEGORIES } from '@/lib/firebase-queries';
+
+export const revalidate = 60;
+
+export function generateStaticParams() {
+  return DEFAULT_CATEGORIES.map((category) => ({
+    slug: category.slug,
+  }));
+}
 
 type Props = { params: { slug: string } | Promise<{ slug: string }> };
 

@@ -34,7 +34,8 @@ export default async function CategoriesPage() {
               <Link
                 key={category.id}
                 href={`/categories/${category.slug}`}
-                className="group relative flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card p-8 text-center transition-all hover:shadow-lg hover:border-primary/20 hover:-translate-y-1"
+                prefetch={true}
+                className="group relative flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card p-6 sm:p-8 text-center transition-all hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 active:scale-95"
               >
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent text-accent-foreground transition-all group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110">
                   <Icon className="h-8 w-8" />

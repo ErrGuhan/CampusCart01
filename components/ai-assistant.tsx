@@ -127,14 +127,14 @@ export function CampusCartAIAssistant() {
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Open AI shopping assistant"
-        className="fixed bottom-18 md:bottom-6 right-3.5 sm:right-6 z-40 flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-primary/20"
+        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-40 flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-primary/20"
       >
         {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5 animate-pulse" />}
       </button>
 
       {/* Chat Window */}
       {open && (
-        <div className="fixed bottom-18 sm:bottom-22 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[380px] h-[72vh] max-h-[520px] rounded-3xl border border-border bg-background/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up">
+        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[380px] h-[72vh] max-h-[520px] rounded-3xl border border-border bg-background/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up">
           {/* Header */}
           <div className="p-3.5 border-b border-border bg-gradient-to-r from-primary/10 to-indigo-500/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
