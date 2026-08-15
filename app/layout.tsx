@@ -21,10 +21,11 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://campuscart.app'),
-  title: 'CampusCart — Discover what your campus creates',
+  title: 'CampusCart — SVCET Student Marketplace & Freelance Hub',
   description:
-    'Buy, sell, and discover products created by students in your college. A trusted marketplace for student creators.',
+    'Buy, sell, and discover products and freelance services created by students at Sri Venkateswara College of Engineering and Technology (SVCET).',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover',
+  themeColor: '#09090b',
   openGraph: {
     title: 'CampusCart — Discover what your campus creates',
     description:
