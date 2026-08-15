@@ -57,3 +57,11 @@ export type ProductCard = {
   sellerUsername: string;
   status: ProductStatus;
 };
+
+export type Review = {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};

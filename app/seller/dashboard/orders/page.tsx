@@ -83,7 +83,7 @@ export default function SellerOrdersPage() {
   }
 
   const sellerOrders = orders.filter((o) =>
-    o.items.some((i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots')
+    o.items.some((i) => i.sellerUsername === profile?.username)
   );
 
   const filtered = sellerOrders.filter((o) => {
@@ -169,7 +169,7 @@ export default function SellerOrdersPage() {
               <div className="space-y-3">
                 {filtered.map((order) => {
                   const sellerItems = order.items.filter(
-                    (i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots'
+                    (i) => i.sellerUsername === profile?.username
                   );
                   const sellerTotal = sellerItems.reduce(
                     (s, i) => s + (i.discountPrice ?? i.price) * i.quantity, 0

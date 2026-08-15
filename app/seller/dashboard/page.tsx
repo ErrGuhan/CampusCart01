@@ -95,19 +95,19 @@ export default function SellerDashboardPage() {
 
   const lowStockProducts = sellerProducts.filter((p) => p.inventory <= 5);
   const sellerOrders = orders.filter((o) =>
-    o.items.some((i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots')
+    o.items.some((i) => i.sellerUsername === profile?.username)
   );
 
   const totalRevenue = sellerOrders.reduce((sum, o) => {
     const sellerItems = o.items.filter(
-      (i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots'
+      (i) => i.sellerUsername === profile?.username
     );
     return sum + sellerItems.reduce((s, i) => s + (i.discountPrice ?? i.price) * i.quantity, 0);
   }, 0);
 
   const totalUnits = sellerOrders.reduce((sum, o) => {
     const sellerItems = o.items.filter(
-      (i) => i.sellerUsername === profile?.username || i.sellerUsername === 'ananyapots'
+      (i) => i.sellerUsername === profile?.username
     );
     return sum + sellerItems.reduce((s, i) => s + i.quantity, 0);
   }, 0);

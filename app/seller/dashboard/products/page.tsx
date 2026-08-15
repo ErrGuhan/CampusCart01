@@ -28,11 +28,26 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase-client';
 import { getMyProducts } from '@/lib/supabase-queries';
 import { getClientCategories } from '@/lib/supabase-client-queries';
-import type { Category, Product } from '@/lib/types';
+import type { Category, Product, ProductStatus } from '@/lib/types';
 
 type SellerProduct = Product & { _editing?: boolean };
+
+export type ProductFormData = {
+  name: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  category: string;
+  inventory: number;
+  tags: string[];
+  imageUrl: string;
+  pickup: boolean;
+  delivery: boolean;
+  status: ProductStatus;
+};
 
 export default function SellerProductsPage() {
   const { user, profile, loading } = useAuth();
@@ -114,24 +129,144 @@ export default function SellerProductsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  function handleSave() {
+  async function handleSave(formData: ProductFormData) {
+    if (!user || !profile) return;
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const selectedCat = categories.find((c) => c.name === formData.category);
+      const categoryId = selectedCat?.id || null;
+
+      const slug = editProduct?.slug || (
+        formData.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '')
+          .slice(0, 40) + '-' + Math.floor(Math.random() * 10000)
+      );
+
+      if (editProduct) {
+        const { error: prodErr } = await supabase
+          .from('products')
+          .update({
+            name: formData.name,
+            description: formData.description,
+            price: formData.price,
+            discount_price: formData.discountPrice ?? null,
+            category_id: categoryId,
+            inventory: formData.inventory,
+            tags: formData.tags,
+            status: formData.status,
+            pickup_available: formData.pickup,
+            delivery_available: formData.delivery,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editProduct.id)
+          .eq('seller_id', user.id);
+
+        if (prodErr) throw prodErr;
+
+        if (formData.imageUrl) {
+          const { data: existingImgs } = await supabase
+            .from('product_images')
+            .select('id')
+            .eq('product_id', editProduct.id);
+
+          if (existingImgs && existingImgs.length > 0) {
+            await supabase
+              .from('product_images')
+              .update({ url: formData.imageUrl })
+              .eq('id', existingImgs[0].id);
+          } else {
+            await supabase
+              .from('product_images')
+              .insert({
+                product_id: editProduct.id,
+                url: formData.imageUrl,
+                sort_order: 0,
+              });
+          }
+        }
+
+        toast({
+          title: 'Product updated',
+          description: `"${formData.name}" has been updated.`,
+        });
+      } else {
+        const { data: inserted, error: prodErr } = await supabase
+          .from('products')
+          .insert({
+            seller_id: user.id,
+            name: formData.name,
+            slug,
+            description: formData.description,
+            price: formData.price,
+            discount_price: formData.discountPrice ?? null,
+            category_id: categoryId,
+            inventory: formData.inventory,
+            tags: formData.tags,
+            status: formData.status,
+            pickup_available: formData.pickup,
+            delivery_available: formData.delivery,
+          })
+          .select('id')
+          .single();
+
+        if (prodErr) throw prodErr;
+
+        if (inserted?.id && formData.imageUrl) {
+          await supabase
+            .from('product_images')
+            .insert({
+              product_id: inserted.id,
+              url: formData.imageUrl,
+              sort_order: 0,
+            });
+        }
+
+        toast({
+          title: 'Product created',
+          description: `"${formData.name}" added to your store.`,
+        });
+      }
+
+      const updated = await getMyProducts(profile.id);
+      setSellerProducts(updated);
       setDialogOpen(false);
       setEditProduct(null);
+    } catch (err: any) {
+      console.error('Error saving product:', err);
       toast({
-        title: editProduct ? 'Product updated' : 'Product created',
-        description: editProduct?.name || 'New product added successfully.',
+        title: 'Could not save product',
+        description: err.message || 'Something went wrong. Please check your inputs.',
+        variant: 'destructive',
       });
-    }, 1200);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!deleteTarget) return;
-    setSellerProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    toast({ title: 'Product deleted', description: deleteTarget.name });
-    setDeleteTarget(null);
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', deleteTarget.id);
+
+      if (error) throw error;
+
+      setSellerProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      toast({ title: 'Product deleted', description: deleteTarget.name });
+    } catch (err: any) {
+      console.error('Error deleting product:', err);
+      toast({
+        title: 'Could not delete product',
+        description: err.message || 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteTarget(null);
+    }
   }
 
   function openEdit(product: Product) {
@@ -328,26 +463,64 @@ function ProductForm({
 }: {
   product: Product | null;
   saving: boolean;
-  onSave: () => void;
+  onSave: (data: ProductFormData) => void;
   onCancel: () => void;
   categories: Category[];
 }) {
+  const { toast } = useToast();
   const [name, setName] = useState(product?.name || '');
   const [description, setDescription] = useState(product?.description || '');
   const [price, setPrice] = useState(product?.price?.toString() || '');
   const [discountPrice, setDiscountPrice] = useState(product?.discountPrice?.toString() || '');
-  const [category, setCategory] = useState(product?.category || '');
-  const [inventory, setInventory] = useState(product?.inventory?.toString() || '0');
+  const [category, setCategory] = useState(product?.category || (categories[0]?.name ?? 'Other'));
+  const [inventory, setInventory] = useState(product?.inventory?.toString() || '10');
   const [tags, setTags] = useState(product?.tags?.join(', ') || '');
   const [imageUrl, setImageUrl] = useState(product?.images?.[0] || '');
   const [pickup, setPickup] = useState(product?.pickupAvailable ?? true);
   const [delivery, setDelivery] = useState(product?.deliveryAvailable ?? false);
-  const [status, setStatus] = useState<string>(product?.status || 'active');
+  const [status, setStatus] = useState<ProductStatus>(product?.status || 'active');
+
+  function handleSubmit() {
+    if (!name.trim()) {
+      toast({
+        title: 'Product name required',
+        description: 'Please enter a name for the product.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const parsedPrice = parseFloat(price);
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      toast({
+        title: 'Valid price required',
+        description: 'Please enter a valid product price.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const parsedDiscount = discountPrice.trim() ? parseFloat(discountPrice) : undefined;
+    const parsedInventory = parseInt(inventory, 10);
+    const tagList = tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+
+    onSave({
+      name: name.trim(),
+      description: description.trim(),
+      price: parsedPrice,
+      discountPrice: parsedDiscount && !isNaN(parsedDiscount) ? parsedDiscount : undefined,
+      category: category || (categories[0]?.name ?? 'Other'),
+      inventory: isNaN(parsedInventory) || parsedInventory < 0 ? 0 : parsedInventory,
+      tags: tagList,
+      imageUrl: imageUrl.trim() || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+      pickup,
+      delivery,
+      status: status || 'active',
+    });
+  }
 
   return (
     <div className="space-y-4 py-2">
       <div className="space-y-2">
-        <Label htmlFor="p-name">Product Name</Label>
+        <Label htmlFor="p-name">Product Name *</Label>
         <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Handmade Ceramic Mug" />
       </div>
 
@@ -358,7 +531,7 @@ function ProductForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="p-price">Price (₹)</Label>
+          <Label htmlFor="p-price">Price (₹) *</Label>
           <Input id="p-price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="280" />
         </div>
         <div className="space-y-2">
@@ -369,7 +542,7 @@ function ProductForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="p-category">Category</Label>
+          <Label htmlFor="p-category">Category *</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger id="p-category">
               <SelectValue placeholder="Select category" />
@@ -405,7 +578,7 @@ function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="p-status">Status</Label>
-          <Select value={status} onValueChange={setStatus}>
+          <Select value={status} onValueChange={(v) => setStatus(v as ProductStatus)}>
             <SelectTrigger id="p-status">
               <SelectValue />
             </SelectTrigger>
@@ -433,7 +606,7 @@ function ProductForm({
 
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={onSave} disabled={saving}>
+        <Button onClick={handleSubmit} disabled={saving}>
           {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 'Save Product'}
         </Button>
       </DialogFooter>

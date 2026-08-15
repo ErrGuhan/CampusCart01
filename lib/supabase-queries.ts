@@ -1,5 +1,5 @@
 import { supabase } from './supabase-server';
-import type { Category, Product, Seller } from './types';
+import type { Category, Product, Seller, Review } from './types';
 
 /**
  * Real data layer for CampusCart, backed by Supabase.
@@ -295,4 +295,33 @@ export async function getMyProducts(sellerId: string): Promise<Product[]> {
 
   if (error) throw error;
   return (data ?? []).map(mapProduct);
+}
+
+// ---------- Reviews ----------
+
+export async function getProductReviews(productId: string): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select(`
+      id,
+      rating,
+      comment,
+      created_at,
+      user:profiles!reviews_user_id_fkey(display_name)
+    `)
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching reviews:', error);
+    return [];
+  }
+
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    author: r.user?.display_name || 'Student Buyer',
+    rating: Number(r.rating),
+    comment: r.comment ?? '',
+    createdAt: r.created_at,
+  }));
 }

@@ -39,6 +39,7 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, profile, loading, signOut } = useAuth();
   const { totalItems } = useCart();
   const router = useRouter();
@@ -53,6 +54,15 @@ export function Navbar() {
   async function handleSignOut() {
     await signOut();
     router.push('/');
+  }
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      router.push('/products');
+      return;
+    }
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
   }
 
   const initials = profile?.display_name
@@ -90,7 +100,18 @@ export function Navbar() {
               <SheetHeader>
                 <SheetTitle className="text-left">CampusCart</SheetTitle>
               </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-2">
+              <form onSubmit={(e) => { setMobileOpen(false); handleSearchSubmit(e); }} className="mt-4 px-1">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products..."
+                    className="pl-9 pr-3 h-9 bg-secondary/50"
+                  />
+                </div>
+              </form>
+              <nav className="mt-4 flex flex-col gap-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
@@ -182,15 +203,17 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="hidden lg:flex flex-1 max-w-md mx-auto">
+          <form onSubmit={handleSearchSubmit} className="hidden lg:flex flex-1 max-w-md mx-auto">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products, creators, categories..."
                 className="pl-9 pr-4 bg-secondary/50 border-transparent focus-visible:border-input focus-visible:bg-background transition-all"
               />
             </div>
-          </div>
+          </form>
 
           <div className="flex items-center gap-1 ml-auto">
             <Button variant="ghost" size="icon" asChild className="hidden sm:flex">

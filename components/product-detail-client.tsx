@@ -17,11 +17,11 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/components/cart-provider';
-import type { Product } from '@/lib/types';
+import type { Product, Review } from '@/lib/types';
 
-type Props = { product: Product; relatedProducts: Product[] };
+type Props = { product: Product; relatedProducts: Product[]; reviews?: Review[] };
 
-export function ProductDetailClient({ product, relatedProducts }: Props) {
+export function ProductDetailClient({ product, relatedProducts, reviews = [] }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const { toast } = useToast();
@@ -67,11 +67,10 @@ export function ProductDetailClient({ product, relatedProducts }: Props) {
     router.push('/cart');
   }
 
-  const mockReviews = [
-    { id: '1', author: 'Sneha K.', rating: 5, comment: 'Absolutely loved the quality! Even better than the photos.', date: '2 weeks ago' },
-    { id: '2', author: 'Vikram R.', rating: 5, comment: 'Great product and quick pickup on campus. Highly recommend!', date: '1 month ago' },
-    { id: '3', author: 'Aditi M.', rating: 4, comment: 'Good value for the price. Would buy again.', date: '1 month ago' },
-  ];
+  const categorySlug = product.category
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 
   return (
     <>
@@ -82,7 +81,7 @@ export function ProductDetailClient({ product, relatedProducts }: Props) {
           <ChevronRight className="h-4 w-4" />
           <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
           <ChevronRight className="h-4 w-4" />
-          <Link href={`/categories/${product.category.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and')}`} className="hover:text-foreground transition-colors">
+          <Link href={`/categories/${categorySlug}`} className="hover:text-foreground transition-colors">
             {product.category}
           </Link>
           <ChevronRight className="h-4 w-4" />
@@ -319,36 +318,55 @@ export function ProductDetailClient({ product, relatedProducts }: Props) {
             </TabsList>
 
             <TabsContent value="reviews" className="mt-6">
-              <div className="space-y-4">
-                {mockReviews.map((review) => (
-                  <div key={review.id} className="rounded-xl border border-border bg-card p-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                          {review.author.charAt(0)}
+              {reviews.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border p-8 text-center bg-card/50">
+                  <Star className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <h3 className="text-base font-semibold">No reviews yet</h3>
+                  <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
+                    Verified student buyers who purchase this item can leave ratings and reviews.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => {
+                    const formattedDate = new Date(review.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    });
+                    return (
+                      <div key={review.id} className="rounded-xl border border-border bg-card p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                              {review.author.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{review.author}</div>
+                              <div className="text-xs text-muted-foreground">{formattedDate}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-4 w-4 ${
+                                  star <= review.rating
+                                    ? 'fill-warning text-warning'
+                                    : 'text-muted-foreground/30'
+                                }`}
+                              />
+                            ))}
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium">{review.author}</div>
-                          <div className="text-xs text-muted-foreground">{review.date}</div>
-                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
+                        )}
                       </div>
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-4 w-4 ${
-                              star <= review.rating
-                                ? 'fill-warning text-warning'
-                                : 'text-muted-foreground/30'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="description" className="mt-6">

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -33,12 +34,29 @@ const sortOptions = [
 type Props = { products: Product[]; categories: Category[] };
 
 export function ProductsBrowser({ products, categories }: Props) {
-  const [search, setSearch] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams?.get('search') || '';
+  const urlCategory = searchParams?.get('category') || '';
+
+  const [search, setSearch] = useState(urlSearch);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    urlCategory ? [urlCategory] : []
+  );
   const [priceRange, setPriceRange] = useState<number[]>([0, 1500]);
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState('relevance');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
+
+  useEffect(() => {
+    const q = searchParams?.get('search');
+    if (q !== null && q !== undefined) {
+      setSearch(q);
+    }
+    const cat = searchParams?.get('category');
+    if (cat) {
+      setSelectedCategories([cat]);
+    }
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     let result = [...products];
