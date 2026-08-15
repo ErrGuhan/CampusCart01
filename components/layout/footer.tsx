@@ -11,44 +11,37 @@ export function Footer() {
     {
       title: 'Marketplace',
       links: [
-        { href: '/products', label: 'Browse Products' },
+        { href: '/marketplace', label: 'All Products' },
+        { href: '/used', label: 'Used Items' },
+        { href: '/deals', label: 'Student Deals' },
         { href: '/categories', label: 'Categories' },
-        { href: '/sellers', label: 'Student Creators' },
+      ],
+    },
+    {
+      title: 'Freelance & Gigs',
+      links: [
+        { href: '/services', label: 'Hire Student Talent' },
+        { href: '/requests', label: 'Product Requests' },
+        { href: '/seller/dashboard/services', label: 'Offer a Service' },
+        { href: '/sellers', label: 'Campus Creators' },
+      ],
+    },
+    {
+      title: 'Community',
+      links: [
+        { href: '/community', label: 'Campus Feed' },
+        { href: '/events', label: 'Events & Hackathons' },
         { href: '/how-it-works', label: 'How It Works' },
+        { href: '/requests', label: 'What Students Need' },
       ],
     },
     {
-      title: 'Sell',
-      links: profile?.is_seller
-        ? [
-            { href: '/seller/dashboard', label: 'Seller Dashboard' },
-            { href: '/seller/dashboard/products', label: 'Manage Products' },
-            { href: '/seller/dashboard/orders', label: 'Orders' },
-            { href: '/how-it-works', label: 'How It Works' },
-          ]
-        : [
-            { href: user ? '/account/settings' : '/register', label: 'Become a Seller' },
-            { href: '/seller/dashboard', label: 'Seller Dashboard' },
-            { href: '/how-it-works', label: 'How It Works' },
-            { href: '/products', label: 'List Your Products' },
-          ],
-    },
-    {
-      title: 'Account',
+      title: 'Student Hub',
       links: [
-        { href: user ? '/account' : '/login', label: user ? 'My Account' : 'Sign In' },
-        { href: user ? '/account/settings' : '/register', label: user ? 'Settings' : 'Create Account' },
-        { href: '/account/orders', label: 'My Orders' },
-        { href: '/wishlist', label: 'Wishlist' },
-      ],
-    },
-    {
-      title: 'Help',
-      links: [
-        { href: '/how-it-works', label: 'Marketplace Guide' },
-        { href: '/products', label: 'Buying Guide' },
-        { href: 'mailto:support@campuscart.com?subject=CampusCart%20Support', label: 'Contact' },
-        { href: '/how-it-works', label: 'FAQ' },
+        { href: user ? '/dashboard' : '/login', label: user ? 'Student Dashboard' : 'Sign In' },
+        { href: user ? '/account/orders' : '/register', label: user ? 'My Orders' : 'Join CampusCart' },
+        { href: '/messages', label: 'Messages' },
+        { href: 'mailto:support@campuscart.com?subject=CampusCart%20Support', label: 'Help & Support' },
       ],
     },
   ];

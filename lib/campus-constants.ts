@@ -23,5 +23,17 @@ export const COLLEGE_YEARS = [
   'Alumni',
 ] as const;
 
+export const CAMPUS_PICKUP_LOCATIONS = [
+  'Main Academic Block - Ground Floor Lobby',
+  'Central Library - Entrance Lobby',
+  'Campus Food Court / Canteen Point',
+  'CSE & IT Department Corridor',
+  'Boys Hostel Block A / B Entrance',
+  'Girls Hostel Entrance Security Desk',
+  'Campus Innovation & incubation Lab',
+  'Sports Complex / Grounds Hub',
+] as const;
+
 export type CollegeDepartment = (typeof COLLEGE_DEPARTMENTS)[number];
 export type CollegeYear = (typeof COLLEGE_YEARS)[number];
+export type CampusPickupLocation = (typeof CAMPUS_PICKUP_LOCATIONS)[number];

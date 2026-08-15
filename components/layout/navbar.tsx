@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   Search, ShoppingCart, Heart, Menu, Store, User,
   LayoutDashboard, Package, LogOut, Settings, ShieldCheck, Shield,
+  MessageSquare, Bell, Sparkles, HelpCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,11 +31,13 @@ import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
 
 const navLinks = [
-  { href: '/products', label: 'Products' },
-  { href: '/services', label: 'Freelance & Gigs', badge: 'New' },
-  { href: '/categories', label: 'Categories' },
-  { href: '/sellers', label: 'Creators' },
-  { href: '/how-it-works', label: 'How It Works' },
+  { href: '/marketplace', label: 'Marketplace' },
+  { href: '/used', label: 'Used Items' },
+  { href: '/services', label: 'Freelance & Gigs', badge: 'Earn' },
+  { href: '/requests', label: 'Requests', badge: 'Campus' },
+  { href: '/community', label: 'Community' },
+  { href: '/deals', label: 'Deals', badge: 'Hot' },
+  { href: '/events', label: 'Events' },
 ];
 
 export function Navbar() {
@@ -233,6 +236,16 @@ export function Navbar() {
 
           <div className="flex items-center gap-1 ml-auto">
             <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
+              <Link href="/messages" aria-label="Messages">
+                <MessageSquare className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
+              <Link href="/notifications" aria-label="Notifications">
+                <Bell className="h-5 w-5" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
               <Link href="/wishlist" aria-label="Wishlist">
                 <Heart className="h-5 w-5" />
               </Link>
@@ -278,15 +291,33 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="cursor-pointer">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Student Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/account" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      My Account
+                      My Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/account/orders" className="cursor-pointer">
                       <Package className="mr-2 h-4 w-4" />
                       My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/messages" className="cursor-pointer">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Campus Messages
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/requests" className="cursor-pointer">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Product Requests
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -311,8 +342,8 @@ export function Navbar() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link href="/seller/dashboard" className="cursor-pointer">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Seller Dashboard
+                          <Store className="mr-2 h-4 w-4" />
+                          Seller Studio
                         </Link>
                       </DropdownMenuItem>
                     </>

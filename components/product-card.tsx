@@ -42,17 +42,24 @@ export function ProductCard({ product, className }: ProductCardProps) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
+        {product.isUsed && product.condition && (
+          <Badge
+            className="absolute top-3 left-3 bg-amber-500 text-white shadow-sm hover:bg-amber-600 capitalize text-[10px]"
+          >
+            {product.condition.replace('_', ' ')}
+          </Badge>
+        )}
         {product.isDigital && (
           <Badge
-            className="absolute top-3 left-3 bg-indigo-600/90 text-white shadow-sm hover:bg-indigo-600"
+            className="absolute top-3 left-3 bg-indigo-600/90 text-white shadow-sm hover:bg-indigo-600 text-[10px]"
           >
             Instant Digital
           </Badge>
         )}
-        {hasDiscount && !product.isDigital && (
+        {hasDiscount && !product.isDigital && !product.isUsed && (
           <Badge
             variant="destructive"
-            className="absolute top-3 left-3 shadow-sm"
+            className="absolute top-3 left-3 shadow-sm text-[10px]"
           >
             {discountPercent}% OFF
           </Badge>
@@ -60,7 +67,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <button
           type="button"
           aria-label="Add to wishlist"
-          className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-muted-foreground opacity-0 shadow-sm backdrop-blur transition-all hover:text-destructive group-hover:opacity-100"
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-muted-foreground opacity-0 shadow-sm backdrop-blur transition-all hover:text-destructive group-hover:opacity-100"
           onClick={(e) => {
             e.preventDefault();
             try {
@@ -90,7 +97,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       </div>
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="truncate">{product.category}</span>
           <span className="text-border">·</span>
           <span className="truncate">{product.seller.displayName}</span>
@@ -100,12 +107,19 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {product.name}
         </h3>
 
-        {product.isVerified && (
-          <span className="mt-1 inline-flex w-fit items-center gap-1 text-[11px] font-medium text-success">
-            <BadgeCheck className="h-3 w-3" />
-            Verified original
-          </span>
-        )}
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          {product.isVerified && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success">
+              <BadgeCheck className="h-3 w-3" />
+              Verified Student
+            </span>
+          )}
+          {product.pickupAvailable && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground bg-secondary/80 px-1.5 py-0.5 rounded">
+              📍 Campus Pickup
+            </span>
+          )}
+        </div>
 
         <div className="mt-2 flex items-center gap-1">
           <Star className="h-3.5 w-3.5 fill-warning text-warning" />

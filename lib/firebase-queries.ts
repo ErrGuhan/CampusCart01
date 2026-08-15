@@ -4,13 +4,19 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  addDoc,
+  updateDoc,
   query,
   where,
   orderBy,
   limit as firestoreLimit,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Category, Product, Seller, Review, ServiceGig, GigOrder, GigRequest } from './types';
+import type {
+  Category, Product, Seller, Review, ServiceGig, GigOrder, GigRequest,
+  ProductRequest, RequestOffer, CommunityPost, CommunityComment,
+  CampusEvent, ChatMessage, Conversation, NotificationItem,
+} from './types';
 
 // Default categories list for instant availability & seeding
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -781,9 +787,9 @@ export async function rejectGig(gigId: string, reason = 'Freelance gig details n
   return true;
 }
 
-export async function getFeaturedProducts(): Promise<Product[]> {
+export async function getFeaturedProducts(limitCount = 4): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.filter((p) => p.rating >= 4.5).slice(0, 4);
+  return all.filter((p) => p.rating >= 4.5).slice(0, limitCount);
 }
 
 export async function getTrendingProducts(limitCount = 4): Promise<Product[]> {
@@ -932,4 +938,544 @@ export async function getMyProducts(sellerId: string): Promise<Product[]> {
   return DEFAULT_PRODUCTS.filter(
     (p) => p.seller.id === sellerId || p.seller.username === 'guhan' || p.seller.id === 'seller-guhan'
   );
+}
+
+// ---------- Used & Deals Queries ----------
+
+export async function getUsedProducts(): Promise<Product[]> {
+  const all = await getAllProducts();
+  return all.filter((p) => p.isUsed || (p.tags && p.tags.some((t) => ['used', 'second-hand', 'preowned'].includes(t.toLowerCase()))));
+}
+
+export async function getDealsProducts(): Promise<Product[]> {
+  const all = await getAllProducts();
+  return all.filter((p) => (p.discountPrice !== undefined && p.discountPrice < p.price) || p.price <= 199);
+}
+
+// ---------- Product Requests ("What I Need") ----------
+
+export const DEFAULT_REQUESTS: ProductRequest[] = [
+  {
+    id: 'req-eg-board',
+    requesterId: 'student-ananya',
+    requesterName: 'Ananya S.',
+    requesterUsername: 'ananya_s',
+    requesterAvatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
+    requesterDepartment: 'Mechanical Engineering (MECH)',
+    requesterYear: '2nd Year',
+    title: 'Need Engineering Graphics Board with Mini Drafter',
+    description: 'Looking for a wooden or acrylic standard drawing board in good condition for 1st/2nd sem CAD & EG classes.',
+    category: 'College Supplies',
+    budget: 450,
+    deadlineDate: 'Within 3 days',
+    status: 'open',
+    offersCount: 2,
+    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    offers: [
+      {
+        id: 'off-1',
+        requestId: 'req-eg-board',
+        sellerId: 'student-karthik',
+        sellerName: 'Karthik Raja',
+        sellerUsername: 'karthik_r',
+        sellerAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
+        sellerDepartment: 'Civil Engineering (CIVIL)',
+        price: 400,
+        message: 'I have my Omega mini drafter and board from last semester in excellent condition. Can deliver at Canteen.',
+        status: 'pending',
+        createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+      },
+    ],
+  },
+  {
+    id: 'req-scientific-calc',
+    requesterId: 'student-rahul',
+    requesterName: 'Rahul Verma',
+    requesterUsername: 'rahul_v',
+    requesterAvatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=300',
+    requesterDepartment: 'Electronics & Communication (ECE)',
+    requesterYear: '3rd Year',
+    title: 'Casio fx-991EX Classwiz Scientific Calculator',
+    description: 'Urgent for internal exams! Need a working scientific calculator with matrix and vector solver.',
+    category: 'Electronics',
+    budget: 700,
+    deadlineDate: 'Tomorrow morning',
+    status: 'open',
+    offersCount: 1,
+    createdAt: new Date(Date.now() - 3600000 * 10).toISOString(),
+  },
+  {
+    id: 'req-lab-coat',
+    requesterId: 'student-priya',
+    requesterName: 'Priya Dharshini',
+    requesterUsername: 'priya_d',
+    requesterAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
+    requesterDepartment: 'Chemistry / S&H',
+    requesterYear: '1st Year',
+    title: 'White Lab Coat (Size M)',
+    description: 'Need clean white lab coat for chemistry practical sessions.',
+    category: 'Academic Materials',
+    budget: 200,
+    deadlineDate: 'This Friday',
+    status: 'open',
+    offersCount: 0,
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+  },
+];
+
+export async function getAllProductRequests(): Promise<ProductRequest[]> {
+  const reqMap = new Map<string, ProductRequest>();
+  DEFAULT_REQUESTS.forEach((r) => reqMap.set(r.id, r));
+
+  try {
+    const snap = await getDocs(collection(db, 'product_requests'));
+    if (!snap.empty) {
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        reqMap.set(docSnap.id, {
+          id: docSnap.id,
+          requesterId: d.requester_id || d.requesterId,
+          requesterName: d.requester_name || d.requesterName,
+          requesterUsername: d.requester_username || d.requesterUsername,
+          requesterAvatar: d.requester_avatar || d.requesterAvatar,
+          requesterDepartment: d.requester_department || d.requesterDepartment,
+          requesterYear: d.requester_year || d.requesterYear,
+          title: d.title,
+          description: d.description,
+          category: d.category,
+          budget: Number(d.budget) || 0,
+          deadlineDate: d.deadline_date || d.deadlineDate,
+          status: d.status || 'open',
+          offersCount: Number(d.offers_count || d.offersCount) || 0,
+          createdAt: d.created_at || d.createdAt,
+          offers: d.offers || [],
+        });
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore getAllProductRequests notice:', e);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_requests');
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          list.forEach((r: ProductRequest) => {
+            if (r.id) reqMap.set(r.id, r);
+          });
+        }
+      }
+    } catch {}
+  }
+
+  return Array.from(reqMap.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export async function createProductRequest(req: Omit<ProductRequest, 'id' | 'createdAt' | 'offersCount' | 'status'>): Promise<ProductRequest> {
+  const newReq: ProductRequest = {
+    ...req,
+    id: 'req_' + Date.now(),
+    status: 'open',
+    offersCount: 0,
+    createdAt: new Date().toISOString(),
+    offers: [],
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_requests');
+      const list = raw ? JSON.parse(raw) : [];
+      list.unshift(newReq);
+      localStorage.setItem('campuscart_requests', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('campuscart_request_updated'));
+    } catch {}
+  }
+
+  try {
+    await setDoc(doc(db, 'product_requests', newReq.id), newReq);
+  } catch (e) {
+    console.warn('Firestore createProductRequest notice:', e);
+  }
+
+  return newReq;
+}
+
+export async function addRequestOffer(requestId: string, offer: Omit<RequestOffer, 'id' | 'createdAt' | 'status'>): Promise<RequestOffer> {
+  const newOffer: RequestOffer = {
+    ...offer,
+    id: 'off_' + Date.now(),
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_requests');
+      let list: ProductRequest[] = raw ? JSON.parse(raw) : [];
+      list = list.map((r) => {
+        if (r.id === requestId) {
+          const offers = r.offers ? [...r.offers, newOffer] : [newOffer];
+          return { ...r, offers, offersCount: offers.length, status: 'offers_received' };
+        }
+        return r;
+      });
+      localStorage.setItem('campuscart_requests', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('campuscart_request_updated'));
+    } catch {}
+  }
+
+  return newOffer;
+}
+
+// ---------- Campus Community & Posts ----------
+
+export const DEFAULT_COMMUNITY_POSTS: CommunityPost[] = [
+  {
+    id: 'post-symp-2026',
+    authorId: 'student-guhan',
+    authorName: 'Guhan M',
+    authorUsername: 'guhan',
+    authorAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+    authorDepartment: 'Computer Science & Engineering (CSE)',
+    category: 'academic',
+    title: 'Tips for Project Presentation & Circuit Demo at IEEE Symposium',
+    content: 'For everyone presenting in the upcoming symposium, make sure to bring extra breadboards and jumper wires. If you need any 3D printed sensor casings, check out the CAD gigs on CampusCart.',
+    tags: ['Symposium', 'Projects', 'CSE', 'Tips'],
+    likes: 24,
+    commentsCount: 6,
+    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+  },
+  {
+    id: 'post-hackathon-team',
+    authorId: 'student-priya',
+    authorName: 'Priya Dharshini',
+    authorUsername: 'priya_d',
+    authorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
+    authorDepartment: 'Information Technology (IT)',
+    category: 'opportunities',
+    title: 'Looking for a UI/UX Designer for Smart Campus App Hackathon',
+    content: 'We are a team of 2 backend developers building an IoT automated campus parking solver. Need a creative UI designer with Figma experience to team up! Drop a comment or message me directly.',
+    tags: ['Hackathon', 'TeamUp', 'UIUX', 'Figma'],
+    likes: 19,
+    commentsCount: 4,
+    createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+  },
+  {
+    id: 'post-coding-club',
+    authorId: 'student-karthik',
+    authorName: 'Karthik Raja',
+    authorUsername: 'karthik_r',
+    authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
+    authorDepartment: 'Computer Science & Engineering (CSE)',
+    category: 'clubs',
+    title: 'Weekly Competitive Programming & LeetCode Meetup this Thursday',
+    content: 'Join us at CSE Lab 3 at 4:30 PM. We will cover dynamic programming and graph algorithms for campus placements.',
+    tags: ['CodingClub', 'LeetCode', 'Placements'],
+    likes: 31,
+    commentsCount: 8,
+    createdAt: new Date(Date.now() - 3600000 * 32).toISOString(),
+  },
+];
+
+export async function getCommunityPosts(category?: string): Promise<CommunityPost[]> {
+  const postsMap = new Map<string, CommunityPost>();
+  DEFAULT_COMMUNITY_POSTS.forEach((p) => postsMap.set(p.id, p));
+
+  try {
+    const snap = await getDocs(collection(db, 'community_posts'));
+    if (!snap.empty) {
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        postsMap.set(docSnap.id, {
+          id: docSnap.id,
+          authorId: d.author_id || d.authorId,
+          authorName: d.author_name || d.authorName,
+          authorUsername: d.author_username || d.authorUsername,
+          authorAvatar: d.author_avatar || d.authorAvatar,
+          authorDepartment: d.author_department || d.authorDepartment,
+          category: d.category,
+          title: d.title,
+          content: d.content,
+          tags: Array.isArray(d.tags) ? d.tags : [],
+          likes: Number(d.likes) || 0,
+          likedBy: d.liked_by || d.likedBy || [],
+          commentsCount: Number(d.comments_count || d.commentsCount) || 0,
+          createdAt: d.created_at || d.createdAt,
+        });
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore getCommunityPosts notice:', e);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_community_posts');
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          list.forEach((p: CommunityPost) => {
+            if (p.id) postsMap.set(p.id, p);
+          });
+        }
+      }
+    } catch {}
+  }
+
+  let result = Array.from(postsMap.values());
+  if (category && category !== 'all') {
+    result = result.filter((p) => p.category === category);
+  }
+
+  return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function createCommunityPost(post: Omit<CommunityPost, 'id' | 'likes' | 'commentsCount' | 'createdAt'>): Promise<CommunityPost> {
+  const newPost: CommunityPost = {
+    ...post,
+    id: 'post_' + Date.now(),
+    likes: 0,
+    commentsCount: 0,
+    createdAt: new Date().toISOString(),
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_community_posts');
+      const list = raw ? JSON.parse(raw) : [];
+      list.unshift(newPost);
+      localStorage.setItem('campuscart_community_posts', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('campuscart_community_updated'));
+    } catch {}
+  }
+
+  try {
+    await setDoc(doc(db, 'community_posts', newPost.id), newPost);
+  } catch (e) {
+    console.warn('Firestore createCommunityPost notice:', e);
+  }
+
+  return newPost;
+}
+
+export async function likeCommunityPost(postId: string, userId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_community_posts');
+      let list: CommunityPost[] = raw ? JSON.parse(raw) : [];
+      list = list.map((p) => {
+        if (p.id === postId) {
+          const liked = p.likedBy?.includes(userId);
+          const likedBy = liked ? p.likedBy?.filter((u) => u !== userId) : [...(p.likedBy || []), userId];
+          return { ...p, likes: liked ? p.likes - 1 : p.likes + 1, likedBy };
+        }
+        return p;
+      });
+      localStorage.setItem('campuscart_community_posts', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('campuscart_community_updated'));
+    } catch {}
+  }
+  return true;
+}
+
+// ---------- Campus Events ----------
+
+export const DEFAULT_EVENTS: CampusEvent[] = [
+  {
+    id: 'event-hackathon-2026',
+    title: 'SVCET National 24-Hour Hackathon 2026',
+    category: 'hackathon',
+    description: 'Build solutions in AI, IoT, FinTech, and Smart Campus. Cash prizes over ₹50,000 + mentor support from tech founders.',
+    date: 'March 28, 2026',
+    time: '09:00 AM - Next Day 09:00 AM',
+    venue: 'Auditorium & Innovation Labs',
+    organizer: 'SVCET ACM Student Chapter',
+    organizerClub: 'ACM & CSI',
+    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
+    price: 0,
+    registeredCount: 84,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'event-symposium-mech',
+    title: 'MechPulse 2026 - National Symposium & CAD Challenge',
+    category: 'symposium',
+    description: 'Paper presentation, SolidWorks CAD modeling contest, water rocketry, and robotics challenge.',
+    date: 'April 4, 2026',
+    time: '10:00 AM - 04:30 PM',
+    venue: 'Mechanical Department Block',
+    organizer: 'Department of Mechanical Engineering',
+    image: 'https://images.pexels.com/photos/3862632/pexels-photo-3862632.jpeg?auto=compress&cs=tinysrgb&w=800',
+    price: 150,
+    registeredCount: 42,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'event-iot-workshop',
+    title: 'Hands-on ESP32 & Cloud IoT Bootcamp',
+    category: 'workshop',
+    description: 'Learn sensor interfacing, MQTT communication, Firebase integration, and build your own smart home prototype.',
+    date: 'April 12, 2026',
+    time: '01:30 PM - 05:00 PM',
+    venue: 'IoT & Embedded Systems Lab',
+    organizer: 'Campus Tech Club',
+    image: 'https://images.pexels.com/photos/2599244/pexels-photo-2599244.jpeg?auto=compress&cs=tinysrgb&w=800',
+    price: 99,
+    registeredCount: 36,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export async function getCampusEvents(category?: string): Promise<CampusEvent[]> {
+  const eventsMap = new Map<string, CampusEvent>();
+  DEFAULT_EVENTS.forEach((e) => eventsMap.set(e.id, e));
+
+  try {
+    const snap = await getDocs(collection(db, 'campus_events'));
+    if (!snap.empty) {
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        eventsMap.set(docSnap.id, {
+          id: docSnap.id,
+          title: d.title,
+          category: d.category,
+          description: d.description,
+          date: d.date,
+          time: d.time,
+          venue: d.venue,
+          organizer: d.organizer,
+          organizerClub: d.organizer_club || d.organizerClub,
+          registrationUrl: d.registration_url || d.registrationUrl,
+          image: d.image,
+          price: Number(d.price) || 0,
+          registeredCount: Number(d.registered_count || d.registeredCount) || 0,
+          createdAt: d.created_at || d.createdAt,
+        });
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore getCampusEvents notice:', e);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_events');
+      if (raw) {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          list.forEach((e: CampusEvent) => {
+            if (e.id) eventsMap.set(e.id, e);
+          });
+        }
+      }
+    } catch {}
+  }
+
+  let result = Array.from(eventsMap.values());
+  if (category && category !== 'all') {
+    result = result.filter((e) => e.category === category);
+  }
+  return result;
+}
+
+// ---------- Messaging System ----------
+
+export async function getConversations(userId: string): Promise<Conversation[]> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_conversations');
+      if (raw) {
+        const list: Conversation[] = JSON.parse(raw);
+        return list.filter((c) => c.participantIds.includes(userId));
+      }
+    } catch {}
+  }
+  return [];
+}
+
+export async function getMessages(conversationId: string): Promise<ChatMessage[]> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(`campuscart_msgs_${conversationId}`);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch {}
+  }
+  return [];
+}
+
+export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>): Promise<ChatMessage> {
+  const newMsg: ChatMessage = {
+    ...msg,
+    id: 'msg_' + Date.now(),
+    createdAt: new Date().toISOString(),
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      // 1. Append to message thread
+      const key = `campuscart_msgs_${msg.conversationId}`;
+      const raw = localStorage.getItem(key);
+      const list = raw ? JSON.parse(raw) : [];
+      list.push(newMsg);
+      localStorage.setItem(key, JSON.stringify(list));
+
+      // 2. Update conversation list
+      const convRaw = localStorage.getItem('campuscart_conversations');
+      let convList: Conversation[] = convRaw ? JSON.parse(convRaw) : [];
+      const convIndex = convList.findIndex((c) => c.id === msg.conversationId);
+      if (convIndex >= 0) {
+        convList[convIndex].lastMessage = msg.text;
+        convList[convIndex].lastMessageTimestamp = newMsg.createdAt;
+      }
+      localStorage.setItem('campuscart_conversations', JSON.stringify(convList));
+
+      window.dispatchEvent(new CustomEvent('campuscart_message_sent', { detail: newMsg }));
+    } catch {}
+  }
+
+  return newMsg;
+}
+
+// ---------- Notifications ----------
+
+export async function getNotifications(userId: string): Promise<NotificationItem[]> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(`campuscart_notifs_${userId}`);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch {}
+  }
+  return [
+    {
+      id: 'notif-welcome',
+      userId,
+      title: 'Welcome to CampusCart! 🎓',
+      message: 'Explore student creations, post freelance gigs, and connect with campus peers.',
+      type: 'announcement',
+      link: '/marketplace',
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    },
+  ];
+}
+
+export async function markNotificationRead(userId: string, notificationId: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(`campuscart_notifs_${userId}`);
+      if (raw) {
+        let list: NotificationItem[] = JSON.parse(raw);
+        list = list.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n));
+        localStorage.setItem(`campuscart_notifs_${userId}`, JSON.stringify(list));
+      }
+    } catch {}
+  }
 }

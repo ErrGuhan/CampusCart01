@@ -1,5 +1,7 @@
 export type ProductStatus = 'active' | 'pending_approval' | 'draft' | 'paused' | 'out_of_stock' | 'rejected';
 
+export type ProductCondition = 'new' | 'like_new' | 'excellent' | 'good' | 'fair';
+
 export type Product = {
   id: string;
   slug: string;
@@ -17,8 +19,11 @@ export type Product = {
   seller: Seller;
   pickupAvailable: boolean;
   deliveryAvailable: boolean;
+  pickupLocation?: string;
   isDigital?: boolean;
   digitalFileUrl?: string;
+  isUsed?: boolean;
+  condition?: ProductCondition;
   createdAt: string;
   isVerified: boolean;
   rejectionReason?: string;
@@ -59,14 +64,19 @@ export type ProductCard = {
   sellerName: string;
   sellerUsername: string;
   status: ProductStatus;
+  isUsed?: boolean;
+  condition?: ProductCondition;
+  isVerified?: boolean;
 };
 
 export type Review = {
   id: string;
   author: string;
+  authorAvatar?: string;
   rating: number;
   comment: string;
   createdAt: string;
+  isVerifiedPurchase?: boolean;
 };
 
 // ----------------- Campus Freelance & Gigs Types -----------------
@@ -115,7 +125,7 @@ export type GigOrder = {
   completedAt?: string;
 };
 
-export type GigRequestStatus = 'open' | 'assigned' | 'completed';
+export type GigRequestStatus = 'open' | 'assigned' | 'completed' | 'expired';
 
 export type GigRequest = {
   id: string;
@@ -129,5 +139,134 @@ export type GigRequest = {
   deadlineDays: number;
   status: GigRequestStatus;
   proposalsCount: number;
+  createdAt: string;
+};
+
+// ----------------- Product Requests Board ("What I Need") -----------------
+
+export type ProductRequestStatus = 'open' | 'offers_received' | 'accepted' | 'completed' | 'expired';
+
+export type ProductRequest = {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  requesterUsername: string;
+  requesterAvatar?: string;
+  requesterDepartment: string;
+  requesterYear: string;
+  title: string;
+  description: string;
+  category: string;
+  budget: number;
+  deadlineDate: string;
+  status: ProductRequestStatus;
+  offersCount: number;
+  createdAt: string;
+  offers?: RequestOffer[];
+};
+
+export type RequestOffer = {
+  id: string;
+  requestId: string;
+  sellerId: string;
+  sellerName: string;
+  sellerUsername: string;
+  sellerAvatar?: string;
+  sellerDepartment?: string;
+  price: number;
+  message: string;
+  condition?: ProductCondition;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+};
+
+// ----------------- Campus Community & Feed -----------------
+
+export type CommunityCategory = 'academic' | 'clubs' | 'events' | 'marketplace' | 'opportunities' | 'general';
+
+export type CommunityPost = {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorUsername: string;
+  authorAvatar?: string;
+  authorDepartment: string;
+  category: CommunityCategory;
+  title: string;
+  content: string;
+  tags: string[];
+  likes: number;
+  likedBy?: string[];
+  commentsCount: number;
+  createdAt: string;
+};
+
+export type CommunityComment = {
+  id: string;
+  postId: string;
+  authorId: string;
+  authorName: string;
+  authorUsername: string;
+  authorAvatar?: string;
+  content: string;
+  createdAt: string;
+};
+
+// ----------------- Campus Events -----------------
+
+export type EventCategory = 'hackathon' | 'symposium' | 'workshop' | 'competition' | 'club' | 'cultural' | 'sports';
+
+export type CampusEvent = {
+  id: string;
+  title: string;
+  category: EventCategory;
+  description: string;
+  date: string;
+  time: string;
+  venue: string;
+  organizer: string;
+  organizerClub?: string;
+  registrationUrl?: string;
+  image: string;
+  price?: number;
+  registeredCount: number;
+  createdAt: string;
+};
+
+// ----------------- Messaging & Notifications -----------------
+
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  recipientId: string;
+  text: string;
+  imageUrl?: string;
+  orderRefId?: string;
+  createdAt: string;
+};
+
+export type Conversation = {
+  id: string;
+  participantIds: string[];
+  participantNames: Record<string, string>;
+  participantAvatars: Record<string, string>;
+  lastMessage: string;
+  lastMessageTimestamp: string;
+  unreadCount: Record<string, number>;
+};
+
+export type NotificationType = 'order' | 'message' | 'approval' | 'rejection' | 'proposal' | 'request_offer' | 'announcement';
+
+export type NotificationItem = {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  link?: string;
+  isRead: boolean;
   createdAt: string;
 };
