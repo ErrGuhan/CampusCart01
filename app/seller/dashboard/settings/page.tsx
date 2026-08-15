@@ -24,7 +24,7 @@ import { db } from '@/lib/firebase';
 
 export default function SellerSettingsPage() {
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, updateUserProfile } = useAuth();
   const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState('');
@@ -92,21 +92,16 @@ export default function SellerSettingsPage() {
     setSaving(true);
     try {
       const skillsArray = skills.split(',').map((s) => s.trim()).filter(Boolean);
-      await setDoc(
-        doc(db, 'profiles', user.uid),
-        {
-          display_name: displayName,
-          department: department || null,
-          year: year || null,
-          bio: bio || null,
-          skills: skillsArray,
-          updated_at: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+      await updateUserProfile({
+        display_name: displayName,
+        department: department || null,
+        year: year || null,
+        bio: bio || null,
+        skills: skillsArray,
+      });
 
       toast({
-        title: 'Store profile updated',
+        title: 'Store profile updated! 🎉',
         description: 'Your seller profile has been saved.',
       });
     } catch (err) {

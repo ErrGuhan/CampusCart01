@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import {
   Check, ChevronRight, MapPin, Truck, CreditCard,
   Package, ArrowLeft, Copy, Clock, ShieldCheck, Download, FileCode,
@@ -18,8 +18,6 @@ import {
   type Order, type OrderStatus,
 } from '@/lib/order-storage';
 
-type Props = { params: Promise<{ id: string }> };
-
 const lifecycleSteps: { status: OrderStatus; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { status: 'confirmed', label: 'Confirmed', icon: Check },
   { status: 'processing', label: 'Processing', icon: Package },
@@ -27,15 +25,18 @@ const lifecycleSteps: { status: OrderStatus; label: string; icon: React.Componen
   { status: 'delivered', label: 'Delivered', icon: Truck },
 ];
 
-export default function OrderDetailPage({ params }: Props) {
-  const { id } = use(params);
+export default function OrderDetailPage() {
+  const routeParams = useParams();
+  const id = routeParams?.id as string;
   const [order, setOrder] = useState<Order | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    setOrder(getOrderById(id));
-    setLoaded(true);
+    if (id) {
+      setOrder(getOrderById(id));
+      setLoaded(true);
+    }
   }, [id]);
 
   if (!loaded) {

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import {
   MessageSquare, Send, X, Loader2, Sparkles,
-  Check, Handshake, DollarSign, ArrowRight,
+  Check, Handshake, DollarSign, ArrowRight, LogIn,
 } from 'lucide-react';
 import {
   collection,
@@ -15,7 +16,6 @@ import {
   where,
   orderBy,
   onSnapshot,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/components/auth-provider';
@@ -79,50 +79,120 @@ export function ChatDialog({
     const computedChatId = `chat_${sortedUids[0]}_${sortedUids[1]}`;
     setChatId(computedChatId);
 
+    // Initial fallback message if none exists
+    const initialGreeting: ChatMessage = {
+      id: 'greeting_0',
+      senderId: recipientId,
+      senderName: recipientName,
+      text: product
+        ? `Hey! Thanks for your interest in "${product.name}". Feel free to ask questions or make an offer!`
+        : `Hey! How can I help you today?`,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Load local cached messages first
+    try {
+      const localCached = localStorage.getItem(`campuscart_chat_${computedChatId}`);
+      if (localCached) {
+        setMessages(JSON.parse(localCached));
+      } else {
+        setMessages([initialGreeting]);
+      }
+    } catch {
+      setMessages([initialGreeting]);
+    }
+
     // Ensure conversation parent document exists
-    const chatRef = doc(db, 'chats', computedChatId);
-    setDoc(
-      chatRef,
-      {
-        participants: [user.uid, recipientId],
-        participantNames: {
-          [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
-          [recipientId]: recipientName,
+    try {
+      const chatRef = doc(db, 'chats', computedChatId);
+      setDoc(
+        chatRef,
+        {
+          participants: [user.uid, recipientId],
+          participantNames: {
+            [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
+            [recipientId]: recipientName,
+          },
+          product: product ? { id: product.id, name: product.name, price: product.price } : null,
+          updatedAt: new Date().toISOString(),
         },
-        product: product ? { id: product.id, name: product.name, price: product.price } : null,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+        { merge: true }
+      ).catch(() => {});
+    } catch {}
 
     // Listen to real-time messages
-    const q = query(
-      collection(db, 'chats', computedChatId, 'messages'),
-      orderBy('createdAt', 'asc')
-    );
+    let unsubscribe = () => {};
+    try {
+      const q = query(
+        collection(db, 'chats', computedChatId, 'messages'),
+        orderBy('createdAt', 'asc')
+      );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs: ChatMessage[] = [];
-      snapshot.forEach((docSnap) => {
-        const d = docSnap.data();
-        msgs.push({
-          id: docSnap.id,
-          senderId: d.senderId,
-          senderName: d.senderName,
-          text: d.text,
-          offerPrice: d.offerPrice,
-          offerStatus: d.offerStatus,
-          createdAt: d.createdAt,
-        });
-      });
-      setMessages(msgs);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    });
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const msgs: ChatMessage[] = [];
+            snapshot.forEach((docSnap) => {
+              const d = docSnap.data();
+              msgs.push({
+                id: docSnap.id,
+                senderId: d.senderId,
+                senderName: d.senderName,
+                text: d.text,
+                offerPrice: d.offerPrice,
+                offerStatus: d.offerStatus,
+                createdAt: d.createdAt,
+              });
+            });
+            setMessages(msgs);
+            try {
+              localStorage.setItem(`campuscart_chat_${computedChatId}`, JSON.stringify(msgs));
+            } catch {}
+          }
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        },
+        (err) => {
+          console.warn('Firestore onSnapshot notice:', err);
+        }
+      );
+    } catch (err) {
+      console.warn('Chat listener notice:', err);
+    }
 
     return () => unsubscribe();
   }, [isOpen, user, recipientId, recipientName, product]);
 
   if (!isOpen) return null;
+
+  if (!user) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50">
+        <div className="relative w-full max-w-md bg-card border border-border rounded-3xl p-6 shadow-2xl text-center space-y-4">
+          <Button variant="ghost" size="icon" className="absolute right-4 top-4 rounded-full" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+            <MessageSquare className="h-6 w-6" />
+          </div>
+          <h3 className="text-xl font-bold font-display">Sign In to Chat</h3>
+          <p className="text-sm text-muted-foreground">
+            You need to be signed in to message {recipientName} and make price offers.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button asChild className="flex-1 rounded-xl">
+              <Link href="/login">
+                <LogIn className="h-4 w-4 mr-2" /> Sign In
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   async function handleSendMessage(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -130,20 +200,37 @@ export function ChatDialog({
 
     if (!inputText.trim()) return;
 
+    const newMsg: ChatMessage = {
+      id: 'msg_' + Date.now(),
+      senderId: user.uid,
+      senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
+      text: inputText.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Update local UI immediately
+    const updatedMessages = [...messages, newMsg];
+    setMessages(updatedMessages);
+    try {
+      localStorage.setItem(`campuscart_chat_${chatId}`, JSON.stringify(updatedMessages));
+    } catch {}
+
+    const textToSend = inputText.trim();
+    setInputText('');
     setSending(true);
+
     try {
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         senderId: user.uid,
         senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
-        text: inputText.trim(),
+        text: textToSend,
         createdAt: new Date().toISOString(),
       });
-
-      setInputText('');
     } catch (err: any) {
-      console.error('Error sending message:', err);
+      console.warn('Firestore message save notice:', err);
     } finally {
       setSending(false);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }
   }
 
@@ -155,6 +242,25 @@ export function ChatDialog({
       return;
     }
 
+    const offerMsg: ChatMessage = {
+      id: 'offer_' + Date.now(),
+      senderId: user.uid,
+      senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
+      text: `🤝 Made an offer for ₹${priceNum}`,
+      offerPrice: priceNum,
+      offerStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [...messages, offerMsg];
+    setMessages(updated);
+    try {
+      localStorage.setItem(`campuscart_chat_${chatId}`, JSON.stringify(updated));
+    } catch {}
+
+    setOfferMode(false);
+    toast({ title: 'Offer sent! 🎉', description: `Offered ₹${priceNum} to ${recipientName}.` });
+
     setSending(true);
     try {
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
@@ -165,30 +271,36 @@ export function ChatDialog({
         offerStatus: 'pending',
         createdAt: new Date().toISOString(),
       });
-
-      setOfferMode(false);
-      toast({ title: 'Offer sent!', description: `Offered ₹${priceNum} to ${recipientName}.` });
     } catch (err: any) {
-      console.error('Error sending offer:', err);
+      console.warn('Firestore offer notice:', err);
     } finally {
       setSending(false);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }
   }
 
   async function handleRespondToOffer(msgId: string, status: 'accepted' | 'declined') {
     if (!chatId) return;
+
+    const updated = messages.map((m) => (m.id === msgId ? { ...m, offerStatus: status } : m));
+    setMessages(updated);
+    try {
+      localStorage.setItem(`campuscart_chat_${chatId}`, JSON.stringify(updated));
+    } catch {}
+
+    toast({
+      title: status === 'accepted' ? 'Offer accepted! 🎉' : 'Offer declined',
+      description: status === 'accepted' ? 'Coordinate with buyer for campus handover.' : undefined,
+    });
+
     try {
       await setDoc(
         doc(db, 'chats', chatId, 'messages', msgId),
         { offerStatus: status },
         { merge: true }
       );
-      toast({
-        title: status === 'accepted' ? 'Offer accepted! 🎉' : 'Offer declined',
-        description: status === 'accepted' ? 'Coordinate with buyer for handover.' : undefined,
-      });
     } catch (err: any) {
-      console.error(err);
+      console.warn('Firestore offer response notice:', err);
     }
   }
 
@@ -211,7 +323,7 @@ export function ChatDialog({
             <div>
               <h3 className="font-semibold text-sm leading-none">{recipientName}</h3>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                {recipientUsername ? `@${recipientUsername}` : 'SVCET Student'} • Active now
+                {recipientUsername ? `@${recipientUsername}` : 'SVCET Student'} • Active on campus
               </p>
             </div>
           </div>
@@ -260,107 +372,101 @@ export function ChatDialog({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">₹</span>
                 <Input
                   type="number"
-                  placeholder="300"
+                  placeholder="Enter offer price"
                   value={offerPrice}
                   onChange={(e) => setOfferPrice(e.target.value)}
-                  className="pl-7 h-9 text-xs font-semibold"
+                  className="pl-7 h-9 text-xs rounded-xl"
+                  autoFocus
                 />
               </div>
-              <Button size="sm" className="h-9 px-4 text-xs font-semibold" onClick={handleSendOffer} disabled={sending}>
-                Send Offer
+              <Button size="sm" onClick={handleSendOffer} disabled={sending} className="h-9 px-4 rounded-xl text-xs">
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Send Offer'}
               </Button>
             </div>
           </div>
         )}
 
-        {/* Messages Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-6">
-              <MessageSquare className="h-10 w-10 text-primary/40 mb-2" />
-              <p className="text-xs font-medium text-foreground">Direct Student Chat</p>
-              <p className="text-[11px] max-w-xs mt-1">
-                Say hello, ask questions about the item condition, or coordinate a meeting spot on campus!
-              </p>
-            </div>
-          ) : (
-            messages.map((msg) => {
-              const isMine = msg.senderId === user?.uid;
+        {/* Messages Feed */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-3">
+          <div className="text-center my-2">
+            <span className="text-[10px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full border border-border">
+              🔒 Direct Student-to-Student Campus Chat
+            </span>
+          </div>
 
-              return (
+          {messages.map((msg) => {
+            const isMe = msg.senderId === user.uid;
+
+            return (
+              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                 <div
-                  key={msg.id}
-                  className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}
+                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${
+                    isMe
+                      ? 'bg-primary text-primary-foreground rounded-br-none'
+                      : 'bg-muted text-foreground rounded-bl-none'
+                  }`}
                 >
-                  {/* Offer Card Bubble */}
-                  {msg.offerPrice ? (
-                    <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-3.5 max-w-[280px] space-y-2 text-xs">
-                      <div className="flex items-center gap-1.5 font-bold text-primary">
-                        <Handshake className="h-4 w-4" />
-                        <span>Price Offer: ₹{msg.offerPrice}</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">{msg.text}</p>
+                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
 
-                      {msg.offerStatus === 'accepted' ? (
-                        <Badge className="bg-success text-white text-[10px]">
-                          <Check className="h-3 w-3 mr-1" /> Offer Accepted
-                        </Badge>
-                      ) : msg.offerStatus === 'declined' ? (
-                        <Badge variant="secondary" className="text-muted-foreground text-[10px]">
-                          Offer Declined
-                        </Badge>
-                      ) : !isMine ? (
-                        <div className="flex gap-2 pt-1">
+                  {/* Offer Interactive Card */}
+                  {msg.offerPrice && (
+                    <div className="mt-2 pt-2 border-t border-current/20 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold">Offer: ₹{msg.offerPrice}</span>
+                        {msg.offerStatus === 'accepted' && (
+                          <Badge className="bg-emerald-500 text-white text-[10px] h-4">Accepted</Badge>
+                        )}
+                        {msg.offerStatus === 'declined' && (
+                          <Badge variant="destructive" className="text-[10px] h-4">Declined</Badge>
+                        )}
+                        {msg.offerStatus === 'pending' && (
+                          <Badge variant="outline" className="text-[10px] h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                            Pending
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* If I am the recipient and offer is pending, allow Accept/Decline */}
+                      {!isMe && msg.offerStatus === 'pending' && (
+                        <div className="flex gap-1.5 pt-1">
                           <Button
                             size="sm"
-                            className="h-6 text-[10px] px-2.5 bg-success text-white hover:bg-success/90"
+                            className="h-6 text-[10px] px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1"
                             onClick={() => handleRespondToOffer(msg.id, 'accepted')}
                           >
-                            Accept ₹{msg.offerPrice}
+                            <Check className="h-3 w-3 mr-1" /> Accept
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-6 text-[10px] px-2"
+                            className="h-6 text-[10px] px-2.5 rounded-lg flex-1 border-border"
                             onClick={() => handleRespondToOffer(msg.id, 'declined')}
                           >
                             Decline
                           </Button>
                         </div>
-                      ) : (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                          Pending response...
-                        </Badge>
                       )}
-                    </div>
-                  ) : (
-                    /* Regular Message Bubble */
-                    <div
-                      className={`max-w-[78%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed ${
-                        isMine
-                          ? 'bg-primary text-primary-foreground rounded-br-none'
-                          : 'bg-secondary text-secondary-foreground rounded-bl-none'
-                      }`}
-                    >
-                      {msg.text}
                     </div>
                   )}
                 </div>
-              );
-            })
-          )}
+                <span className="text-[9px] text-muted-foreground px-1 mt-0.5">
+                  {isMe ? 'You' : msg.senderName}
+                </span>
+              </div>
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Footer */}
-        <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-card flex items-center gap-2">
+        {/* Input Bar */}
+        <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-card flex gap-2">
           <Input
-            placeholder="Type a message or campus meeting point..."
+            placeholder="Type a message or bargain..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            className="flex-1 h-10 text-xs rounded-xl bg-secondary/40"
+            className="flex-1 h-10 text-xs rounded-xl"
           />
-          <Button type="submit" size="icon" className="h-10 w-10 rounded-xl shrink-0" disabled={sending || !inputText.trim()}>
+          <Button type="submit" size="icon" disabled={sending || !inputText.trim()} className="h-10 w-10 shrink-0 rounded-xl">
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>

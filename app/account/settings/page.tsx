@@ -32,7 +32,7 @@ import { db } from '@/lib/firebase';
 
 export default function AccountSettingsPage() {
   const router = useRouter();
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, updateUserProfile } = useAuth();
   const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState('');
@@ -79,19 +79,14 @@ export default function AccountSettingsPage() {
     if (!user) return;
     setSaving(true);
     try {
-      await setDoc(
-        doc(db, 'profiles', user.uid),
-        {
-          display_name: displayName,
-          department: department || null,
-          year: year || null,
-          updated_at: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+      await updateUserProfile({
+        display_name: displayName,
+        department: department || null,
+        year: year || null,
+      });
 
       toast({
-        title: 'Profile updated',
+        title: 'Profile updated! 🎉',
         description: 'Your changes have been saved.',
       });
     } catch (err) {
@@ -124,31 +119,21 @@ export default function AccountSettingsPage() {
 
     setBecomingSeller(true);
     try {
-      await setDoc(
-        doc(db, 'profiles', user.uid),
-        {
-          is_seller: true,
-          role: 'seller',
-          display_name: storeName.trim() || displayName,
-          bio: storeDescription || null,
-          updated_at: new Date().toISOString(),
-        },
-        { merge: true }
-      );
-
-      toast({
-        title: 'Welcome to the seller community!',
-        description: 'Your seller account has been activated. Visit your dashboard to start listing products.',
+      await updateUserProfile({
+        is_seller: true,
+        role: 'seller',
+        display_name: storeName.trim() || displayName,
+        bio: storeDescription || null,
       });
 
+      toast({
+        title: 'Welcome to the seller community! 🎉',
+        description: 'Your store has been set up. You can now list products.',
+      });
       setBecomingSellerOpen(false);
-      setStoreName('');
-      setStoreDescription('');
-
-      // Redirect to seller dashboard
-      setTimeout(() => router.push('/seller/dashboard'), 1500);
+      router.push('/seller/dashboard');
     } catch (err) {
-      console.error('Error activating seller account:', err);
+      console.error('Error becoming seller:', err);
       toast({
         title: 'Could not activate seller account',
         description: 'Something went wrong. Please try again.',

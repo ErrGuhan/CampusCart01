@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -27,8 +27,34 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
   const { toast } = useToast();
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('campuscart-wishlist');
+      const list: string[] = stored ? JSON.parse(stored) : [];
+      setIsWishlisted(list.includes(product.id));
+    } catch {}
+  }, [product.id]);
+
+  function toggleWishlist() {
+    try {
+      const stored = localStorage.getItem('campuscart-wishlist');
+      let list: string[] = stored ? JSON.parse(stored) : [];
+      if (list.includes(product.id)) {
+        list = list.filter((id) => id !== product.id);
+        setIsWishlisted(false);
+        toast({ title: 'Removed from wishlist', description: product.name });
+      } else {
+        list.push(product.id);
+        setIsWishlisted(true);
+        toast({ title: 'Added to wishlist! ❤️', description: product.name });
+      }
+      localStorage.setItem('campuscart-wishlist', JSON.stringify(list));
+    } catch {}
+  }
 
   const hasDiscount = product.discountPrice !== undefined;
   const displayPrice = product.discountPrice ?? product.price;
@@ -264,8 +290,14 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
                 >
                   Buy Now
                 </Button>
-                <Button size="lg" variant="ghost" className="px-3" aria-label="Add to wishlist">
-                  <Heart className="h-5 w-5" />
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className={`px-3 transition-colors ${isWishlisted ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
+                  aria-label="Add to wishlist"
+                  onClick={toggleWishlist}
+                >
+                  <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
                 </Button>
               </div>
 
