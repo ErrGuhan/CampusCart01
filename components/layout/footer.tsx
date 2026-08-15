@@ -47,47 +47,47 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-border/80 bg-secondary/30 mt-14 sm:mt-20 pb-20 md:pb-8">
-      <div className="container-px mx-auto max-w-7xl py-10 sm:py-14">
+    <footer className="border-t border-border/80 bg-secondary/30 mt-16 sm:mt-24 pb-24 md:pb-12">
+      <div className="container-px mx-auto max-w-7xl py-12 sm:py-16">
         {/* Top Trust Banner */}
-        <div className="mb-10 pb-8 border-b border-border/60 grid grid-cols-2 md:grid-cols-4 gap-4 text-center sm:text-left">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <div className="mb-12 pb-10 border-b border-border/60 grid grid-cols-2 md:grid-cols-4 gap-5 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-foreground">100% Student Verified</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Exclusive to verified college peers</p>
+              <h4 className="text-xs sm:text-sm font-bold text-foreground">100% Student Verified</h4>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Exclusive to verified college peers</p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <MapPin className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-foreground">Campus Handover</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Meet at safe college pickup points</p>
+              <h4 className="text-xs sm:text-sm font-bold text-foreground">Campus Handover</h4>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Meet at safe college pickup points</p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
               <Store className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-foreground">Zero Platform Fees</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Keep 100% of your earnings</p>
+              <h4 className="text-xs sm:text-sm font-bold text-foreground">Zero Platform Fees</h4>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Keep 100% of your earnings</p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
               <Heart className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-foreground">Circular Campus</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Pass down items to seniors & juniors</p>
+              <h4 className="text-xs sm:text-sm font-bold text-foreground">Circular Campus</h4>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Pass down items to seniors & juniors</p>
             </div>
           </div>
         </div>
@@ -95,31 +95,31 @@ export function Footer() {
         {/* Links Grid */}
         <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           <div className="col-span-2 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-xs">
-                <Store className="h-5 w-5" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold shadow-sm">
+                <Store className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-bold tracking-tight">
+              <span className="font-display text-xl sm:text-2xl font-black tracking-tight">
                 CampusCart
               </span>
             </Link>
-            <p className="mt-3 text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed">
+            <p className="mt-3.5 text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed">
               The official student marketplace, freelance hub, and request board for Sri Venkateswara College of Engineering and Technology.
             </p>
 
             {/* Official Feedback Contact Badge */}
-            <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-card border border-border/80 px-3 py-1.5 text-xs text-muted-foreground">
-              <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-card border border-border/80 px-3.5 py-2 text-xs text-muted-foreground shadow-2xs">
+              <Mail className="h-4 w-4 text-primary shrink-0" />
               <span>Feedback: </span>
               <a
                 href="mailto:campuscartsvcet@gmail.com"
-                className="font-semibold text-foreground hover:text-primary transition-colors underline decoration-primary/40 underline-offset-2"
+                className="font-bold text-foreground hover:text-primary transition-colors underline decoration-primary/40 underline-offset-2"
               >
                 campuscartsvcet@gmail.com
               </a>
             </div>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2.5">
               {[
                 { Icon: Instagram, label: 'Instagram', href: 'https://instagram.com' },
                 { Icon: Twitter, label: 'Twitter', href: 'https://x.com' },
@@ -132,9 +132,9 @@ export function Footer() {
                   target={href.startsWith('http') ? '_blank' : undefined}
                   rel={href.startsWith('http') ? 'noreferrer' : undefined}
                   aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-card text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-accent/40 transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border/80 bg-card text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-accent/40 transition-all shadow-2xs"
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4.5 w-4.5" />
                 </a>
               ))}
             </div>
@@ -145,12 +145,12 @@ export function Footer() {
               <h3 className="text-xs sm:text-sm font-bold text-foreground tracking-tight">
                 {section.title}
               </h3>
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-3.5 space-y-2.5">
                 {section.links.map((link) => (
                   <li key={`${section.title}-${link.href}-${link.label}`}>
                     <Link
                       href={link.href}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors block py-0.5"
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors block py-0.5 font-medium"
                     >
                       {link.label}
                     </Link>
@@ -162,11 +162,11 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row">
           <p className="text-xs text-muted-foreground text-center sm:text-left">
             © {new Date().getFullYear()} CampusCart · Built by students for students at SVCET.
           </p>
-          <div className="flex items-center gap-5 flex-wrap justify-center text-xs text-muted-foreground">
+          <div className="flex items-center gap-5 flex-wrap justify-center text-xs text-muted-foreground font-medium">
             <Link href="/how-it-works" className="hover:text-primary transition-colors">
               How It Works
             </Link>
