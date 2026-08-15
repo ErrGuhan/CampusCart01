@@ -26,11 +26,10 @@ export default function OrdersPage() {
       const myEmail = user?.email?.toLowerCase() || '';
 
       const buyerOrders = allOrders.filter((o) => {
-        if (!user) return true; // Show cached orders if guest
+        if (!user) return false;
         return (
           (myUid && o.buyerId === myUid) ||
-          (myEmail && o.buyerEmail?.toLowerCase() === myEmail) ||
-          (!o.buyerId && !o.buyerEmail)
+          (myEmail && o.buyerEmail?.toLowerCase() === myEmail)
         );
       });
 

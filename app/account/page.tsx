@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
-import { getOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
+import { subscribeToOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
 import { getDiscountedProducts } from '@/lib/firebase-queries';
 import type { Product } from '@/lib/types';
 
@@ -26,9 +26,28 @@ export default function AccountDashboardPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setOrders(getOrders());
-    setLoaded(true);
-  }, []);
+    if (!user) {
+      setOrders([]);
+      setLoaded(true);
+      return;
+    }
+
+    const unsubscribe = subscribeToOrders((allOrders) => {
+      const myUid = user.uid;
+      const myEmail = user.email?.toLowerCase() || '';
+
+      const buyerOrders = allOrders.filter((o) => {
+        const isBuyerId = o.buyerId && o.buyerId === myUid;
+        const isBuyerEmail = o.buyerEmail && o.buyerEmail.toLowerCase() === myEmail;
+        return isBuyerId || isBuyerEmail;
+      });
+
+      setOrders(buyerOrders);
+      setLoaded(true);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     getDiscountedProducts().then((products) => setDeals(products.slice(0, 3)));

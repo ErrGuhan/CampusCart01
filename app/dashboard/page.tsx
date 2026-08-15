@@ -16,36 +16,51 @@ import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
 import { ProductCard } from '@/components/product-card';
 import { getAllProducts, getFeaturedProducts } from '@/lib/firebase-queries';
-import { getOrders, type Order } from '@/lib/order-storage';
+import { subscribeToOrders, type Order } from '@/lib/order-storage';
 import type { Product } from '@/lib/types';
 
 export default function StudentDashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const { totalItems } = useCart();
 
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [recommended, setRecommended] = useState<Product[]>([]);
   const [wishlistCount, setWishlistCount] = useState(0);
 
   useEffect(() => {
-    async function load() {
-      const prods = await getFeaturedProducts(4);
-      setRecommended(prods);
+    getFeaturedProducts(4).then(setRecommended);
 
-      const allOrders = getOrders();
-      setOrders(allOrders);
-
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('campuscart-wishlist');
-        if (stored) {
-          try {
-            setWishlistCount(JSON.parse(stored).length);
-          } catch {}
-        }
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('campuscart-wishlist');
+      if (stored) {
+        try {
+          setWishlistCount(JSON.parse(stored).length);
+        } catch {}
       }
     }
-    load();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setOrders([]);
+      return;
+    }
+
+    const unsubscribe = subscribeToOrders((allOrders) => {
+      const myUid = user.uid;
+      const myEmail = user.email?.toLowerCase() || '';
+
+      const buyerOrders = allOrders.filter((o) => {
+        const isBuyerId = o.buyerId && o.buyerId === myUid;
+        const isBuyerEmail = o.buyerEmail && o.buyerEmail.toLowerCase() === myEmail;
+        return isBuyerId || isBuyerEmail;
+      });
+
+      setOrders(buyerOrders);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -203,11 +218,11 @@ export default function StudentDashboardPage() {
                   </Badge>
                 </div>
                 <h4 className="font-bold text-sm text-foreground mt-0.5">
-                  {latestOrder.items?.length || 1} items • ₹{latestOrder.totalAmount}
+                  {latestOrder.items?.length || 1} items • ₹{latestOrder.total}
                 </h4>
-                {latestOrder.deliveryPin && (
+                {latestOrder.pickupPin && (
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Pickup Handshake PIN: <strong className="text-primary font-mono text-sm">{latestOrder.deliveryPin}</strong>
+                    Pickup Handshake PIN: <strong className="text-primary font-mono text-sm">{latestOrder.pickupPin}</strong>
                   </p>
                 )}
               </div>
