@@ -708,10 +708,10 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       <ChatDialog
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
-        recipientId={product.seller.id}
-        recipientName={product.seller.displayName}
-        recipientAvatar={product.seller.avatar}
-        recipientUsername={product.seller.username}
+        recipientId={product.seller?.id || product.seller?.username || 'seller'}
+        recipientName={product.seller?.displayName || 'Campus Creator'}
+        recipientAvatar={product.seller?.avatar}
+        recipientUsername={product.seller?.username}
         product={{
           id: product.id,
           name: product.name,

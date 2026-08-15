@@ -433,7 +433,7 @@ export default function ProductRequestsPage() {
                             </div>
 
                             <Button asChild size="sm" variant="outline" className="rounded-xl text-xs gap-1.5 h-7.5 self-end sm:self-center">
-                              <Link href="/messages">
+                              <Link href={`/messages?user=${offer.sellerId}&name=${encodeURIComponent(offer.sellerName)}`}>
                                 <MessageSquare className="h-3.5 w-3.5" />
                                 Chat with Seller
                               </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import {
   MessageSquare, Send, User, Search, Store,
@@ -15,6 +15,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
+import { useSearchParams } from 'next/navigation';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import {
   getConversations,
   getMessages,
@@ -22,8 +25,11 @@ import {
 } from '@/lib/firebase-queries';
 import type { Conversation, ChatMessage } from '@/lib/types';
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { user, profile, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const targetUserParam = searchParams.get('user');
+  const targetNameParam = searchParams.get('name');
   const { toast } = useToast();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -48,27 +54,81 @@ export default function MessagesPage() {
     });
 
     setConversations(sorted);
-    if (!activeConvId && sorted.length > 0) {
+    if (!activeConvId && sorted.length > 0 && !targetUserParam) {
       setActiveConvId(sorted[0].id);
     }
-  }, [user, activeConvId]);
+  }, [user, activeConvId, targetUserParam]);
 
   useEffect(() => {
     loadUserConversations();
   }, [loadUserConversations]);
 
-  // Load messages for active conversation
-  const loadMessagesForActive = useCallback(async () => {
-    if (!activeConvId) return;
-    const msgs = await getMessages(activeConvId);
-    setMessages(msgs);
-  }, [activeConvId]);
-
+  // Handle URL user param to open direct chat
   useEffect(() => {
-    loadMessagesForActive();
+    if (!user || !targetUserParam) return;
+    const sorted = [user.uid, targetUserParam].sort();
+    const computedId = `chat_${sorted[0]}_${sorted[1]}`;
+    setActiveConvId(computedId);
+    setConversations((prev) => {
+      if (prev.some((c) => c.id === computedId)) return prev;
+      return [
+        {
+          id: computedId,
+          participantIds: [user.uid, targetUserParam],
+          participantNames: {
+            [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
+            [targetUserParam]: targetNameParam || 'Campus Peer',
+          },
+          participantAvatars: {
+            [user.uid]: profile?.avatar_url || '',
+            [targetUserParam]: '',
+          },
+          lastMessage: 'Conversation started',
+          lastMessageTimestamp: new Date().toISOString(),
+          unreadCount: {},
+        },
+        ...prev,
+      ];
+    });
+  }, [user, targetUserParam, targetNameParam, profile]);
+
+  // Real-time listener for active conversation
+  useEffect(() => {
+    if (!activeConvId) return;
+
+    getMessages(activeConvId).then((msgs) => setMessages(msgs));
+
+    let unsubscribe = () => {};
+    try {
+      const q = query(
+        collection(db, 'chats', activeConvId, 'messages'),
+        orderBy('createdAt', 'asc')
+      );
+      unsubscribe = onSnapshot(q, (snap) => {
+        if (!snap.empty) {
+          const msgs: ChatMessage[] = [];
+          snap.forEach((d) => {
+            const data = d.data();
+            msgs.push({
+              id: d.id,
+              conversationId: activeConvId,
+              senderId: data.senderId,
+              senderName: data.senderName,
+              senderAvatar: data.senderAvatar || '',
+              recipientId: data.recipientId || '',
+              text: data.text || '',
+              createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
+            });
+          });
+          setMessages(msgs);
+        }
+      });
+    } catch (e) {
+      console.warn('Firestore onSnapshot notice in MessagesPage:', e);
+    }
 
     const handleSync = () => {
-      loadMessagesForActive();
+      getMessages(activeConvId).then((msgs) => setMessages(msgs));
       loadUserConversations();
     };
 
@@ -76,11 +136,14 @@ export default function MessagesPage() {
       window.addEventListener('campuscart_message_sent', handleSync);
       window.addEventListener('storage', handleSync);
       return () => {
+        unsubscribe();
         window.removeEventListener('campuscart_message_sent', handleSync);
         window.removeEventListener('storage', handleSync);
       };
     }
-  }, [loadMessagesForActive, loadUserConversations]);
+
+    return () => unsubscribe();
+  }, [activeConvId, loadUserConversations]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -349,5 +412,19 @@ export default function MessagesPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <MessagesContent />
+    </Suspense>
   );
 }

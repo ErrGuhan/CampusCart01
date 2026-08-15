@@ -8,7 +8,7 @@ import {
   Clock, RotateCcw, CheckCircle2, Star, ShieldCheck,
   Send, Sparkles, MessageSquare, ArrowLeft, Loader2,
 } from 'lucide-react';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -134,6 +134,30 @@ export default function GigDetailPage() {
       await addDoc(collection(db, 'gig_orders'), orderData);
     } catch (err: any) {
       console.warn('Firestore gig order notice:', err);
+    }
+
+    // Notify the freelancer in real-time
+    if (gig.sellerId && gig.sellerId !== user.uid) {
+      try {
+        const notifDocId = 'notif_gigord_' + orderData.id;
+        const notifPayload = {
+          userId: gig.sellerId,
+          title: `✨ New Client Order for "${gig.title}"`,
+          message: `${orderData.buyerName} hired your freelance service for ₹${gig.startingPrice}.`,
+          type: 'order',
+          link: '/seller/dashboard/services',
+          isRead: false,
+          created_at: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'notifications', notifDocId), notifPayload);
+
+        if (typeof window !== 'undefined') {
+          const notifKey = `campuscart_notifs_${gig.sellerId}`;
+          const existing = JSON.parse(localStorage.getItem(notifKey) || '[]');
+          existing.unshift({ id: notifDocId, ...notifPayload, isRead: false, createdAt: new Date().toISOString() });
+          localStorage.setItem(notifKey, JSON.stringify(existing));
+        }
+      } catch {}
     }
 
     toast({
@@ -278,7 +302,7 @@ export default function GigDetailPage() {
                     className="w-full rounded-xl text-xs"
                     asChild
                   >
-                    <Link href={`/seller/${gig.seller.username}`}>
+                    <Link href={`/messages?user=${gig.sellerId || gig.seller.username}&name=${encodeURIComponent(gig.seller.displayName)}`}>
                       <MessageSquare className="h-3.5 w-3.5 mr-2" />
                       Contact Freelancer
                     </Link>

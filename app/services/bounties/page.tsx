@@ -284,10 +284,14 @@ export default function CampusBountiesPage() {
                       variant="outline"
                       className="text-xs h-8 rounded-lg"
                       onClick={() => {
-                        window.location.href = `mailto:${bounty.requesterEmail}?subject=Application for Campus Bounty: ${encodeURIComponent(bounty.title)}`;
+                        if (!user) {
+                          setAuthPromptOpen(true);
+                          return;
+                        }
+                        router.push(`/messages?user=${bounty.requesterId}&name=${encodeURIComponent(bounty.requesterName)}`);
                       }}
                     >
-                      Apply / Contact
+                      Apply / Message
                       <ArrowRight className="h-3 w-3 ml-1.5" />
                     </Button>
                   </div>

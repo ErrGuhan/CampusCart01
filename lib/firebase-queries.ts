@@ -897,12 +897,15 @@ export async function addRequestOffer(requestId: string, offer: Omit<RequestOffe
     createdAt: new Date().toISOString(),
   };
 
+  let targetReq: ProductRequest | undefined;
+
   if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem('campuscart_requests');
       let list: ProductRequest[] = raw ? JSON.parse(raw) : [];
       list = list.map((r) => {
         if (r.id === requestId) {
+          targetReq = r;
           const offers = r.offers ? [...r.offers, newOffer] : [newOffer];
           return { ...r, offers, offersCount: offers.length, status: 'offers_received' };
         }
@@ -910,6 +913,49 @@ export async function addRequestOffer(requestId: string, offer: Omit<RequestOffe
       });
       localStorage.setItem('campuscart_requests', JSON.stringify(list));
       window.dispatchEvent(new CustomEvent('campuscart_request_updated'));
+    } catch {}
+  }
+
+  // Update in Firestore
+  try {
+    const docRef = doc(db, 'product_requests', requestId);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      targetReq = targetReq || (data as ProductRequest);
+      const existingOffers = Array.isArray(data.offers) ? data.offers : [];
+      const updatedOffers = [...existingOffers, newOffer];
+      await setDoc(docRef, {
+        offers: updatedOffers,
+        offersCount: updatedOffers.length,
+        status: 'offers_received',
+      }, { merge: true });
+    }
+  } catch (e) {
+    console.warn('Firestore addRequestOffer notice:', e);
+  }
+
+  // Notify requester in real time
+  if (targetReq?.requesterId && targetReq.requesterId !== offer.sellerId) {
+    try {
+      const notifDocId = 'notif_offer_' + requestId + '_' + newOffer.id;
+      const notifPayload = {
+        userId: targetReq.requesterId,
+        title: 'New Offer on your Request! 🤝',
+        message: `${offer.sellerName} offered an item for ₹${offer.price} on "${targetReq.title}"`,
+        type: 'request',
+        link: '/requests',
+        isRead: false,
+        created_at: new Date().toISOString(),
+      };
+      await setDoc(doc(db, 'notifications', notifDocId), notifPayload);
+
+      if (typeof window !== 'undefined') {
+        const notifKey = `campuscart_notifs_${targetReq.requesterId}`;
+        const existing = JSON.parse(localStorage.getItem(notifKey) || '[]');
+        existing.unshift({ id: notifDocId, ...notifPayload, isRead: false, createdAt: new Date().toISOString() });
+        localStorage.setItem(notifKey, JSON.stringify(existing));
+      }
     } catch {}
   }
 
@@ -1082,28 +1128,107 @@ export async function getCampusEvents(category?: string): Promise<CampusEvent[]>
 // ---------- Messaging System ----------
 
 export async function getConversations(userId: string): Promise<Conversation[]> {
+  const convMap = new Map<string, Conversation>();
+
+  // 1. Load from local storage first for instantaneous UI rendering
   if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem('campuscart_conversations');
       if (raw) {
         const list: Conversation[] = JSON.parse(raw);
-        return list.filter((c) => c.participantIds.includes(userId));
+        list.filter((c) => c.participantIds?.includes(userId)).forEach((c) => convMap.set(c.id, c));
       }
     } catch {}
   }
-  return [];
+
+  // 2. Fetch all matching chats from Firestore
+  try {
+    const snap = await getDocs(collection(db, 'chats'));
+    if (!snap.empty) {
+      snap.forEach((d) => {
+        const data = d.data();
+        const participants = Array.isArray(data.participants) ? data.participants : [];
+        if (participants.includes(userId)) {
+          const cId = d.id;
+          const existing = convMap.get(cId);
+          convMap.set(cId, {
+            id: cId,
+            participantIds: participants,
+            participantNames: data.participantNames || existing?.participantNames || {},
+            participantAvatars: data.participantAvatars || existing?.participantAvatars || {},
+            lastMessage: data.lastMessage || existing?.lastMessage || 'Conversation active',
+            lastMessageTimestamp: data.updatedAt || data.lastMessageTimestamp || existing?.lastMessageTimestamp || new Date().toISOString(),
+            unreadCount: data.unreadCount || existing?.unreadCount || {},
+          });
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore getConversations notice:', e);
+  }
+
+  const result = Array.from(convMap.values()).sort(
+    (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
+  );
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('campuscart_conversations', JSON.stringify(result));
+    } catch {}
+  }
+
+  return result;
 }
 
 export async function getMessages(conversationId: string): Promise<ChatMessage[]> {
+  const msgMap = new Map<string, ChatMessage>();
+
+  // 1. Load from local cache
   if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem(`campuscart_msgs_${conversationId}`);
       if (raw) {
-        return JSON.parse(raw);
+        const list: ChatMessage[] = JSON.parse(raw);
+        list.forEach((m) => msgMap.set(m.id, m));
       }
     } catch {}
   }
-  return [];
+
+  // 2. Fetch from Firestore chats/{id}/messages
+  try {
+    const snap = await getDocs(
+      query(collection(db, 'chats', conversationId, 'messages'), orderBy('createdAt', 'asc'))
+    );
+    if (!snap.empty) {
+      snap.forEach((d) => {
+        const data = d.data();
+        msgMap.set(d.id, {
+          id: d.id,
+          conversationId,
+          senderId: data.senderId,
+          senderName: data.senderName,
+          senderAvatar: data.senderAvatar || '',
+          recipientId: data.recipientId || '',
+          text: data.text || '',
+          createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
+        });
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore getMessages notice:', e);
+  }
+
+  const result = Array.from(msgMap.values()).sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`campuscart_msgs_${conversationId}`, JSON.stringify(result));
+    } catch {}
+  }
+
+  return result;
 }
 
 export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>): Promise<ChatMessage> {
@@ -1113,16 +1238,15 @@ export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>
     createdAt: new Date().toISOString(),
   };
 
+  // 1. Save to local storage
   if (typeof window !== 'undefined') {
     try {
-      // 1. Append to message thread
       const key = `campuscart_msgs_${msg.conversationId}`;
       const raw = localStorage.getItem(key);
       const list = raw ? JSON.parse(raw) : [];
       list.push(newMsg);
       localStorage.setItem(key, JSON.stringify(list));
 
-      // 2. Update conversation list
       const convRaw = localStorage.getItem('campuscart_conversations');
       let convList: Conversation[] = convRaw ? JSON.parse(convRaw) : [];
       const convIndex = convList.findIndex((c) => c.id === msg.conversationId);
@@ -1147,8 +1271,54 @@ export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>
         });
       }
       localStorage.setItem('campuscart_conversations', JSON.stringify(convList));
-
       window.dispatchEvent(new CustomEvent('campuscart_message_sent', { detail: newMsg }));
+    } catch {}
+  }
+
+  // 2. Persist to Firestore chats/{id}/messages and parent chat doc
+  try {
+    await setDoc(doc(db, 'chats', msg.conversationId, 'messages', newMsg.id), {
+      senderId: newMsg.senderId,
+      senderName: newMsg.senderName,
+      senderAvatar: newMsg.senderAvatar || '',
+      recipientId: newMsg.recipientId,
+      text: newMsg.text,
+      createdAt: newMsg.createdAt,
+    });
+
+    await setDoc(doc(db, 'chats', msg.conversationId), {
+      participants: [msg.senderId, msg.recipientId],
+      lastMessage: msg.text,
+      updatedAt: newMsg.createdAt,
+      participantNames: {
+        [msg.senderId]: msg.senderName,
+      },
+    }, { merge: true });
+  } catch (e) {
+    console.warn('Firestore sendChatMessage notice:', e);
+  }
+
+  // 3. Dispatch real-time notification to recipient
+  if (msg.recipientId && msg.recipientId !== msg.senderId) {
+    try {
+      const notifDocId = 'notif_msg_' + newMsg.id;
+      const notifPayload = {
+        userId: msg.recipientId,
+        title: `💬 Message from ${msg.senderName}`,
+        message: msg.text.length > 60 ? msg.text.slice(0, 57) + '...' : msg.text,
+        type: 'message',
+        link: '/messages',
+        isRead: false,
+        created_at: new Date().toISOString(),
+      };
+      await setDoc(doc(db, 'notifications', notifDocId), notifPayload);
+
+      if (typeof window !== 'undefined') {
+        const notifKey = `campuscart_notifs_${msg.recipientId}`;
+        const existing = JSON.parse(localStorage.getItem(notifKey) || '[]');
+        existing.unshift({ id: notifDocId, ...notifPayload, isRead: false, createdAt: new Date().toISOString() });
+        localStorage.setItem(notifKey, JSON.stringify(existing));
+      }
     } catch {}
   }
 
@@ -1158,16 +1328,45 @@ export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>
 // ---------- Notifications ----------
 
 export async function getNotifications(userId: string): Promise<NotificationItem[]> {
+  const notifMap = new Map<string, NotificationItem>();
+
+  // 1. Local notifications
   if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem(`campuscart_notifs_${userId}`);
       if (raw) {
-        return JSON.parse(raw);
+        const list: NotificationItem[] = JSON.parse(raw);
+        list.forEach((n) => notifMap.set(n.id, n));
       }
     } catch {}
   }
-  return [
-    {
+
+  // 2. Fetch from Firestore
+  try {
+    const snap = await getDocs(collection(db, 'notifications'));
+    if (!snap.empty) {
+      snap.forEach((d) => {
+        const data = d.data();
+        if (data.userId === userId) {
+          notifMap.set(d.id, {
+            id: d.id,
+            userId: data.userId,
+            title: data.title || 'Campus Notification',
+            message: data.message || '',
+            type: data.type || 'announcement',
+            link: data.link || '/notifications',
+            isRead: Boolean(data.isRead),
+            createdAt: data.created_at || data.createdAt || new Date().toISOString(),
+          });
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Firestore getNotifications notice:', e);
+  }
+
+  if (notifMap.size === 0) {
+    notifMap.set('notif-welcome', {
       id: 'notif-welcome',
       userId,
       title: 'Welcome to CampusCart! 🎓',
@@ -1176,8 +1375,20 @@ export async function getNotifications(userId: string): Promise<NotificationItem
       link: '/marketplace',
       isRead: false,
       createdAt: new Date().toISOString(),
-    },
-  ];
+    });
+  }
+
+  const result = Array.from(notifMap.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`campuscart_notifs_${userId}`, JSON.stringify(result));
+    } catch {}
+  }
+
+  return result;
 }
 
 export async function markNotificationRead(userId: string, notificationId: string): Promise<void> {
@@ -1191,4 +1402,8 @@ export async function markNotificationRead(userId: string, notificationId: strin
       }
     } catch {}
   }
+
+  try {
+    await setDoc(doc(db, 'notifications', notificationId), { isRead: true }, { merge: true });
+  } catch {}
 }

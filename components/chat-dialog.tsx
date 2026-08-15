@@ -227,6 +227,27 @@ export function ChatDialog({
         text: textToSend,
         createdAt: new Date().toISOString(),
       });
+
+      await setDoc(doc(db, 'chats', chatId), {
+        participants: [user.uid, recipientId],
+        lastMessage: textToSend,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      // Notify recipient
+      if (recipientId && recipientId !== user.uid) {
+        const notifDocId = 'notif_chat_' + Date.now();
+        const notifPayload = {
+          userId: recipientId,
+          title: `💬 Message from ${profile?.display_name || 'Student'}`,
+          message: textToSend.length > 60 ? textToSend.slice(0, 57) + '...' : textToSend,
+          type: 'message',
+          link: '/messages',
+          isRead: false,
+          created_at: new Date().toISOString(),
+        };
+        setDoc(doc(db, 'notifications', notifDocId), notifPayload).catch(() => {});
+      }
     } catch (err: any) {
       console.warn('Firestore message save notice:', err);
     } finally {
@@ -272,6 +293,27 @@ export function ChatDialog({
         offerStatus: 'pending',
         createdAt: new Date().toISOString(),
       });
+
+      await setDoc(doc(db, 'chats', chatId), {
+        participants: [user.uid, recipientId],
+        lastMessage: `🤝 Made an offer for ₹${priceNum}`,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      // Notify seller
+      if (recipientId && recipientId !== user.uid) {
+        const notifDocId = 'notif_offer_' + Date.now();
+        const notifPayload = {
+          userId: recipientId,
+          title: `🤝 Price Offer Received!`,
+          message: `${profile?.display_name || 'A student'} offered ₹${priceNum}${product ? ` on "${product.name}"` : ''}.`,
+          type: 'offer',
+          link: '/messages',
+          isRead: false,
+          created_at: new Date().toISOString(),
+        };
+        setDoc(doc(db, 'notifications', notifDocId), notifPayload).catch(() => {});
+      }
     } catch (err: any) {
       console.warn('Firestore offer notice:', err);
     } finally {
