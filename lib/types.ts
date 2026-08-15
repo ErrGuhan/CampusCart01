@@ -17,6 +17,8 @@ export type Product = {
   seller: Seller;
   pickupAvailable: boolean;
   deliveryAvailable: boolean;
+  isDigital?: boolean;
+  digitalFileUrl?: string;
   createdAt: string;
   isVerified: boolean;
 };

@@ -231,6 +231,8 @@ function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product {
     seller,
     pickupAvailable: data.pickup_available ?? data.pickupAvailable ?? true,
     deliveryAvailable: data.delivery_available ?? data.deliveryAvailable ?? false,
+    isDigital: data.is_digital ?? data.isDigital ?? false,
+    digitalFileUrl: data.digital_file_url ?? data.digitalFileUrl ?? '',
     createdAt: data.created_at || data.createdAt || new Date().toISOString(),
     isVerified: data.is_verified ?? data.isVerified ?? false,
   };

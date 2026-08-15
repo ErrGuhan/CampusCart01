@@ -6,6 +6,7 @@ import Link from 'next/link';
 import {
   Check, ChevronRight, MapPin, Truck, CreditCard,
   Shield, Loader2, ArrowLeft, ShoppingBag, Lock,
+  QrCode, Copy, ExternalLink, Zap,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -16,10 +17,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { useCart } from '@/components/cart-provider';
 import { useToast } from '@/hooks/use-toast';
 import {
-  saveOrder, generateOrderId, generateTransactionId,
+  saveOrder, generateOrderId, generateTransactionId, generatePickupPin,
+  CAMPUS_PICKUP_POINTS,
   type Order, type OrderItem, type OrderStatus,
 } from '@/lib/order-storage';
 
@@ -33,14 +38,27 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState<Step>('Review');
   const [fulfillment, setFulfillment] = useState<'pickup' | 'delivery'>('pickup');
-  const [pickupPoint, setPickupPoint] = useState('Main Block Pickup Counter');
+  const [pickupPoint, setPickupPoint] = useState(CAMPUS_PICKUP_POINTS[0]);
   const [deliveryLocation, setDeliveryLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('upi');
   const [processing, setProcessing] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [utrNumber, setUtrNumber] = useState('');
 
   const deliveryFee = fulfillment === 'delivery' ? 30 : 0;
   const total = subtotal + deliveryFee;
+
+  const collegeUpiId = 'guhan24td0781@svcet.ac.in';
+  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(collegeUpiId)}&pn=${encodeURIComponent('CampusCart SVCET')}&am=${total}&cu=INR&tn=${encodeURIComponent('CampusCart Order')}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(upiDeepLink)}`;
+
+  function copyUpiId() {
+    navigator.clipboard?.writeText(collegeUpiId);
+    setCopiedUpi(true);
+    toast({ title: 'UPI ID copied to clipboard!', description: collegeUpiId });
+    setTimeout(() => setCopiedUpi(false), 2500);
+  }
 
   const stepIndex = steps.indexOf(step);
 
@@ -90,7 +108,7 @@ export default function CheckoutPage() {
   async function handlePlaceOrder() {
     setProcessing(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 1800));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     const orderItems: OrderItem[] = items.map((item) => ({
       id: item.id,
@@ -103,7 +121,11 @@ export default function CheckoutPage() {
       quantity: item.quantity,
       sellerName: item.sellerName,
       sellerUsername: item.sellerUsername,
+      isDigital: item.isDigital,
+      digitalFileUrl: item.digitalFileUrl,
     }));
+
+    const pickupPin = generatePickupPin();
 
     const order: Order = {
       id: generateOrderId(),
@@ -115,6 +137,7 @@ export default function CheckoutPage() {
       total,
       fulfillmentType: fulfillment,
       pickupPoint: fulfillment === 'pickup' ? pickupPoint : null,
+      pickupPin,
       notes: notes.trim() || null,
       paymentStatus: 'paid',
       paymentMethod: paymentMethod === 'upi' ? 'UPI' : 'Card',
@@ -128,7 +151,7 @@ export default function CheckoutPage() {
 
     toast({
       title: 'Order placed successfully!',
-      description: `Order ${order.id} has been confirmed.`,
+      description: `Order ${order.id} confirmed. Your Security Pickup PIN is ${pickupPin}.`,
     });
 
     router.push(`/account/orders/${order.id}`);
@@ -226,14 +249,19 @@ export default function CheckoutPage() {
                       </p>
                       {fulfillment === 'pickup' && (
                         <div className="mt-3">
-                          <Label htmlFor="pickupPoint" className="text-xs text-muted-foreground">Pickup point</Label>
-                          <Input
-                            id="pickupPoint"
-                            value={pickupPoint}
-                            onChange={(e) => setPickupPoint(e.target.value)}
-                            className="mt-1"
-                            placeholder="e.g., Main Block Pickup Counter"
-                          />
+                          <Label htmlFor="pickupPoint" className="text-xs text-muted-foreground mb-1 block">
+                            Designated Campus Pickup Landmark
+                          </Label>
+                          <Select value={pickupPoint} onValueChange={setPickupPoint}>
+                            <SelectTrigger id="pickupPoint" className="bg-background">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CAMPUS_PICKUP_POINTS.map((pt) => (
+                                <SelectItem key={pt} value={pt}>{pt}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       )}
                     </div>
@@ -306,15 +334,96 @@ export default function CheckoutPage() {
                   <div className={`flex items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === 'upi' ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'}`}>
                     <RadioGroupItem value="upi" id="pay-upi" />
                     <Label htmlFor="pay-upi" className="flex-1 cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="h-5 w-5 text-primary" />
-                        <div>
-                          <div className="text-sm font-semibold">UPI</div>
-                          <div className="text-xs text-muted-foreground">Pay via UPI app (Google Pay, PhonePe, etc.)</div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <QrCode className="h-5 w-5 text-primary" />
+                          <div>
+                            <div className="text-sm font-semibold flex items-center gap-2">
+                              <span>UPI (Instant 0% Fee)</span>
+                              <Badge className="bg-success text-white text-[10px] px-1.5 py-0">Recommended</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Google Pay, PhonePe, Paytm, BHIM</div>
+                          </div>
                         </div>
+                        <span className="font-bold text-sm text-foreground">₹{total}</span>
                       </div>
                     </Label>
                   </div>
+
+                  {paymentMethod === 'upi' && (
+                    <div className="rounded-2xl border-2 border-primary/30 bg-card p-5 space-y-4 shadow-sm animate-in fade-in-50">
+                      <div className="flex flex-col sm:flex-row items-center gap-6">
+                        {/* Dynamic Live QR Code */}
+                        <div className="relative bg-white p-3 rounded-2xl border shadow-md flex flex-col items-center shrink-0">
+                          <img
+                            src={qrCodeUrl}
+                            alt="Scan UPI QR Code to Pay"
+                            className="h-44 w-44 object-contain rounded-lg"
+                          />
+                          <span className="mt-1.5 text-[10px] font-bold text-muted-foreground tracking-wider uppercase">
+                            Scan to Pay ₹{total}
+                          </span>
+                        </div>
+
+                        {/* UPI Details & DeepLink */}
+                        <div className="flex-1 space-y-3 text-center sm:text-left">
+                          <div>
+                            <div className="inline-flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full mb-1">
+                              <Zap className="h-3 w-3" /> Direct Student-to-Student Settlement
+                            </div>
+                            <h4 className="font-display text-sm font-bold">SVCET Official Merchant VPA</h4>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Scan this dynamic QR code with any UPI app on your phone, or copy the UPI ID below.
+                            </p>
+                          </div>
+
+                          {/* Copy UPI ID Bar */}
+                          <div className="flex items-center justify-between gap-2 bg-secondary/60 border border-border p-2.5 rounded-xl text-xs">
+                            <span className="font-mono font-semibold truncate text-foreground">{collegeUpiId}</span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2.5 text-xs font-semibold text-primary shrink-0"
+                              onClick={copyUpiId}
+                            >
+                              {copiedUpi ? <><Check className="h-3.5 w-3.5 mr-1 text-success" /> Copied</> : <><Copy className="h-3.5 w-3.5 mr-1" /> Copy</>}
+                            </Button>
+                          </div>
+
+                          {/* Quick Mobile UPI Intent Link */}
+                          <div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs font-semibold h-8 border-primary/40 text-primary hover:bg-primary/10"
+                              asChild
+                            >
+                              <a href={upiDeepLink}>
+                                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                                Pay via Installed UPI App
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Optional UTR Input */}
+                      <div className="pt-3 border-t border-border/80 space-y-1.5">
+                        <Label htmlFor="utr-ref" className="text-xs text-muted-foreground">
+                          UPI Reference / UTR Number (Optional)
+                        </Label>
+                        <Input
+                          id="utr-ref"
+                          placeholder="e.g. 423871928472"
+                          value={utrNumber}
+                          onChange={(e) => setUtrNumber(e.target.value)}
+                          className="h-9 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className={`flex items-center gap-3 rounded-xl border p-4 transition-colors ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'}`}>
                     <RadioGroupItem value="card" id="pay-card" />

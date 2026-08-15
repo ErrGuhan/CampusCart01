@@ -42,7 +42,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
-        {hasDiscount && (
+        {product.isDigital && (
+          <Badge
+            className="absolute top-3 left-3 bg-indigo-600/90 text-white shadow-sm hover:bg-indigo-600"
+          >
+            Instant Digital
+          </Badge>
+        )}
+        {hasDiscount && !product.isDigital && (
           <Badge
             variant="destructive"
             className="absolute top-3 left-3 shadow-sm"
@@ -58,13 +65,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
             e.preventDefault();
             try {
               const stored = localStorage.getItem(WISHLST_KEY);
-              const ids: string[] = stored ? JSON.parse(stored) : [];
-              if (!ids.includes(product.id)) {
-                ids.push(product.id);
-                localStorage.setItem(WISHLST_KEY, JSON.stringify(ids));
+              const list: string[] = stored ? JSON.parse(stored) : [];
+              if (!list.includes(product.id)) {
+                list.push(product.id);
+                localStorage.setItem(WISHLST_KEY, JSON.stringify(list));
                 toast({ title: 'Added to wishlist', description: product.name });
               } else {
-                toast({ title: 'Already in your wishlist' });
+                toast({ title: 'Already in wishlist', description: product.name });
               }
             } catch {
               // ignore
@@ -143,6 +150,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
                 sellerName: product.seller.displayName,
                 sellerUsername: product.seller.username,
                 maxQuantity: product.inventory,
+                isDigital: product.isDigital,
+                digitalFileUrl: product.digitalFileUrl,
               });
               toast({ title: 'Added to cart', description: product.name });
             }}

@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import {
   Star, Heart, ShoppingBag, Minus, Plus, Truck, MapPin,
   ChevronRight, Store, Share2, Shield, Check, BadgeCheck,
+  MessageSquare, Handshake,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
+import { ChatDialog } from '@/components/chat-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -24,6 +26,7 @@ type Props = { product: Product; relatedProducts: Product[]; reviews?: Review[] 
 export function ProductDetailClient({ product, relatedProducts, reviews = [] }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [chatOpen, setChatOpen] = useState(false);
   const { toast } = useToast();
   const { addToCart } = useCart();
 
@@ -45,6 +48,8 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       sellerName: product.seller.displayName,
       sellerUsername: product.seller.username,
       maxQuantity: product.inventory,
+      isDigital: product.isDigital,
+      digitalFileUrl: product.digitalFileUrl,
     }, quantity);
     toast({
       title: 'Added to cart',
@@ -63,8 +68,10 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       sellerName: product.seller.displayName,
       sellerUsername: product.seller.username,
       maxQuantity: product.inventory,
+      isDigital: product.isDigital,
+      digitalFileUrl: product.digitalFileUrl,
     }, quantity);
-    router.push('/cart');
+    router.push('/checkout');
   }
 
   const categorySlug = product.category
@@ -262,6 +269,28 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
                 </Button>
               </div>
 
+              {/* Chat & Make Offer Actions */}
+              <div className="flex gap-2.5 pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 rounded-xl text-xs font-semibold h-9"
+                  onClick={() => setChatOpen(true)}
+                >
+                  <MessageSquare className="h-4 w-4 mr-1.5 text-primary" />
+                  Chat with Seller
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="flex-1 rounded-xl text-xs font-semibold h-9 text-primary bg-primary/10 hover:bg-primary/20"
+                  onClick={() => setChatOpen(true)}
+                >
+                  <Handshake className="h-4 w-4 mr-1.5" />
+                  Make an Offer
+                </Button>
+              </div>
+
               <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                 <div className="flex items-center gap-1.5">
                   <Shield className="h-4 w-4 text-primary" />
@@ -418,6 +447,22 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
         )}
       </main>
       <Footer />
+
+      {/* Real-time Student Chat & Offer Dialog */}
+      <ChatDialog
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        recipientId={product.seller.id}
+        recipientName={product.seller.displayName}
+        recipientAvatar={product.seller.avatar}
+        recipientUsername={product.seller.username}
+        product={{
+          id: product.id,
+          name: product.name,
+          price: product.discountPrice ?? product.price,
+          image: product.images[0],
+        }}
+      />
     </>
   );
 }

@@ -12,6 +12,8 @@ export type CartItemData = {
   sellerName: string;
   sellerUsername: string;
   maxQuantity: number;
+  isDigital?: boolean;
+  digitalFileUrl?: string;
 };
 
 type CartItem = CartItemData & { quantity: number };

@@ -20,6 +20,8 @@ export type OrderItem = {
   quantity: number;
   sellerName: string;
   sellerUsername: string;
+  isDigital?: boolean;
+  digitalFileUrl?: string;
 };
 
 export type Order = {
@@ -32,12 +34,25 @@ export type Order = {
   total: number;
   fulfillmentType: 'pickup' | 'delivery';
   pickupPoint: string | null;
+  pickupPin?: string;
   notes: string | null;
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod: string;
   transactionId: string;
   createdAt: string;
 };
+
+export const CAMPUS_PICKUP_POINTS = [
+  'Central Library Entrance',
+  'Main Canteen / Food Court',
+  'CSE & Tech Park Block (Ground Floor)',
+  'Mechanical / Civil Block Courtyard',
+  'ECE & EEE Laboratory Block',
+  'Boys Hostel (Block A/B Gate)',
+  'Girls Hostel Entrance Security Desk',
+  'College Main Gate / Security Arch',
+  'Admin Block Reception Desk',
+];
 
 const STORAGE_KEY = 'campuscart-orders';
 
@@ -59,6 +74,33 @@ export function saveOrder(order: Order): void {
   const orders = getOrders();
   orders.unshift(order);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+}
+
+export function updateOrderStatus(orderId: string, status: OrderStatus): boolean {
+  const orders = getOrders();
+  const idx = orders.findIndex((o) => o.id === orderId);
+  if (idx === -1) return false;
+  orders[idx].status = status;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+  return true;
+}
+
+export function verifyOrderPickupPin(orderId: string, inputPin: string): { success: boolean; message: string } {
+  const orders = getOrders();
+  const idx = orders.findIndex((o) => o.id === orderId);
+  if (idx === -1) return { success: false, message: 'Order not found' };
+
+  const order = orders[idx];
+  if (!order.pickupPin || order.pickupPin.trim() === inputPin.trim()) {
+    orders[idx].status = 'delivered';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    return { success: true, message: 'Handover PIN verified! Order marked as Delivered.' };
+  }
+  return { success: false, message: 'Invalid PIN. Please check the 4-digit code with the buyer.' };
+}
+
+export function generatePickupPin(): string {
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 export function generateOrderId(): string {

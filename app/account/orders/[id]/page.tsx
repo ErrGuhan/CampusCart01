@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   Check, ChevronRight, MapPin, Truck, CreditCard,
-  Package, ArrowLeft, Copy, Clock,
+  Package, ArrowLeft, Copy, Clock, ShieldCheck, Download, FileCode,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -77,6 +77,28 @@ export default function OrderDetailPage({ params }: Props) {
           <ArrowLeft className="h-4 w-4" />
           Back to orders
         </Link>
+
+        {/* Security Pickup PIN Banner */}
+        {order.pickupPin && order.status !== 'delivered' && (
+          <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-display text-sm font-bold">Campus Handover Security PIN</h3>
+                <p className="text-xs text-muted-foreground max-w-md">
+                  Give this 4-digit PIN to the student seller when you meet at <strong className="text-foreground">{order.pickupPoint || 'the pickup point'}</strong> to confirm receipt.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-background px-4 py-2 rounded-xl border border-border shadow-inner shrink-0">
+              <span className="font-mono text-2xl font-black tracking-widest text-primary">
+                {order.pickupPin}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl border border-border bg-card p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -161,6 +183,20 @@ export default function OrderDetailPage({ params }: Props) {
                           <span className="text-xs text-muted-foreground">Qty: {item.quantity}</span>
                           <span className="text-sm font-semibold">₹{itemPrice * item.quantity}</span>
                         </div>
+
+                        {item.digitalFileUrl && (
+                          <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between">
+                            <span className="text-xs text-primary font-medium flex items-center gap-1">
+                              <FileCode className="h-3.5 w-3.5" /> Digital Asset Ready
+                            </span>
+                            <Button size="sm" className="h-7 text-xs rounded-lg gap-1.5" asChild>
+                              <a href={item.digitalFileUrl} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-3.5 w-3.5" />
+                                Download / Access
+                              </a>
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

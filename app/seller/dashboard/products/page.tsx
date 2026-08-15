@@ -56,6 +56,8 @@ export type ProductFormData = {
   imageUrl: string;
   pickup: boolean;
   delivery: boolean;
+  isDigital?: boolean;
+  digitalFileUrl?: string;
   status: ProductStatus;
 };
 
@@ -169,6 +171,8 @@ export default function SellerProductsPage() {
         status: formData.status,
         pickup_available: formData.pickup,
         delivery_available: formData.delivery,
+        is_digital: formData.isDigital || false,
+        digital_file_url: formData.digitalFileUrl || '',
         images: [formData.imageUrl],
         rating: editProduct?.rating ?? 5.0,
         review_count: editProduct?.reviewCount ?? 0,
@@ -439,6 +443,8 @@ function ProductForm({
   const [imageUrl, setImageUrl] = useState(product?.images?.[0] || '');
   const [pickup, setPickup] = useState(product?.pickupAvailable ?? true);
   const [delivery, setDelivery] = useState(product?.deliveryAvailable ?? false);
+  const [isDigital, setIsDigital] = useState(product?.isDigital ?? false);
+  const [digitalFileUrl, setDigitalFileUrl] = useState(product?.digitalFileUrl || '');
   const [status, setStatus] = useState<ProductStatus>(product?.status || 'active');
 
   function handleSubmit() {
@@ -474,6 +480,8 @@ function ProductForm({
       imageUrl: imageUrl.trim() || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
       pickup,
       delivery,
+      isDigital,
+      digitalFileUrl: digitalFileUrl.trim(),
       status: status || 'active',
     });
   }
@@ -552,6 +560,34 @@ function ProductForm({
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Digital Academic & Project Marketplace Toggle */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-3">
+        <div className="flex items-center space-x-2">
+          <Checkbox id="p-digital" checked={isDigital} onCheckedChange={(v) => setIsDigital(!!v)} />
+          <Label htmlFor="p-digital" className="text-sm font-semibold cursor-pointer text-primary">
+            📁 Digital Product (Study Notes, Project Code, 3D STL, eBook)
+          </Label>
+        </div>
+
+        {isDigital && (
+          <div className="space-y-1.5 pt-1">
+            <Label htmlFor="p-file-url" className="text-xs text-muted-foreground">
+              Digital Download Link / GitHub Repo / Google Drive URL *
+            </Label>
+            <Input
+              id="p-file-url"
+              value={digitalFileUrl}
+              onChange={(e) => setDigitalFileUrl(e.target.value)}
+              placeholder="https://drive.google.com/... or https://github.com/..."
+              className="text-xs bg-background"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Buyers will receive this instant access link immediately upon completing payment.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">

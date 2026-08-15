@@ -4,32 +4,84 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ShoppingBag, Search, ChevronRight, MapPin, Truck,
-  Package, Eye,
+  Package, Eye, ShieldCheck, KeyRound, Check, Loader2,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { SellerSidebar } from '@/components/seller-sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/components/auth-provider';
-import { getOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
+import { useToast } from '@/hooks/use-toast';
+import {
+  getOrders, statusLabels, statusColors, verifyOrderPickupPin,
+  type Order,
+} from '@/lib/order-storage';
 
 export default function SellerOrdersPage() {
   const { user, profile, loading } = useAuth();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Verify PIN Dialog state
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [targetOrderId, setTargetOrderId] = useState('');
+  const [inputPin, setInputPin] = useState('');
+  const [verifying, setVerifying] = useState(false);
+
   useEffect(() => {
     setOrders(getOrders());
     setLoaded(true);
   }, []);
+
+  function handleOpenPinModal(orderId: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setTargetOrderId(orderId);
+    setInputPin('');
+    setPinModalOpen(true);
+  }
+
+  function handleVerifyPin() {
+    if (!inputPin.trim()) {
+      toast({ title: 'PIN required', description: 'Please enter the 4-digit handover PIN.', variant: 'destructive' });
+      return;
+    }
+
+    setVerifying(true);
+    setTimeout(() => {
+      const result = verifyOrderPickupPin(targetOrderId, inputPin.trim());
+      setVerifying(false);
+
+      if (result.success) {
+        toast({
+          title: 'Handover Verified! 🎉',
+          description: result.message,
+        });
+        setOrders(getOrders());
+        setPinModalOpen(false);
+        setInputPin('');
+      } else {
+        toast({
+          title: 'Verification failed',
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
+    }, 400);
+  }
 
   if (loading) {
     return (
@@ -236,6 +288,22 @@ export default function SellerOrdersPage() {
                           </div>
                         ))}
                       </div>
+
+                      {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                        <div className="mt-4 pt-3 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="text-xs text-muted-foreground">
+                            Pickup Point: <strong className="text-foreground">{order.pickupPoint || 'Campus Pickup Landmark'}</strong>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs font-semibold rounded-lg"
+                            onClick={(e) => handleOpenPinModal(order.id, e)}
+                          >
+                            <KeyRound className="h-3.5 w-3.5 mr-1.5" />
+                            Verify Handover PIN
+                          </Button>
+                        </div>
+                      )}
                     </Link>
                   );
                 })}
@@ -245,6 +313,45 @@ export default function SellerOrdersPage() {
         </div>
       </main>
       <Footer />
+
+      {/* Verify Handover PIN Dialog */}
+      <Dialog open={pinModalOpen} onOpenChange={setPinModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Verify Handover PIN
+            </DialogTitle>
+            <DialogDescription>
+              Ask the student buyer for their 4-digit Security PIN to confirm pickup and mark this order as completed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label htmlFor="h-pin" className="text-xs font-medium">4-Digit Security PIN</Label>
+              <Input
+                id="h-pin"
+                placeholder="e.g. 4892"
+                maxLength={4}
+                value={inputPin}
+                onChange={(e) => setInputPin(e.target.value.replace(/[^0-9]/g, ''))}
+                className="text-center font-mono text-2xl tracking-widest font-bold h-12"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setPinModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleVerifyPin} disabled={verifying}>
+              {verifying ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Verifying...</> : 'Confirm Handover'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
