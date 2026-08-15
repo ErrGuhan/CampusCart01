@@ -28,6 +28,7 @@ import {
   addRequestOffer,
   DEFAULT_CATEGORIES,
 } from '@/lib/firebase-queries';
+import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
 import type { ProductRequest, RequestOffer } from '@/lib/types';
 
 export default function ProductRequestsPage() {
@@ -43,6 +44,8 @@ export default function ProductRequestsPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [offerModalOpen, setOfferModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const [authPromptAction, setAuthPromptAction] = useState('Post a Request');
 
   // Form States - Create Request
   const [reqTitle, setReqTitle] = useState('');
@@ -209,7 +212,8 @@ export default function ProductRequestsPage() {
             <Button
               onClick={() => {
                 if (!user) {
-                  toast({ title: 'Sign in required', description: 'Please sign in to post requests.' });
+                  setAuthPromptAction('Post a Request');
+                  setAuthPromptOpen(true);
                   return;
                 }
                 setCreateModalOpen(true);
@@ -294,7 +298,17 @@ export default function ProductRequestsPage() {
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               {search ? 'Try adjusting your search terms.' : 'Be the first student to post what you need on campus!'}
             </p>
-            <Button onClick={() => setCreateModalOpen(true)} className="mt-5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button
+              onClick={() => {
+                if (!user) {
+                  setAuthPromptAction('Post a Request');
+                  setAuthPromptOpen(true);
+                  return;
+                }
+                setCreateModalOpen(true);
+              }}
+              className="mt-5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
               Post Your Request
             </Button>
           </div>
@@ -366,6 +380,11 @@ export default function ProductRequestsPage() {
                       {!isOwnRequest ? (
                         <Button
                           onClick={() => {
+                            if (!user) {
+                              setAuthPromptAction('Make an Offer');
+                              setAuthPromptOpen(true);
+                              return;
+                            }
                             setSelectedRequest(req);
                             setOfferModalOpen(true);
                           }}
@@ -591,6 +610,16 @@ export default function ProductRequestsPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Auth Required Prompt Dialog */}
+        <AuthPromptDialog
+          isOpen={authPromptOpen}
+          onClose={() => setAuthPromptOpen(false)}
+          title="Sign In to Continue"
+          description="You must be signed in with your college email to post requests or make offers to classmates."
+          actionName={authPromptAction}
+          redirectTo="/requests"
+        />
       </main>
       <Footer />
     </>

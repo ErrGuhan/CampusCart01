@@ -361,6 +361,46 @@ export default function SellerProductsPage() {
     setDialogOpen(true);
   }
 
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-7xl py-8">
+          <div className="h-96 animate-pulse rounded-xl bg-secondary" />
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Navbar />
+        <main className="container-px mx-auto max-w-3xl py-20 text-center min-h-[70vh] flex items-center justify-center">
+          <div className="rounded-3xl border border-border p-8 sm:p-12 bg-card shadow-sm max-w-md w-full">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mx-auto mb-4">
+              <Package className="h-7 w-7" />
+            </div>
+            <h1 className="font-display text-2xl font-bold">Sign In to Manage Products</h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
+              Sign in with your student account to list items for sale, manage inventory, and receive campus orders.
+            </p>
+            <div className="flex flex-col gap-2.5 mt-6">
+              <Button asChild className="rounded-xl w-full">
+                <Link href="/login?redirect=%2Fseller%2Fdashboard%2Fproducts">Sign In to Seller Studio</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-xl w-full">
+                <Link href="/register?redirect=%2Fseller%2Fdashboard%2Fproducts">Create Student Account</Link>
+              </Button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />

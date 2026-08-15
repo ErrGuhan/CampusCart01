@@ -25,6 +25,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { getAllGigRequests, GIG_CATEGORIES } from '@/lib/firebase-queries';
+import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
 import type { GigRequest } from '@/lib/types';
 
 export default function CampusBountiesPage() {
@@ -36,6 +37,7 @@ export default function CampusBountiesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [postModalOpen, setPostModalOpen] = useState(false);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -185,7 +187,17 @@ export default function CampusBountiesPage() {
               </p>
             </div>
 
-            <Button size="lg" className="rounded-xl shrink-0" onClick={() => setPostModalOpen(true)}>
+            <Button
+              size="lg"
+              className="rounded-xl shrink-0"
+              onClick={() => {
+                if (!user) {
+                  setAuthPromptOpen(true);
+                  return;
+                }
+                setPostModalOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Post a Request
             </Button>
@@ -221,7 +233,16 @@ export default function CampusBountiesPage() {
               <p className="mt-1 text-sm text-muted-foreground max-w-md">
                 Need something done for your club event or semester project? Post a bounty and let skilled classmates help you out.
               </p>
-              <Button className="mt-5 rounded-xl" onClick={() => setPostModalOpen(true)}>
+              <Button
+                className="mt-5 rounded-xl"
+                onClick={() => {
+                  if (!user) {
+                    setAuthPromptOpen(true);
+                    return;
+                  }
+                  setPostModalOpen(true);
+                }}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Post the First Bounty
               </Button>
@@ -359,6 +380,16 @@ export default function CampusBountiesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Auth Prompt Dialog */}
+      <AuthPromptDialog
+        isOpen={authPromptOpen}
+        onClose={() => setAuthPromptOpen(false)}
+        title="Sign In to Post Bounties"
+        description="Please sign in with your college student account to post freelance task bounties or submit proposals."
+        actionName="Post a Bounty"
+        redirectTo="/services/bounties"
+      />
     </>
   );
 }

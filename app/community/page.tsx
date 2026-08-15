@@ -27,6 +27,7 @@ import {
   createCommunityPost,
   likeCommunityPost,
 } from '@/lib/firebase-queries';
+import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
 import type { CommunityPost, CommunityCategory } from '@/lib/types';
 
 export default function CampusCommunityPage() {
@@ -37,6 +38,8 @@ export default function CampusCommunityPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const [authPromptAction, setAuthPromptAction] = useState('Create a Post');
 
   // Modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -121,7 +124,8 @@ export default function CampusCommunityPage() {
 
   async function handleLike(post: CommunityPost) {
     if (!user) {
-      toast({ title: 'Sign in required', description: 'Sign in to like posts.' });
+      setAuthPromptAction('Like Discussions');
+      setAuthPromptOpen(true);
       return;
     }
     await likeCommunityPost(post.id, user.uid);
@@ -160,7 +164,8 @@ export default function CampusCommunityPage() {
           <Button
             onClick={() => {
               if (!user) {
-                toast({ title: 'Sign in required', description: 'Please sign in to post.' });
+                setAuthPromptAction('Create a Post');
+                setAuthPromptOpen(true);
                 return;
               }
               setCreateModalOpen(true);
@@ -385,6 +390,16 @@ export default function CampusCommunityPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Auth Required Prompt Dialog */}
+        <AuthPromptDialog
+          isOpen={authPromptOpen}
+          onClose={() => setAuthPromptOpen(false)}
+          title="Sign In to Join Discussion"
+          description="Sign in with your campus student account to publish posts, ask questions, and like campus discussions."
+          actionName={authPromptAction}
+          redirectTo="/community"
+        />
       </main>
       <Footer />
     </>

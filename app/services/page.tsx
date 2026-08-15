@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Sparkles, Search, Plus, Palette, Code, Video, Box,
   ArrowRight, CheckCircle2, ShieldCheck, Zap, X,
@@ -12,14 +13,19 @@ import { GigCard } from '@/components/gig-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/components/auth-provider';
+import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
 import { getAllGigs, GIG_CATEGORIES } from '@/lib/firebase-queries';
 import type { ServiceGig } from '@/lib/types';
 
 export default function ServicesPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [gigs, setGigs] = useState<ServiceGig[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
 
   const refreshGigs = () => {
     getAllGigs()
@@ -90,11 +96,20 @@ export default function ServicesPage() {
                     Campus Bounties
                   </Link>
                 </Button>
-                <Button size="sm" variant="outline" className="rounded-xl h-10 px-4 text-xs font-semibold" asChild>
-                  <Link href="/seller/dashboard/services">
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Offer Your Skills
-                  </Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl h-10 px-4 text-xs font-semibold"
+                  onClick={() => {
+                    if (!user) {
+                      setAuthPromptOpen(true);
+                      return;
+                    }
+                    router.push('/seller/dashboard/services');
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Offer Your Skills
                 </Button>
               </div>
             </div>
@@ -212,11 +227,19 @@ export default function ServicesPage() {
                     : 'Be the first student to offer freelance services on campus!'}
                 </p>
                 <div className="mt-5 flex gap-2">
-                  <Button asChild size="sm" className="rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
-                    <Link href="/seller/dashboard/services">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Create a Gig
-                    </Link>
+                  <Button
+                    size="sm"
+                    className="rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    onClick={() => {
+                      if (!user) {
+                        setAuthPromptOpen(true);
+                        return;
+                      }
+                      router.push('/seller/dashboard/services');
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Create a Gig
                   </Button>
                 </div>
               </div>
@@ -229,6 +252,16 @@ export default function ServicesPage() {
             )}
           </div>
         </section>
+
+        {/* Auth Prompt Dialog */}
+        <AuthPromptDialog
+          isOpen={authPromptOpen}
+          onClose={() => setAuthPromptOpen(false)}
+          title="Sign In to Offer Skills"
+          description="Sign in with your campus student account to list freelance services, set your prices, and earn on campus."
+          actionName="Offer Skills"
+          redirectTo="/seller/dashboard/services"
+        />
       </main>
       <Footer />
     </>

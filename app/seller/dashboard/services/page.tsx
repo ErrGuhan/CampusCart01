@@ -67,10 +67,13 @@ export default function SellerServicesPage() {
   const [status, setStatus] = useState<GigStatus>('active');
 
   const loadGigs = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setFetching(true);
     try {
-      const data = await getMyGigs(user.uid);
+      const data = await getMyGigs(user.uid, profile?.username);
       setGigs(data);
     } catch (err) {
       console.warn('Error fetching gigs:', err);
@@ -78,7 +81,7 @@ export default function SellerServicesPage() {
       setFetching(false);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, profile?.username]);
 
   useEffect(() => {
     loadGigs();
@@ -295,9 +298,24 @@ export default function SellerServicesPage() {
     return (
       <>
         <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-16 text-center">
-          <h1 className="text-2xl font-bold">Sign in required</h1>
-          <Button className="mt-4" asChild><Link href="/login">Sign In</Link></Button>
+        <main className="container-px mx-auto max-w-3xl py-20 text-center min-h-[70vh] flex items-center justify-center">
+          <div className="rounded-3xl border border-border p-8 sm:p-12 bg-card shadow-sm max-w-md w-full">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 mx-auto mb-4">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <h1 className="font-display text-2xl font-bold">Sign In to Offer Services</h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
+              Sign in with your campus account to list freelance gigs, manage orders, and earn from your skills.
+            </p>
+            <div className="flex flex-col gap-2.5 mt-6">
+              <Button asChild className="rounded-xl w-full">
+                <Link href="/login?redirect=%2Fseller%2Fdashboard%2Fservices">Sign In to Freelance Studio</Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-xl w-full">
+                <Link href="/register?redirect=%2Fseller%2Fdashboard%2Fservices">Create Student Account</Link>
+              </Button>
+            </div>
+          </div>
         </main>
         <Footer />
       </>
