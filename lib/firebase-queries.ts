@@ -1164,6 +1164,22 @@ export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>
       if (convIndex >= 0) {
         convList[convIndex].lastMessage = msg.text;
         convList[convIndex].lastMessageTimestamp = newMsg.createdAt;
+      } else {
+        convList.unshift({
+          id: msg.conversationId,
+          participantIds: [msg.senderId, msg.recipientId],
+          participantNames: {
+            [msg.senderId]: msg.senderName,
+            [msg.recipientId]: 'Campus Peer',
+          },
+          participantAvatars: {
+            [msg.senderId]: msg.senderAvatar || '',
+            [msg.recipientId]: '',
+          },
+          lastMessage: msg.text,
+          lastMessageTimestamp: newMsg.createdAt,
+          unreadCount: { [msg.recipientId]: 1 },
+        });
       }
       localStorage.setItem('campuscart_conversations', JSON.stringify(convList));
 
