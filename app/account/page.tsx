@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
 import { getOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
-import { getDiscountedProducts } from '@/lib/supabase-queries';
+import { getDiscountedProducts } from '@/lib/firebase-queries';
 import type { Product } from '@/lib/types';
 
 export default function AccountDashboardPage() {

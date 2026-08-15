@@ -4,7 +4,7 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { getAllSellers } from '@/lib/supabase-queries';
+import { getAllSellers } from '@/lib/firebase-queries';
 
 export default async function SellersPage() {
   const sellers = await getAllSellers();

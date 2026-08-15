@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth-provider';
 import { getOrders, statusLabels, statusColors, type Order } from '@/lib/order-storage';
-import { getMyProducts } from '@/lib/supabase-queries';
+import { getMyProducts } from '@/lib/firebase-queries';
 import type { Product } from '@/lib/types';
 
 export default function SellerDashboardPage() {
@@ -28,10 +28,10 @@ export default function SellerDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (profile?.id) {
-      getMyProducts(profile.id).then(setSellerProducts);
+    if (user?.uid) {
+      getMyProducts(user.uid).then(setSellerProducts);
     }
-  }, [profile?.id]);
+  }, [user?.uid]);
 
   if (loading) {
     return (

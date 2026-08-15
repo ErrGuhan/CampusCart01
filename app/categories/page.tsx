@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
-import { getCategories } from '@/lib/supabase-queries';
+import { getCategories } from '@/lib/firebase-queries';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Hammer, Palette, Cpu, Watch, Shirt, BookOpen,

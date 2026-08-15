@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ShareProfileButton } from '@/components/share-profile-button';
-import { getSellerByUsername, getProductsBySeller } from '@/lib/supabase-queries';
+import { getSellerByUsername, getProductsBySeller } from '@/lib/firebase-queries';
 
 type Props = { params: Promise<{ username: string }> };
 

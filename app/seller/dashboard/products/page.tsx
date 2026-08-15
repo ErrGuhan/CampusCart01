@@ -6,9 +6,20 @@ import {
   Plus, Search, Pencil, Trash2, Package, Eye,
   AlertCircle, X, Loader2,
 } from 'lucide-react';
+import {
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { SellerSidebar } from '@/components/seller-sidebar';
+import { ImageUploader } from '@/components/image-uploader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +31,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -28,9 +39,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase-client';
-import { getMyProducts } from '@/lib/supabase-queries';
-import { getClientCategories } from '@/lib/supabase-client-queries';
+import { db } from '@/lib/firebase';
+import { getMyProducts, getCategories } from '@/lib/firebase-queries';
 import type { Category, Product, ProductStatus } from '@/lib/types';
 
 type SellerProduct = Product & { _editing?: boolean };
@@ -63,13 +73,13 @@ export default function SellerProductsPage() {
   const [sellerProducts, setSellerProducts] = useState<SellerProduct[]>([]);
 
   useEffect(() => {
-    if (profile?.id) {
-      getMyProducts(profile.id).then(setSellerProducts);
+    if (user?.uid) {
+      getMyProducts(user.uid).then(setSellerProducts);
     }
-  }, [profile?.id]);
+  }, [user?.uid]);
 
   useEffect(() => {
-    getClientCategories().then(setCategories);
+    getCategories().then(setCategories);
   }, []);
 
   if (loading) {
@@ -133,108 +143,62 @@ export default function SellerProductsPage() {
     if (!user || !profile) return;
     setSaving(true);
     try {
-      const selectedCat = categories.find((c) => c.name === formData.category);
-      const categoryId = selectedCat?.id || null;
-
       const slug = editProduct?.slug || (
         formData.name
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/(^-|-$)/g, '')
-          .slice(0, 40) + '-' + Math.floor(Math.random() * 10000)
+          .slice(0, 40) + '-' + Math.floor(1000 + Math.random() * 9000)
       );
 
+      const productPayload = {
+        seller_id: user.uid,
+        sellerName: profile.display_name,
+        sellerUsername: profile.username,
+        sellerAvatar: profile.avatar_url || '',
+        sellerDepartment: profile.department || '',
+        sellerYear: profile.year || '',
+        name: formData.name,
+        slug,
+        description: formData.description,
+        price: formData.price,
+        discount_price: formData.discountPrice ?? null,
+        category: formData.category,
+        inventory: formData.inventory,
+        tags: formData.tags,
+        status: formData.status,
+        pickup_available: formData.pickup,
+        delivery_available: formData.delivery,
+        images: [formData.imageUrl],
+        rating: editProduct?.rating ?? 5.0,
+        review_count: editProduct?.reviewCount ?? 0,
+        is_verified: profile.is_verified || false,
+        updated_at: new Date().toISOString(),
+      };
+
       if (editProduct) {
-        const { error: prodErr } = await supabase
-          .from('products')
-          .update({
-            name: formData.name,
-            description: formData.description,
-            price: formData.price,
-            discount_price: formData.discountPrice ?? null,
-            category_id: categoryId,
-            inventory: formData.inventory,
-            tags: formData.tags,
-            status: formData.status,
-            pickup_available: formData.pickup,
-            delivery_available: formData.delivery,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editProduct.id)
-          .eq('seller_id', user.id);
-
-        if (prodErr) throw prodErr;
-
-        if (formData.imageUrl) {
-          const { data: existingImgs } = await supabase
-            .from('product_images')
-            .select('id')
-            .eq('product_id', editProduct.id);
-
-          if (existingImgs && existingImgs.length > 0) {
-            await supabase
-              .from('product_images')
-              .update({ url: formData.imageUrl })
-              .eq('id', existingImgs[0].id);
-          } else {
-            await supabase
-              .from('product_images')
-              .insert({
-                product_id: editProduct.id,
-                url: formData.imageUrl,
-                sort_order: 0,
-              });
-          }
-        }
-
+        await setDoc(doc(db, 'products', editProduct.id), productPayload, { merge: true });
         toast({
           title: 'Product updated',
           description: `"${formData.name}" has been updated.`,
         });
       } else {
-        const { data: inserted, error: prodErr } = await supabase
-          .from('products')
-          .insert({
-            seller_id: user.id,
-            name: formData.name,
-            slug,
-            description: formData.description,
-            price: formData.price,
-            discount_price: formData.discountPrice ?? null,
-            category_id: categoryId,
-            inventory: formData.inventory,
-            tags: formData.tags,
-            status: formData.status,
-            pickup_available: formData.pickup,
-            delivery_available: formData.delivery,
-          })
-          .select('id')
-          .single();
-
-        if (prodErr) throw prodErr;
-
-        if (inserted?.id && formData.imageUrl) {
-          await supabase
-            .from('product_images')
-            .insert({
-              product_id: inserted.id,
-              url: formData.imageUrl,
-              sort_order: 0,
-            });
-        }
-
+        await addDoc(collection(db, 'products'), {
+          ...productPayload,
+          created_at: new Date().toISOString(),
+        });
         toast({
           title: 'Product created',
           description: `"${formData.name}" added to your store.`,
         });
       }
 
-      const updated = await getMyProducts(profile.id);
+      const updated = await getMyProducts(user.uid);
       setSellerProducts(updated);
       setDialogOpen(false);
       setEditProduct(null);
     } catch (err: any) {
-      console.error('Error saving product:', err);
+      console.error('Error saving product in Firestore:', err);
       toast({
         title: 'Could not save product',
         description: err.message || 'Something went wrong. Please check your inputs.',
@@ -248,17 +212,12 @@ export default function SellerProductsPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', deleteTarget.id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, 'products', deleteTarget.id));
 
       setSellerProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       toast({ title: 'Product deleted', description: deleteTarget.name });
     } catch (err: any) {
-      console.error('Error deleting product:', err);
+      console.error('Error deleting product from Firestore:', err);
       toast({
         title: 'Could not delete product',
         description: err.message || 'Please try again.',
@@ -428,6 +387,7 @@ export default function SellerProductsPage() {
           <ProductForm
             product={editProduct}
             saving={saving}
+            userId={user?.uid}
             onSave={handleSave}
             onCancel={() => { setDialogOpen(false); setEditProduct(null); }}
             categories={categories}
@@ -459,10 +419,11 @@ export default function SellerProductsPage() {
 }
 
 function ProductForm({
-  product, saving, onSave, onCancel, categories,
+  product, saving, userId, onSave, onCancel, categories,
 }: {
   product: Product | null;
   saving: boolean;
+  userId?: string;
   onSave: (data: ProductFormData) => void;
   onCancel: () => void;
   categories: Category[];
@@ -472,7 +433,7 @@ function ProductForm({
   const [description, setDescription] = useState(product?.description || '');
   const [price, setPrice] = useState(product?.price?.toString() || '');
   const [discountPrice, setDiscountPrice] = useState(product?.discountPrice?.toString() || '');
-  const [category, setCategory] = useState(product?.category || (categories[0]?.name ?? 'Other'));
+  const [category, setCategory] = useState(product?.category || (categories[0]?.name ?? 'Handmade'));
   const [inventory, setInventory] = useState(product?.inventory?.toString() || '10');
   const [tags, setTags] = useState(product?.tags?.join(', ') || '');
   const [imageUrl, setImageUrl] = useState(product?.images?.[0] || '');
@@ -565,14 +526,15 @@ function ProductForm({
         <Input id="p-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="pottery, ceramic, mug" />
       </div>
 
+      {/* Direct Firebase Storage Image Upload */}
       <div className="space-y-2">
-        <Label htmlFor="p-image">Image URL</Label>
-        <Input id="p-image" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-        {imageUrl && (
-          <div className="h-20 w-20 overflow-hidden rounded-lg border border-border">
-            <img src={imageUrl} alt="Preview" className="h-full w-full object-cover" />
-          </div>
-        )}
+        <ImageUploader
+          label="Product Photo *"
+          value={imageUrl}
+          onChange={setImageUrl}
+          folder="products"
+          userId={userId}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

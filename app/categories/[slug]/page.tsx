@@ -4,7 +4,7 @@ import { ChevronRight, Package } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
-import { getCategories, getProductsByCategory } from '@/lib/supabase-queries';
+import { getCategories, getProductsByCategory } from '@/lib/firebase-queries';
 
 type Props = { params: Promise<{ slug: string }> };
 

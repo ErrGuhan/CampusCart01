@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase-client';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
-const COLLEGE_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_COLLEGE_EMAIL_DOMAIN || 'college.edu';
+const COLLEGE_EMAIL_DOMAIN = process.env.NEXT_PUBLIC_COLLEGE_EMAIL_DOMAIN || 'svcet.ac.in';
 
 function slugifyUsername(name: string): string {
   return name
@@ -68,52 +70,53 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    const username = slugifyUsername(displayName) + Math.floor(Math.random() * 1000);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const user = userCredential.user;
+      const username = slugifyUsername(displayName) + Math.floor(100 + Math.random() * 900);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: displayName,
-          username,
-        },
-      },
-    });
+      // Update auth displayName
+      await updateProfile(user, { displayName: displayName.trim() });
 
-    if (error) {
-      setLoading(false);
+      // Create profile document in Firestore
+      await setDoc(doc(db, 'profiles', user.uid), {
+        id: user.uid,
+        email: email.trim(),
+        display_name: displayName.trim(),
+        username,
+        role: 'student',
+        department: department.trim() || null,
+        year: year.trim() || null,
+        bio: null,
+        avatar_url: null,
+        skills: [],
+        social_links: {},
+        is_verified: false,
+        is_seller: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      toast({
+        title: 'Account created!',
+        description: 'Welcome to CampusCart. You can now start exploring.',
+      });
+
+      router.push('/');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      let msg = error.message || 'Registration failed. Please try again.';
+      if (error.code === 'auth/email-already-in-use') {
+        msg = 'An account with this email already exists. Please sign in.';
+      }
       toast({
         title: 'Registration failed',
-        description: error.message,
+        description: msg,
         variant: 'destructive',
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        display_name: displayName,
-        username,
-        department: department || null,
-        year: year || null,
-      });
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError.message);
-      }
-    }
-
-    setLoading(false);
-
-    toast({
-      title: 'Account created!',
-      description: 'Welcome to CampusCart. You can now start exploring.',
-    });
-
-    router.push('/');
   }
 
   return (

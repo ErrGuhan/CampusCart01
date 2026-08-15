@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getProductsByIds } from '@/lib/supabase-queries';
+import { getProductsByIds } from '@/lib/firebase-queries';
 import type { Product } from '@/lib/types';
 
 const STORAGE_KEY = 'campuscart-wishlist';

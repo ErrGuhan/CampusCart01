@@ -12,7 +12,7 @@ import {
   getTrendingProducts,
   getNewArrivals,
   getAllSellers,
-} from '@/lib/supabase-queries';
+} from '@/lib/firebase-queries';
 
 export default async function Home() {
   const [categories, featured, trending, newArrivals, sellers] = await Promise.all([

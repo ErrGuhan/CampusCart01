@@ -1,10 +1,11 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase-client';
+import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
-type Profile = {
+export type Profile = {
   id: string;
   email: string;
   display_name: string;
@@ -21,7 +22,6 @@ type Profile = {
 
 type AuthContextType = {
   user: User | null;
-  session: Session | null;
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -29,7 +29,6 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
   profile: null,
   loading: true,
   signOut: async () => {},
@@ -37,59 +36,80 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        fetchProfile(data.session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        (async () => {
-          await fetchProfile(newSession.user.id);
-        })();
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        await fetchProfile(currentUser.uid, currentUser.email ?? '');
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, email, display_name, username, role, department, year, bio, skills, avatar_url, is_seller, is_verified')
-      .eq('id', userId)
-      .maybeSingle();
+  async function fetchProfile(userId: string, userEmail: string) {
+    try {
+      const docRef = doc(db, 'profiles', userId);
+      const docSnap = await getDoc(docRef);
 
-    setProfile(data as Profile | null);
-    setLoading(false);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfile({
+          id: userId,
+          email: data.email || userEmail,
+          display_name: data.display_name || data.displayName || 'Student',
+          username: data.username || 'student',
+          role: data.role || (data.is_seller ? 'seller' : 'student'),
+          department: data.department || null,
+          year: data.year || null,
+          bio: data.bio || null,
+          skills: data.skills || [],
+          avatar_url: data.avatar_url || data.avatarUrl || null,
+          is_seller: data.is_seller ?? false,
+          is_verified: data.is_verified ?? false,
+        });
+      } else {
+        // Create basic profile fallback if document does not exist yet
+        setProfile({
+          id: userId,
+          email: userEmail,
+          display_name: userEmail.split('@')[0],
+          username: userEmail.split('@')[0],
+          role: 'student',
+          department: null,
+          year: null,
+          bio: null,
+          skills: [],
+          avatar_url: null,
+          is_seller: false,
+          is_verified: false,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching profile from Firestore:', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
+  async function handleSignOut() {
+    try {
+      await firebaseSignOut(auth);
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
     setProfile(null);
     setUser(null);
-    setSession(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut: handleSignOut }}>
       {children}
     </AuthContext.Provider>
   );

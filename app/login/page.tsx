@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase-client';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,24 +22,30 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
 
-    setLoading(false);
-
-    if (error) {
+      toast({
+        title: 'Welcome back!',
+        description: 'You have been signed in successfully.',
+      });
+      router.push('/');
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      let message = error.message || 'Failed to sign in. Please check your credentials.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        message = 'Invalid email or password. Please try again.';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Please provide a valid college email address.';
+      }
       toast({
         title: 'Sign in failed',
-        description: error.message,
+        description: message,
         variant: 'destructive',
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    toast({
-      title: 'Welcome back!',
-      description: 'You have been signed in successfully.',
-    });
-    router.push('/');
   }
 
   return (

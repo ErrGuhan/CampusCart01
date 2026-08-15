@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProductBySlug, getRelatedProducts, getProductReviews } from '@/lib/supabase-queries';
+import { getProductBySlug, getRelatedProducts, getProductReviews } from '@/lib/firebase-queries';
 import { ProductDetailClient } from '@/components/product-detail-client';
 
 type Props = { params: Promise<{ slug: string }> };

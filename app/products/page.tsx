@@ -1,4 +1,4 @@
-import { getAllProducts, getCategories } from '@/lib/supabase-queries';
+import { getAllProducts, getCategories } from '@/lib/firebase-queries';
 import { ProductsBrowser } from '@/components/products-browser';
 
 export default async function ProductsPage() {

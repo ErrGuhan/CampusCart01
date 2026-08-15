@@ -27,7 +27,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase-client';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function AccountSettingsPage() {
   const router = useRouter();
@@ -75,24 +76,26 @@ export default function AccountSettingsPage() {
     : 'CC';
 
   async function handleSave() {
+    if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      await setDoc(
+        doc(db, 'profiles', user.uid),
+        {
           display_name: displayName,
           department: department || null,
           year: year || null,
-        })
-        .eq('id', user!.id);
-
-      if (error) throw error;
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       toast({
         title: 'Profile updated',
         description: 'Your changes have been saved.',
       });
-    } catch {
+    } catch (err) {
+      console.error('Error saving profile:', err);
       toast({
         title: 'Could not save changes',
         description: 'Something went wrong. Please try again.',
@@ -109,6 +112,7 @@ export default function AccountSettingsPage() {
   }
 
   async function handleBecomeSeller() {
+    if (!user) return;
     if (!storeName.trim()) {
       toast({
         title: 'Store name required',
@@ -120,16 +124,17 @@ export default function AccountSettingsPage() {
 
     setBecomingSeller(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      await setDoc(
+        doc(db, 'profiles', user.uid),
+        {
           is_seller: true,
           role: 'seller',
+          display_name: storeName.trim() || displayName,
           bio: storeDescription || null,
-        })
-        .eq('id', user!.id);
-
-      if (error) throw error;
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       toast({
         title: 'Welcome to the seller community!',
@@ -139,10 +144,11 @@ export default function AccountSettingsPage() {
       setBecomingSellerOpen(false);
       setStoreName('');
       setStoreDescription('');
-      
+
       // Redirect to seller dashboard
       setTimeout(() => router.push('/seller/dashboard'), 1500);
-    } catch {
+    } catch (err) {
+      console.error('Error activating seller account:', err);
       toast({
         title: 'Could not activate seller account',
         description: 'Something went wrong. Please try again.',

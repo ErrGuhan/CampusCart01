@@ -19,7 +19,8 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase-client';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function SellerSettingsPage() {
   const router = useRouter();
@@ -87,27 +88,29 @@ export default function SellerSettingsPage() {
     : 'CC';
 
   async function handleSave() {
+    if (!user) return;
     setSaving(true);
     try {
       const skillsArray = skills.split(',').map((s) => s.trim()).filter(Boolean);
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      await setDoc(
+        doc(db, 'profiles', user.uid),
+        {
           display_name: displayName,
           department: department || null,
           year: year || null,
           bio: bio || null,
           skills: skillsArray,
-        })
-        .eq('id', user!.id);
-
-      if (error) throw error;
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       toast({
         title: 'Store profile updated',
         description: 'Your seller profile has been saved.',
       });
-    } catch {
+    } catch (err) {
+      console.error('Error saving seller profile:', err);
       toast({
         title: 'Could not save changes',
         description: 'Something went wrong. Please try again.',
