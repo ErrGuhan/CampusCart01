@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
 import {
-  Sparkles, Plus, Search, Clock, DollarSign, Send,
-  User, CheckCircle2, MessageSquare, AlertCircle,
-  ArrowRight, ShieldCheck, Tag, X, Rocket, Lightbulb,
-  TestTube2, Wrench, Users, Loader2,
+  Sparkles, Plus, Search, Send, X, Rocket, Lightbulb,
+  TestTube2, Wrench, Users, WifiOff, RefreshCw, Loader2,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -24,18 +21,29 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
-import { getRequests, createRequest } from '@/lib/collaboration-hub';
 import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
+import { RequestCard } from '@/components/requests/request-card';
+import { SkeletonRequestFeed } from '@/components/requests/skeleton-request-card';
 import type { CollaborationRequest, CollaborationTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const FORUM_TAGS: { id: CollaborationTag | 'ALL'; label: string; icon: any }[] = [
-  { id: 'ALL', label: 'All Discussions', icon: Sparkles },
-  { id: 'LOOKING_FOR_COFOUNDER', label: '🚀 Looking for Co-Founder', icon: Rocket },
-  { id: 'NEED_FEEDBACK', label: '💡 Need Feedback', icon: Lightbulb },
-  { id: 'HARDWARE_HELP', label: '🛠️ Hardware Help', icon: Wrench },
-  { id: 'BETA_TESTERS', label: '🧪 Beta Testers', icon: TestTube2 },
-  { id: 'GENERAL', label: '🤝 Teammates & General', icon: Users },
+// Standard API fetcher for SWR
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error('Unable to connect to campus network.');
+  }
+  const json = await res.json();
+  return json.data as CollaborationRequest[];
+};
+
+const FORUM_TAGS: { id: CollaborationTag | 'ALL'; label: string }[] = [
+  { id: 'ALL', label: 'All Discussions' },
+  { id: 'LOOKING_FOR_COFOUNDER', label: '🚀 Looking for Co-Founder' },
+  { id: 'NEED_FEEDBACK', label: '💡 Need Feedback' },
+  { id: 'HARDWARE_HELP', label: '🛠️ Hardware Help' },
+  { id: 'BETA_TESTERS', label: '🧪 Beta Testers' },
+  { id: 'GENERAL', label: '🤝 Teammates & General' },
 ];
 
 export default function RequestsForumPage() {
@@ -46,10 +54,25 @@ export default function RequestsForumPage() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
-  const [requests, setRequests] = useState<CollaborationRequest[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<CollaborationTag | 'ALL'>(initialTag);
+
+  // SWR Data Fetching & Caching Hook
+  const {
+    data: requests,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useSWR<CollaborationRequest[]>(
+    `/api/collaboration/requests?tag=${selectedTag}`,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      keepPreviousData: true,
+      dedupingInterval: 4000,
+    }
+  );
 
   // Modal States
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -64,34 +87,7 @@ export default function RequestsForumPage() {
   const [reqDesc, setReqDesc] = useState('');
   const [reqTag, setReqTag] = useState<CollaborationTag>('LOOKING_FOR_COFOUNDER');
 
-  const loadForumRequests = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getRequests(selectedTag);
-      setRequests(data);
-    } catch (e) {
-      console.error('Failed to load forum requests:', e);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedTag]);
-
-  useEffect(() => {
-    loadForumRequests();
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('campuscart_collaboration_updated', loadForumRequests);
-      window.addEventListener('storage', loadForumRequests);
-      window.addEventListener('focus', loadForumRequests);
-
-      return () => {
-        window.removeEventListener('campuscart_collaboration_updated', loadForumRequests);
-        window.removeEventListener('storage', loadForumRequests);
-        window.removeEventListener('focus', loadForumRequests);
-      };
-    }
-  }, [loadForumRequests]);
-
+  // Handle Form Submission (Create Request)
   async function handleCreateRequestSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) {
@@ -105,17 +101,25 @@ export default function RequestsForumPage() {
 
     setSubmitting(true);
     try {
-      await createRequest({
-        authorId: user.uid || 'user_demo',
-        authorName: profile?.display_name || user.email?.split('@')[0] || 'Student Maker',
-        authorUsername: profile?.username || 'maker',
-        authorAvatar: profile?.avatar_url || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-        authorMajor: profile?.department || 'Computer Science & Engineering',
-        authorYear: profile?.year || '4th Year',
-        title: reqTitle,
-        description: reqDesc,
-        tags: reqTag,
+      const res = await fetch('/api/collaboration/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          authorId: user.uid || 'user_demo',
+          authorName: profile?.display_name || user.email?.split('@')[0] || 'Student Maker',
+          authorUsername: profile?.username || 'maker',
+          authorAvatar: profile?.avatar_url || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+          authorMajor: profile?.department || 'Computer Science & Engineering',
+          authorYear: profile?.year || '4th Year',
+          title: reqTitle,
+          description: reqDesc,
+          tags: reqTag,
+        }),
       });
+
+      if (!res.ok) {
+        throw new Error('Failed to post discussion. Please try again.');
+      }
 
       toast({
         title: 'Pitch Published! 🚀',
@@ -125,7 +129,8 @@ export default function RequestsForumPage() {
       setReqTitle('');
       setReqDesc('');
       setCreateModalOpen(false);
-      loadForumRequests();
+      // Revalidate cached requests
+      mutate();
     } catch (err: any) {
       toast({
         title: 'Error posting pitch',
@@ -135,6 +140,15 @@ export default function RequestsForumPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleOpenConnect(req: CollaborationRequest) {
+    if (!user) {
+      setAuthPromptOpen(true);
+      return;
+    }
+    setSelectedReqForConnect(req);
+    setConnectModalOpen(true);
   }
 
   function handleSendConnect() {
@@ -150,7 +164,9 @@ export default function RequestsForumPage() {
     setConnectModalOpen(false);
   }
 
+  // Filter cached requests by client-side search query
   const filteredRequests = useMemo(() => {
+    if (!requests) return [];
     return requests.filter((r) => {
       const q = search.toLowerCase().trim();
       const matchesSearch =
@@ -158,7 +174,7 @@ export default function RequestsForumPage() {
         r.title.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q) ||
         r.authorName.toLowerCase().includes(q) ||
-        r.authorMajor.toLowerCase().includes(q);
+        (r.authorMajor && r.authorMajor.toLowerCase().includes(q));
 
       return matchesSearch;
     });
@@ -168,7 +184,7 @@ export default function RequestsForumPage() {
     <>
       <Navbar />
       <main className="container-px mx-auto max-w-5xl py-6 sm:py-10 min-h-screen pb-28 sm:pb-32 bg-radial-wash">
-        {/* Forum Header */}
+        {/* Forum Top Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primary mb-1">
@@ -198,7 +214,7 @@ export default function RequestsForumPage() {
           </Button>
         </div>
 
-        {/* Search and Filter Row */}
+        {/* Search and Category Filter Pills */}
         <div className="space-y-3 mb-8">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -219,13 +235,14 @@ export default function RequestsForumPage() {
             )}
           </div>
 
-          {/* Forum Category Filter Pills - 44px touch target */}
+          {/* Horizontal Tag Filters - 44px Touch Target */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
             {FORUM_TAGS.map((tag) => {
               const active = selectedTag === tag.id;
               return (
                 <button
                   key={tag.id}
+                  type="button"
                   onClick={() => setSelectedTag(tag.id)}
                   className={cn(
                     'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none shadow-2xs border flex items-center gap-1.5',
@@ -241,17 +258,35 @@ export default function RequestsForumPage() {
           </div>
         </div>
 
-        {/* Forum Posts Feed */}
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-40 rounded-3xl bg-secondary/50 animate-pulse" />
-            ))}
+        {/* Feed State Routing: Skeletons vs Error vs Empty vs Real Data */}
+        {isLoading && !requests ? (
+          /* 1. Skeleton Loading Feed (Zero Layout Jumps) */
+          <SkeletonRequestFeed count={4} />
+        ) : error && !requests ? (
+          /* 2. Connection Error State */
+          <div className="rounded-3xl border border-destructive/30 bg-destructive/5 p-8 sm:p-12 text-center my-6 shadow-xs">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-3">
+              <WifiOff className="h-7 w-7" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-foreground">
+              Unable to connect to campus network
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto font-medium">
+              We could not reach the collaboration forum. Please verify your internet connection or tap below to reconnect.
+            </p>
+            <Button
+              onClick={() => mutate()}
+              className="btn-gradient-primary mt-5 rounded-xl text-xs font-bold px-5 h-10 shadow-xs"
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-2" />
+              Tap to Retry
+            </Button>
           </div>
         ) : filteredRequests.length === 0 ? (
+          /* 3. Empty State */
           <div className="rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center my-6">
             <Lightbulb className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="font-display text-lg font-bold text-foreground">No discussions found</h3>
+            <h2 className="font-display text-lg font-bold text-foreground">No discussions found</h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto font-medium">
               Be the first student to pitch an idea or ask for a co-founder in this category!
             </p>
@@ -263,75 +298,14 @@ export default function RequestsForumPage() {
             </Button>
           </div>
         ) : (
+          /* 4. Real-time Dynamic Feed */
           <div className="space-y-4">
             {filteredRequests.map((req) => (
-              <div
+              <RequestCard
                 key={req.id}
-                className="group p-5 sm:p-6 rounded-3xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all flex flex-col gap-3.5"
-              >
-                {/* Author row */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 ring-2 ring-border/80 shrink-0">
-                      <AvatarImage src={req.authorAvatar} alt={req.authorName} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                        {req.authorName.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-bold text-foreground">{req.authorName}</span>
-                        <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs font-semibold text-primary">{req.authorMajor}</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground font-medium">
-                        {req.authorYear} • {new Date(req.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-xl bg-secondary/80 border-border/80"
-                  >
-                    {req.tags.replace(/_/g, ' ')}
-                  </Badge>
-                </div>
-
-                {/* Post Title & Description */}
-                <div>
-                  <h2 className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
-                    {req.title}
-                  </h2>
-                  <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
-                    {req.description}
-                  </p>
-                </div>
-
-                {/* Footer Action Row */}
-                <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground font-semibold">
-                    <span>👀 {req.viewsCount} views</span>
-                    <span>💬 {req.responsesCount} offers</span>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      if (!user) {
-                        setAuthPromptOpen(true);
-                        return;
-                      }
-                      setSelectedReqForConnect(req);
-                      setConnectModalOpen(true);
-                    }}
-                    className="btn-gradient-primary rounded-xl text-xs font-bold shadow-xs px-4 touch-target min-h-[38px]"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                    Connect & Message
-                  </Button>
-                </div>
-              </div>
+                data={req}
+                onConnect={handleOpenConnect}
+              />
             ))}
           </div>
         )}
