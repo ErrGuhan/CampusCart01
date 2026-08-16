@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   MessageSquare, Send, User, Search, Store,
   Sparkles, CheckCheck, ShieldCheck, ArrowLeft,
-  ChevronLeft, Loader2, Info, MapPin, Handshake,
+  ChevronLeft, Loader2, Info, MapPin, Handshake, ShoppingBag,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -32,14 +32,31 @@ const QUICK_STARTERS = [
   '🤝 I saw your listing on CampusCart and would love to discuss!',
 ];
 
-// Helper to merge message arrays deduplicating by ID and sorting chronologically
+// Helper to merge message arrays deduplicating by ID and preventing duplicate rapid bubbles
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
   const map = new Map<string, ChatMessage>();
   existing.forEach((m) => map.set(m.id, m));
   incoming.forEach((m) => map.set(m.id, m));
-  return Array.from(map.values()).sort(
+
+  const sorted = Array.from(map.values()).sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
+
+  const deduplicated: ChatMessage[] = [];
+  for (const msg of sorted) {
+    const isDuplicate = deduplicated.some(
+      (prev) =>
+        prev.id === msg.id ||
+        (prev.senderId === msg.senderId &&
+          prev.text.trim() === msg.text.trim() &&
+          Math.abs(new Date(prev.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 3000)
+    );
+    if (!isDuplicate) {
+      deduplicated.push(msg);
+    }
+  }
+
+  return deduplicated;
 }
 
 function MessagesContent() {
@@ -58,7 +75,7 @@ function MessagesContent() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load and merge conversations for the user
+  // Load and merge real conversations for the authenticated user
   const loadUserConversations = useCallback(async () => {
     if (!user) return;
 
@@ -105,13 +122,13 @@ function MessagesContent() {
       participantIds: [user.uid, targetUserParam],
       participantNames: {
         [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
-        [targetUserParam]: targetNameParam || 'Campus Peer',
+        [targetUserParam]: targetNameParam || 'Campus Student',
       },
       participantAvatars: {
         [user.uid]: profile?.avatar_url || '',
         [targetUserParam]: '',
       },
-      lastMessage: 'Conversation active',
+      lastMessage: 'Starting conversation...',
       lastMessageTimestamp: new Date().toISOString(),
       unreadCount: {},
     };
@@ -122,11 +139,11 @@ function MessagesContent() {
     });
   }, [user, targetUserParam, targetNameParam, profile]);
 
-  // Real-time listener for active conversation (with lossless message merging)
+  // Real-time listener for active conversation
   useEffect(() => {
     if (!activeConvId) return;
 
-    // 1. Load local & database messages first
+    // Load initial messages
     getMessages(activeConvId).then((msgs) => {
       setMessages((prev) => mergeMessages(prev, msgs));
     });
@@ -155,7 +172,6 @@ function MessagesContent() {
                 createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
               });
             });
-            // Merge losslessly so local optimistic messages never get erased
             setMessages((prev) => mergeMessages(prev, incoming));
           }
         },
@@ -197,27 +213,32 @@ function MessagesContent() {
     if (!user || !activeConvId || !textToSend) return;
 
     const currentConv = conversations.find((c) => c.id === activeConvId);
-    const otherId = currentConv?.participantIds.find((id) => id !== user.uid) || targetUserParam || 'seller-guhan';
-    const otherName = currentConv?.participantNames?.[otherId] || targetNameParam || 'Campus Peer';
+    const otherId = currentConv?.participantIds.find((id) => id !== user.uid) || targetUserParam;
+    if (!otherId) return;
+
+    const otherName = currentConv?.participantNames?.[otherId] || targetNameParam || 'Campus Student';
     const otherAvatar = currentConv?.participantAvatars?.[otherId] || '';
 
+    const exactMessageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const exactCreatedAt = new Date().toISOString();
+
     const tempMsg: ChatMessage = {
-      id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      id: exactMessageId,
       conversationId: activeConvId,
       senderId: user.uid,
       senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
       senderAvatar: profile?.avatar_url || '',
       recipientId: otherId,
       text: textToSend,
-      createdAt: new Date().toISOString(),
+      createdAt: exactCreatedAt,
     };
 
-    // 1. Optimistically append message immediately to local state so it NEVER disappears
+    // 1. Optimistically append message immediately
     setMessages((prev) => mergeMessages(prev, [tempMsg]));
     setInputMsg('');
     setSending(true);
 
-    // 2. Update conversation list preview in state
+    // 2. Update conversation list preview
     setConversations((prev) => {
       const map = new Map<string, Conversation>();
       prev.forEach((c) => map.set(c.id, c));
@@ -246,6 +267,8 @@ function MessagesContent() {
 
     try {
       await sendChatMessage({
+        id: exactMessageId,
+        createdAt: exactCreatedAt,
         conversationId: activeConvId,
         senderId: user.uid,
         senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
@@ -273,24 +296,23 @@ function MessagesContent() {
     });
   }, [conversations, search, user?.uid]);
 
-  // Robust active conversation resolver (with fallback synthesis so chat window NEVER disappears)
+  // Robust active conversation resolver
   const activeConv = useMemo(() => {
     const found = conversations.find((c) => c.id === activeConvId);
     if (found) return found;
-    if (activeConvId && user) {
-      const targetId = targetUserParam || 'seller-guhan';
+    if (activeConvId && user && targetUserParam) {
       return {
         id: activeConvId,
-        participantIds: [user.uid, targetId],
+        participantIds: [user.uid, targetUserParam],
         participantNames: {
           [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'You',
-          [targetId]: targetNameParam || 'Campus Peer',
+          [targetUserParam]: targetNameParam || 'Campus Student',
         },
         participantAvatars: {
           [user.uid]: profile?.avatar_url || '',
-          [targetId]: '',
+          [targetUserParam]: '',
         },
-        lastMessage: 'Conversation active',
+        lastMessage: 'Starting conversation...',
         lastMessageTimestamp: new Date().toISOString(),
         unreadCount: {},
       };
@@ -300,10 +322,11 @@ function MessagesContent() {
 
   const otherParticipant = useMemo(() => {
     if (!activeConv || !user) return null;
-    const otherId = activeConv.participantIds.find((id) => id !== user.uid) || targetUserParam || 'seller-guhan';
+    const otherId = activeConv.participantIds.find((id) => id !== user.uid) || targetUserParam;
+    if (!otherId) return null;
     return {
       id: otherId,
-      name: activeConv.participantNames?.[otherId] || targetNameParam || 'Campus Peer',
+      name: activeConv.participantNames?.[otherId] || targetNameParam || 'Campus Student',
       avatar: activeConv.participantAvatars?.[otherId] || '',
     };
   }, [activeConv, user, targetUserParam, targetNameParam]);
@@ -351,22 +374,22 @@ function MessagesContent() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-6xl py-4 sm:py-8 min-h-[calc(100vh-140px)] pb-28 sm:pb-32 bg-radial-wash">
-        <div className="rounded-3xl border border-border/80 bg-card overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-12 min-h-[620px] max-h-[780px]">
+      <main className="container-px mx-auto max-w-6xl py-3 sm:py-6 pb-20 md:pb-8">
+        <div className="rounded-3xl border border-border/80 bg-card overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-130px)] min-h-[520px] max-h-[780px]">
           {/* Left Sidebar: Conversations List */}
           <div
-            className={`md:col-span-5 lg:col-span-4 border-r border-border flex flex-col bg-secondary/15 ${
+            className={`md:col-span-5 lg:col-span-4 border-r border-border flex flex-col bg-secondary/15 h-full min-h-0 ${
               mobileView === 'chat' ? 'hidden md:flex' : 'flex'
             }`}
           >
-            <div className="p-4 border-b border-border/80">
-              <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="p-3.5 border-b border-border/80 shrink-0">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
                 <div className="flex items-center gap-1.5">
                   <MessageSquare className="h-4 w-4 text-primary" />
-                  <h2 className="font-display text-lg font-bold text-foreground">Campus Messages</h2>
+                  <h2 className="font-display text-base sm:text-lg font-bold text-foreground">Campus Messages</h2>
                 </div>
                 <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30 font-bold">
-                  Live Chat
+                  Direct
                 </Badge>
               </div>
 
@@ -376,21 +399,28 @@ function MessagesContent() {
                   placeholder="Search chats by name or text..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-9 text-xs rounded-xl bg-card border-border/80 shadow-2xs"
+                  className="pl-9 h-8 sm:h-9 text-xs rounded-xl bg-card border-border/80 shadow-2xs"
                 />
               </div>
             </div>
 
             {/* Conversation list items */}
-            <div className="flex-1 overflow-y-auto divide-y divide-border/60">
+            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border/60">
               {filteredConversations.length === 0 ? (
-                <div className="p-8 text-center text-xs text-muted-foreground font-medium">
-                  {search ? 'No matching chats found.' : 'No active conversations yet.'}
+                <div className="p-8 text-center space-y-3 text-muted-foreground">
+                  <MessageSquare className="h-8 w-8 mx-auto opacity-30" />
+                  <p className="text-xs font-semibold text-foreground">No conversations yet</p>
+                  <p className="text-[11px] leading-relaxed max-w-[200px] mx-auto text-muted-foreground">
+                    Connect with classmates from the Marketplace or Requests board to start a chat.
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="rounded-xl text-xs mt-2">
+                    <Link href="/marketplace">Browse Marketplace</Link>
+                  </Button>
                 </div>
               ) : (
                 filteredConversations.map((c) => {
-                  const otherId = c.participantIds.find((id) => id !== user.uid) || 'seller-guhan';
-                  const otherName = c.participantNames?.[otherId] || 'Campus Peer';
+                  const otherId = c.participantIds.find((id) => id !== user.uid) || '';
+                  const otherName = c.participantNames?.[otherId] || 'Campus Student';
                   const otherAvatar = c.participantAvatars?.[otherId];
                   const isSelected = c.id === activeConvId;
 
@@ -399,7 +429,7 @@ function MessagesContent() {
                       key={c.id}
                       onClick={() => handleSelectConversation(c.id)}
                       className={cn(
-                        'w-full p-4 flex items-center gap-3 text-left transition-colors',
+                        'w-full p-3.5 flex items-center gap-3 text-left transition-colors',
                         isSelected ? 'bg-primary/10 border-l-4 border-primary shadow-2xs' : 'hover:bg-accent/40'
                       )}
                     >
@@ -428,26 +458,26 @@ function MessagesContent() {
 
           {/* Right Area: Active Chat */}
           <div
-            className={`md:col-span-7 lg:col-span-8 flex flex-col bg-background ${
+            className={`md:col-span-7 lg:col-span-8 flex flex-col bg-background h-full min-h-0 ${
               mobileView === 'list' ? 'hidden md:flex' : 'flex'
             }`}
           >
             {activeConv && otherParticipant ? (
               <>
                 {/* Chat Header */}
-                <div className="p-3.5 sm:p-4 border-b border-border flex items-center justify-between bg-card/50">
-                  <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="p-3 sm:p-3.5 border-b border-border flex items-center justify-between bg-card/60 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="md:hidden h-8 w-8 rounded-lg"
+                      className="md:hidden h-8 w-8 rounded-lg shrink-0"
                       onClick={() => setMobileView('list')}
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
 
-                    <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-primary/20 shrink-0">
+                    <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-primary/20 shrink-0">
                       <AvatarImage src={otherParticipant.avatar} alt={otherParticipant.name} />
                       <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
                         {otherParticipant.name.charAt(0)}
@@ -460,20 +490,20 @@ function MessagesContent() {
                       </div>
                       <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Active on Campus
+                        Active Student
                       </p>
                     </div>
                   </div>
 
-                  <Button variant="outline" size="sm" asChild className="rounded-xl text-xs h-8 touch-target">
-                    <Link href="/marketplace">Explore Store</Link>
+                  <Button variant="outline" size="sm" asChild className="rounded-xl text-xs h-7 sm:h-8 px-2.5 shrink-0">
+                    <Link href="/marketplace">Explore Market</Link>
                   </Button>
                 </div>
 
                 {/* Messages Feed */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-3">
                   {messages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground text-xs font-medium space-y-3">
+                    <div className="text-center py-6 text-muted-foreground text-xs font-medium space-y-3">
                       <p>Start a conversation with {otherParticipant.name}!</p>
                       <div className="flex flex-col gap-2 max-w-sm mx-auto">
                         {QUICK_STARTERS.map((starter) => (
@@ -498,7 +528,7 @@ function MessagesContent() {
                         >
                           <div
                             className={cn(
-                              'max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed shadow-2xs',
+                              'max-w-[85%] sm:max-w-[75%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm leading-relaxed shadow-2xs',
                               isMe
                                 ? 'bg-gradient-to-r from-primary to-cyan-500 text-white rounded-br-none'
                                 : 'bg-secondary text-foreground rounded-bl-none border border-border/70'
@@ -506,7 +536,7 @@ function MessagesContent() {
                           >
                             {m.text}
                           </div>
-                          <span className="text-[9px] text-muted-foreground mt-1 px-1 font-medium">
+                          <span className="text-[9px] text-muted-foreground mt-0.5 px-1 font-medium">
                             {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
@@ -516,18 +546,21 @@ function MessagesContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Chat Input Bar */}
-                <form onSubmit={handleSend} className="p-3 sm:p-4 border-t border-border bg-card/40 flex items-center gap-2">
+                {/* Chat Input Bar - Fixed neatly to bottom of panel */}
+                <form
+                  onSubmit={handleSend}
+                  className="p-2.5 sm:p-3 border-t border-border bg-card flex items-center gap-2 shrink-0 z-10"
+                >
                   <Input
                     placeholder="Type a message to arrange pickup or details..."
                     value={inputMsg}
                     onChange={(e) => setInputMsg(e.target.value)}
-                    className="rounded-xl text-xs h-10 bg-card border-border/80 shadow-2xs"
+                    className="rounded-xl text-xs h-9 sm:h-10 bg-background border-border/80 shadow-2xs"
                   />
                   <Button
                     type="submit"
                     size="icon"
-                    className="btn-gradient-primary rounded-xl h-10 w-10 shrink-0 shadow-xs touch-target"
+                    className="btn-gradient-primary rounded-xl h-9 w-9 sm:h-10 sm:w-10 shrink-0 shadow-xs touch-target"
                     disabled={!inputMsg.trim() || sending}
                   >
                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -536,8 +569,11 @@ function MessagesContent() {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                <MessageSquare className="h-10 w-10 mb-2 opacity-40" />
-                <p className="text-sm font-semibold">Select a conversation to start chatting</p>
+                <MessageSquare className="h-10 w-10 mb-2 opacity-30" />
+                <p className="text-sm font-semibold text-foreground">Select a conversation to start chatting</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                  Your chat threads with other students will appear here in real time.
+                </p>
               </div>
             )}
           </div>

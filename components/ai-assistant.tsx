@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
   Sparkles, MessageSquare, X, Send, Bot,
   ShoppingBag, ArrowRight, CornerDownLeft, ExternalLink,
@@ -23,6 +24,7 @@ type AIMessage = {
 };
 
 export function CampusCartAIAssistant() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<AIMessage[]>([
@@ -120,6 +122,10 @@ export function CampusCartAIAssistant() {
       ]);
       setLoading(false);
     }, 450);
+  }
+
+  if (pathname?.startsWith('/messages')) {
+    return null;
   }
 
   return (

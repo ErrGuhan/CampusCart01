@@ -1166,44 +1166,6 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
     console.warn('Firestore getConversations notice:', e);
   }
 
-  // 3. If user has no active chats yet, provide a welcoming verified founder conversation
-  if (convMap.size === 0 && userId) {
-    const sorted = ['seller-guhan', userId].sort();
-    const defaultConvId = `chat_${sorted[0]}_${sorted[1]}`;
-    const defaultConv: Conversation = {
-      id: defaultConvId,
-      participantIds: [userId, 'seller-guhan'],
-      participantNames: {
-        [userId]: 'You',
-        'seller-guhan': 'Guhan M (Founder)',
-      },
-      participantAvatars: {
-        [userId]: '',
-        'seller-guhan': 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-      },
-      lastMessage: '👋 Welcome to CampusCart! Connect with classmates to buy gear or collaborate on projects.',
-      lastMessageTimestamp: new Date().toISOString(),
-      unreadCount: {},
-    };
-    convMap.set(defaultConvId, defaultConv);
-
-    if (typeof window !== 'undefined') {
-      try {
-        const welcomeMsg: ChatMessage = {
-          id: 'msg_welcome_init',
-          conversationId: defaultConvId,
-          senderId: 'seller-guhan',
-          senderName: 'Guhan M (Founder)',
-          senderAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-          recipientId: userId,
-          text: '👋 Welcome to CampusCart! Connect with classmates to buy gear or collaborate on projects.',
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem(`campuscart_msgs_${defaultConvId}`, JSON.stringify([welcomeMsg]));
-      } catch {}
-    }
-  }
-
   const result = Array.from(convMap.values()).sort(
     (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
   );
@@ -1269,11 +1231,22 @@ export async function getMessages(conversationId: string): Promise<ChatMessage[]
   return result;
 }
 
-export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>): Promise<ChatMessage> {
+export async function sendChatMessage(msg: Partial<ChatMessage> & {
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  recipientId: string;
+  text: string;
+}): Promise<ChatMessage> {
   const newMsg: ChatMessage = {
-    ...msg,
-    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-    createdAt: new Date().toISOString(),
+    id: msg.id || ('msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+    conversationId: msg.conversationId,
+    senderId: msg.senderId,
+    senderName: msg.senderName,
+    senderAvatar: msg.senderAvatar || '',
+    recipientId: msg.recipientId,
+    text: msg.text,
+    createdAt: msg.createdAt || new Date().toISOString(),
   };
 
   // 1. Save to local storage immediately
@@ -1282,8 +1255,15 @@ export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>
       const key = `campuscart_msgs_${msg.conversationId}`;
       const raw = localStorage.getItem(key);
       const list: ChatMessage[] = raw ? JSON.parse(raw) : [];
-      // Prevent duplicates
-      if (!list.some((m) => m.id === newMsg.id)) {
+      // Prevent duplicates by ID or by identical sender+text within 2 seconds
+      const isDuplicate = list.some(
+        (m) =>
+          m.id === newMsg.id ||
+          (m.senderId === newMsg.senderId &&
+            m.text === newMsg.text &&
+            Math.abs(new Date(m.createdAt).getTime() - new Date(newMsg.createdAt).getTime()) < 2000)
+      );
+      if (!isDuplicate) {
         list.push(newMsg);
       }
       localStorage.setItem(key, JSON.stringify(list));

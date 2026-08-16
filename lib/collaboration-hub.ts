@@ -13,151 +13,33 @@ const REQUESTS_STORAGE_KEY = 'campuscart_collaboration_requests';
 const BOUNTIES_STORAGE_KEY = 'campuscart_bounties';
 const STUDENTS_HELPED_KEY = 'campuscart_students_helped_';
 
-// ----------------- Default Seeded Collaboration Requests -----------------
-const SEEDED_REQUESTS: CollaborationRequest[] = [
-  {
-    id: 'req-seed-1',
-    authorId: 'user-guhan-1',
-    authorName: 'Guhan M',
-    authorUsername: 'guhan_dev',
-    authorAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-    authorMajor: 'Computer Science & Engineering',
-    authorYear: '4th Year',
-    title: 'Looking for a Hardware / IoT Co-Founder for Smart Agriculture Project',
-    description: 'Building an automated greenhouse monitoring system using ESP32 and Next.js dashboard. Need an EEE or ECE student with circuit design & sensor calibration experience.',
-    tags: 'LOOKING_FOR_COFOUNDER',
-    status: 'OPEN',
-    viewsCount: 68,
-    responsesCount: 5,
-    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-  },
-  {
-    id: 'req-seed-2',
-    authorId: 'user-kavya-2',
-    authorName: 'Kavya S',
-    authorUsername: 'kavya_design',
-    authorAvatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
-    authorMajor: 'Information Technology',
-    authorYear: '3rd Year',
-    title: 'Need UI/UX feedback on our Campus Event Booking Prototype',
-    description: 'We created a Figma interactive prototype for college symposium ticketing. Looking for 5 students from any department to test the flow and give constructive feedback.',
-    tags: 'NEED_FEEDBACK',
-    status: 'OPEN',
-    viewsCount: 42,
-    responsesCount: 3,
-    createdAt: new Date(Date.now() - 6 * 3600000).toISOString(),
-  },
-  {
-    id: 'req-seed-3',
-    authorId: 'user-rahul-3',
-    authorName: 'Rahul Verma',
-    authorUsername: 'rahul_mech',
-    authorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg',
-    authorMajor: 'Mechanical Engineering',
-    authorYear: '4th Year',
-    title: 'Need help 3D Printing / Laser cutting a drone arm bracket',
-    description: 'Have the STL & STEP files ready for an aerodynamic arm mount. Need someone with access to high-precision PLA/ABS 3D printer today.',
-    tags: 'HARDWARE_HELP',
-    status: 'OPEN',
-    viewsCount: 89,
-    responsesCount: 7,
-    createdAt: new Date(Date.now() - 12 * 3600000).toISOString(),
-  },
-  {
-    id: 'req-seed-4',
-    authorId: 'user-ananya-4',
-    authorName: 'Ananya Iyer',
-    authorUsername: 'ananya_ai',
-    authorAvatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg',
-    authorMajor: 'AI & Data Science',
-    authorYear: '2nd Year',
-    title: 'Seeking Beta Testers for Student GPA & Attendance Prediction ML App',
-    description: 'Trained a light gradient-boosting model that predicts semester risk factors. Need 10 students to test with anonymous sample subject marks.',
-    tags: 'BETA_TESTERS',
-    status: 'OPEN',
-    viewsCount: 54,
-    responsesCount: 4,
-    createdAt: new Date(Date.now() - 24 * 3600000).toISOString(),
-  },
-];
+// ----------------- Clean Database Baseline (Real Students Only) -----------------
+const SEEDED_REQUESTS: CollaborationRequest[] = [];
 
-// ----------------- Default Seeded Campus Bounties -----------------
-const SEEDED_BOUNTIES: CampusBounty[] = [
-  {
-    id: 'bounty-1',
-    creatorId: 'user-guhan-1',
-    creatorName: 'Guhan M',
-    creatorAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-    solverId: null,
-    title: 'Fix React Native Camera QR Scanner Layout Bug',
-    description: 'Camera viewport has black padding on iOS 17 devices. Need clean fix with expo-camera or react-native-vision-camera in 48 hours.',
-    rewardAmount: 650,
-    deadline: '2 days remaining',
-    category: 'Mobile Dev',
-    status: 'OPEN',
-    createdAt: new Date(Date.now() - 3 * 3600000).toISOString(),
-  },
-  {
-    id: 'bounty-2',
-    creatorId: 'user-kavya-2',
-    creatorName: 'Kavya S',
-    creatorAvatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
-    solverId: null,
-    title: 'Design 3 Animated Instagram Story Templates for Tech Fest',
-    description: 'Need After Effects / Canva editable templates for upcoming SVCET National Hackathon announcements.',
-    rewardAmount: 400,
-    deadline: 'Tomorrow 6 PM',
-    category: 'Design & Media',
-    status: 'OPEN',
-    createdAt: new Date(Date.now() - 5 * 3600000).toISOString(),
-  },
-  {
-    id: 'bounty-3',
-    creatorId: 'user-rahul-3',
-    creatorName: 'Rahul Verma',
-    creatorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg',
-    solverId: 'user-guhan-1',
-    solverName: 'Guhan M',
-    solverAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-    title: 'Convert SolidWorks Gear Assembly into GLTF for Web 3D Viewer',
-    description: 'Optimize mesh count and export with textures for Three.js rendering.',
-    rewardAmount: 500,
-    deadline: 'Completed',
-    category: 'CAD & 3D',
-    status: 'COMPLETED',
-    claimedAt: new Date(Date.now() - 48 * 3600000).toISOString(),
-    completedAt: new Date(Date.now() - 24 * 3600000).toISOString(),
-    createdAt: new Date(Date.now() - 72 * 3600000).toISOString(),
-  },
-];
+// ----------------- Clean Bounties Baseline (Real Students Only) -----------------
+const SEEDED_BOUNTIES: CampusBounty[] = [];
 
 // Helper to get local requests
 function getStoredRequests(): CollaborationRequest[] {
-  if (typeof window === 'undefined') return SEEDED_REQUESTS;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(REQUESTS_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(SEEDED_REQUESTS));
-      return SEEDED_REQUESTS;
-    }
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch {
-    return SEEDED_REQUESTS;
+    return [];
   }
 }
 
 // Helper to get local bounties
 function getStoredBounties(): CampusBounty[] {
-  if (typeof window === 'undefined') return SEEDED_BOUNTIES;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(BOUNTIES_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(BOUNTIES_STORAGE_KEY, JSON.stringify(SEEDED_BOUNTIES));
-      return SEEDED_BOUNTIES;
-    }
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch {
-    return SEEDED_BOUNTIES;
+    return [];
   }
 }
 
