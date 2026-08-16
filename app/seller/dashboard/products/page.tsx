@@ -21,6 +21,7 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { SellerSidebar } from '@/components/seller-sidebar';
 import { ImageUploader } from '@/components/image-uploader';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -461,21 +462,26 @@ export default function SellerProductsPage() {
             )}
 
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20 text-center">
-                <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold">No products found</h3>
-                <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                  {search || statusFilter !== 'all'
-                    ? 'Try adjusting your search or filters.'
-                    : 'Start by adding your first product to the store.'}
-                </p>
-                {!search && statusFilter === 'all' && (
-                  <Button className="mt-4" onClick={openCreate}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                icon={Package}
+                title={search || statusFilter !== 'all' ? 'No products match your filter' : 'Your store has no products yet'}
+                description={
+                  search || statusFilter !== 'all'
+                    ? 'Try adjusting your search query or reset status filter to see all inventory.'
+                    : 'List your used textbooks, electronics, lab tools, or study notes for campus delivery.'
+                }
+                actionLabel="+ Add Your First Product"
+                onAction={openCreate}
+                secondaryActionLabel={search || statusFilter !== 'all' ? 'Reset Filters' : undefined}
+                onSecondaryAction={
+                  search || statusFilter !== 'all'
+                    ? () => {
+                        setSearch('');
+                        setStatusFilter('all');
+                      }
+                    : undefined
+                }
+              />
             ) : (
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-border bg-secondary/30 text-xs font-medium text-muted-foreground">

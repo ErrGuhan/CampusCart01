@@ -3,10 +3,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, SlidersHorizontal, X, Sparkles, Tag, ArrowRight, Check, Plus } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Sparkles, Tag, ArrowRight, Check, Plus, Package } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -395,29 +396,20 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
           {/* Product Grid Area - Enhanced gap and breathing room */}
           <div className="flex-1 min-w-0">
             {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border py-16 px-4 text-center bg-card/40">
-                <Search className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                <h3 className="text-base font-bold text-foreground">No products match your criteria</h3>
-                <p className="mt-1 text-xs text-muted-foreground max-w-sm font-medium">
-                  Try adjusting your search terms, changing categories, or post a request on the campus board.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-2.5 justify-center">
-                  {activeFilterCount > 0 && (
-                    <Button variant="outline" size="sm" className="rounded-xl text-xs min-h-[44px] sm:min-h-auto" onClick={clearFilters}>
-                      Clear all filters
-                    </Button>
-                  )}
-                  <Button asChild size="sm" className="btn-gradient-primary rounded-xl text-xs font-bold shadow-xs min-h-[44px] sm:min-h-auto">
-                    <Link href="/seller/dashboard/products">
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      List a Product
-                    </Link>
-                  </Button>
-                  <Button asChild size="sm" variant="outline" className="rounded-xl text-xs min-h-[44px] sm:min-h-auto">
-                    <Link href="/requests">Post Product Request</Link>
-                  </Button>
-                </div>
-              </div>
+              <EmptyState
+                icon={Package}
+                title={search ? 'No products match your search' : 'Welcome to the Marketplace!'}
+                description={
+                  search
+                    ? 'Try adjusting your search keywords or clearing active category filters.'
+                    : 'The campus catalog is fresh and waiting for listings. Be the first student to publish an item for sale!'
+                }
+                actionLabel="+ List Your Item"
+                actionHref="/seller/dashboard/products"
+                secondaryActionLabel={activeFilterCount > 0 ? 'Clear Filters' : 'Post a Request'}
+                secondaryActionHref={activeFilterCount > 0 ? undefined : '/requests'}
+                onSecondaryAction={activeFilterCount > 0 ? clearFilters : undefined}
+              />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6">
                 {filtered.map((product) => (

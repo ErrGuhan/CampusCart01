@@ -22,6 +22,7 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { SellerSidebar } from '@/components/seller-sidebar';
 import { ImageUploader } from '@/components/image-uploader';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -364,17 +365,13 @@ export default function SellerServicesPage() {
             {fetching ? (
               <div className="h-64 animate-pulse rounded-2xl bg-secondary/50" />
             ) : gigs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center bg-card/40">
-                <Sparkles className="h-12 w-12 text-primary/40 mb-3" />
-                <h3 className="text-lg font-bold">No active freelance gigs yet</h3>
-                <p className="mt-1 text-sm text-muted-foreground max-w-md">
-                  Turn your design, coding, or video editing skills into cash by creating your first campus gig.
-                </p>
-                <Button className="mt-5 rounded-xl" onClick={openCreate}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Gig
-                </Button>
-              </div>
+              <EmptyState
+                icon={Sparkles}
+                title="No active freelance gigs yet"
+                description="Turn your design, coding, tutoring, or video editing skills into income on campus."
+                actionLabel="+ Create Your First Gig"
+                onAction={openCreate}
+              />
             ) : (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="divide-y divide-border">

@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Plus, Store, Package } from 'lucide-react';
+import { ArrowRight, Package, Plus } from 'lucide-react';
 import { ProductCard } from '@/components/product-card';
-import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { Product } from '@/lib/types';
 
 type ProductSectionProps = {
@@ -40,30 +40,15 @@ export function ProductSection({
       </div>
 
       {products.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/90 bg-card/50 p-10 sm:p-14 text-center">
-          <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3.5 shadow-xs">
-            <Package className="h-6 w-6" />
-          </div>
-          <h3 className="font-display text-base sm:text-lg font-bold text-foreground">
-            No listings yet in {title}
-          </h3>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-md">
-            Be the first SVCET student to list your textbooks, tools, project kits, or handwritten notes!
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2.5 justify-center">
-            <Button asChild size="sm" className="rounded-xl text-xs font-bold shadow-xs">
-              <Link href="/seller/dashboard/products">
-                <Plus className="h-4 w-4 mr-1.5" />
-                List a Product
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
-              <Link href="/requests">
-                Post a Request
-              </Link>
-            </Button>
-          </div>
-        </div>
+        <EmptyState
+          icon={Package}
+          title={`No listings yet in ${title}`}
+          description="Welcome to CampusCart! Be the first student to list textbooks, lab equipment, project kits, or components!"
+          actionLabel="+ List Your First Item"
+          actionHref="/seller/dashboard/products"
+          secondaryActionLabel="Post a Request"
+          secondaryActionHref="/requests"
+        />
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">

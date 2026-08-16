@@ -12,15 +12,6 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { secureApiRequest } from '@/lib/api-client';
 
-export const ADMIN_EMAILS = [
-  'guhan24td0781@svcet.ac.in',
-];
-
-export function isAdminEmail(email?: string | null): boolean {
-  if (!email) return false;
-  return email.trim().toLowerCase() === 'guhan24td0781@svcet.ac.in';
-}
-
 export type Profile = {
   id: string;
   email: string;
@@ -78,12 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Computed admin status
-  const isAdmin = Boolean(
-    profile?.role === 'admin' ||
-    isAdminEmail(user?.email) ||
-    isAdminEmail(profile?.email)
-  );
+  // Role-Based Access Control (RBAC): Admin status is strictly determined by database role
+  const isAdmin = Boolean(profile?.role?.toLowerCase() === 'admin');
 
   useEffect(() => {
     // 1. Check secure cookie-backed session via backend /api/auth/me
@@ -102,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: apiUser.email,
             display_name: apiUser.displayName,
             username: apiUser.username || 'student',
-            role: apiUser.role || 'student',
+            role: (apiUser.role?.toLowerCase() === 'admin' ? 'admin' : (apiUser.role || 'student')) as Profile['role'],
             department: apiUser.department || null,
             year: apiUser.year || null,
             bio: apiUser.bio || null,
@@ -165,8 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function fetchProfile(userId: string, userEmail: string) {
-    const isUserAdmin = isAdminEmail(userEmail);
-
     try {
       const docRef = doc(db, 'profiles', userId);
       const docSnap = await getDoc(docRef);
@@ -177,15 +162,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: userId,
           email: data.email || userEmail,
           display_name: data.display_name || data.displayName || 'Student',
-          username: data.username || 'student',
-          role: isUserAdmin ? 'admin' : (data.role || (data.is_seller ? 'seller' : 'student')),
+          username: data.username || userEmail.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
+          role: data.role === 'admin' ? 'admin' : (data.role || (data.is_seller ? 'seller' : 'student')),
           department: data.department || null,
           year: data.year || null,
           bio: data.bio || null,
           skills: data.skills || [],
           avatar_url: data.avatar_url || data.avatarUrl || null,
           is_seller: data.is_seller ?? true,
-          is_verified: isUserAdmin ? true : (data.is_verified ?? true),
+          is_verified: data.is_verified ?? false,
           trustScore: data.trustScore ?? 50.0,
         };
         setProfile(p);
@@ -198,17 +183,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fallback: Profile = {
       id: userId,
       email: userEmail,
-      display_name: isUserAdmin ? 'Guhan M' : (userEmail.split('@')[0] || 'Student'),
-      username: isUserAdmin ? 'guhan' : (userEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student'),
-      role: isUserAdmin ? 'admin' : 'student',
-      department: isUserAdmin ? 'Computer Science & Engineering' : 'Engineering',
-      year: isUserAdmin ? '4th Year' : 'Student',
-      bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
-      skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
-      avatar_url: isUserAdmin ? 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300' : null,
+      display_name: userEmail.split('@')[0] || 'Student',
+      username: userEmail.split('@')[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
+      role: 'student',
+      department: 'Engineering',
+      year: 'Student',
+      bio: null,
+      skills: [],
+      avatar_url: null,
       is_seller: true,
-      is_verified: true,
-      trustScore: 85.0,
+      is_verified: false,
+      trustScore: 50.0,
     };
     setProfile(fallback);
     setLoading(false);
@@ -216,7 +201,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     const trimmedEmail = email.trim().toLowerCase();
-    const isUserAdmin = isAdminEmail(trimmedEmail);
 
     // 1. Attempt secure backend API login
     try {
@@ -239,180 +223,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fall through to Firebase auth
     }
 
-    // 2. Firebase sign-in with admin & student auto-recovery
+    // 2. Firebase sign-in
     try {
       const cred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
       const u: AuthUser = {
         uid: cred.user.uid,
         email: cred.user.email,
-        displayName: cred.user.displayName || (isUserAdmin ? 'Guhan M' : trimmedEmail.split('@')[0]),
+        displayName: cred.user.displayName || trimmedEmail.split('@')[0],
       };
       setUser(u);
-      await fetchProfile(cred.user.uid, cred.user.email ?? trimmedEmail);
+      await fetchProfile(cred.user.uid, trimmedEmail);
       return { success: true };
     } catch (err: any) {
       console.warn('Firebase signIn notice:', err);
-
-      // If user is Admin (Guhan M), guarantee login without fail
-      if (isUserAdmin) {
-        try {
-          const createCred = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
-          await updateFirebaseProfile(createCred.user, { displayName: 'Guhan M' });
-          const adminProfile: Profile = {
-            id: createCred.user.uid,
-            email: trimmedEmail,
-            display_name: 'Guhan M',
-            username: 'guhan',
-            role: 'admin',
-            department: 'Computer Science & Engineering',
-            year: '4th Year',
-            bio: 'Full-stack developer, IoT builder & Founder of CampusCart.',
-            skills: ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'],
-            avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede',
-            is_seller: true,
-            is_verified: true,
-            trustScore: 99.0,
-          };
-          try {
-            await setDoc(doc(db, 'profiles', createCred.user.uid), adminProfile);
-          } catch {}
-          setUser({ uid: createCred.user.uid, email: trimmedEmail, displayName: 'Guhan M' });
-          setProfile(adminProfile);
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.setItem('campuscart_fallback_user', JSON.stringify({
-                user: { uid: createCred.user.uid, email: trimmedEmail, displayName: 'Guhan M' },
-                profile: adminProfile,
-              }));
-            } catch {}
-          }
-          return { success: true };
-        } catch {
-          // Even if Firebase Auth fails, log in as verified admin
-          const uid = 'admin_guhan_' + trimmedEmail.replace(/[^a-zA-Z0-9]/g, '');
-          const localUser: AuthUser = { uid, email: trimmedEmail, displayName: 'Guhan M' };
-          const localProfile: Profile = {
-            id: uid,
-            email: trimmedEmail,
-            display_name: 'Guhan M',
-            username: 'guhan',
-            role: 'admin',
-            department: 'Computer Science & Engineering',
-            year: '4th Year',
-            bio: 'Full-stack developer, IoT builder & Founder of CampusCart.',
-            skills: ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'],
-            avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede',
-            is_seller: true,
-            is_verified: true,
-            trustScore: 99.0,
-          };
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user: localUser, profile: localProfile }));
-            } catch {}
-          }
-          setUser(localUser);
-          setProfile(localProfile);
-          return { success: true };
-        }
-      }
-
-      // If user does not exist in Firebase, auto-create account
-      if (
-        err.code === 'auth/user-not-found' ||
-        err.code === 'auth/invalid-credential' ||
-        err.code === 'auth/invalid-login-credentials'
-      ) {
-        try {
-          const autoCred = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
-          const studentName = trimmedEmail.split('@')[0];
-          await updateFirebaseProfile(autoCred.user, { displayName: studentName });
-          const studentProfile: Profile = {
-            id: autoCred.user.uid,
-            email: trimmedEmail,
-            display_name: studentName,
-            username: studentName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
-            role: 'student',
-            department: 'Engineering',
-            year: 'Student',
-            bio: null,
-            skills: [],
-            avatar_url: null,
-            is_seller: true,
-            is_verified: true,
-            trustScore: 50.0,
-          };
-          try {
-            await setDoc(doc(db, 'profiles', autoCred.user.uid), studentProfile);
-          } catch {}
-          setUser({ uid: autoCred.user.uid, email: trimmedEmail, displayName: studentName });
-          setProfile(studentProfile);
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.setItem('campuscart_fallback_user', JSON.stringify({
-                user: { uid: autoCred.user.uid, email: trimmedEmail, displayName: studentName },
-                profile: studentProfile,
-              }));
-            } catch {}
-          }
-          return { success: true };
-        } catch (autoErr: any) {
-          if (autoErr.code === 'auth/email-already-in-use' || autoErr.code === 'auth/wrong-password') {
-            return { success: false, error: 'Incorrect password. Please verify your password and try again.' };
-          }
-        }
-      }
-
-      const isConfigIssue =
-        err.code === 'auth/api-key-not-valid' ||
-        err.code === 'auth/network-request-failed' ||
-        err.code === 'auth/internal-error' ||
-        err.message?.includes('api-key-not-valid') ||
-        err.message?.includes('API key');
-
-      if (isConfigIssue) {
-        const uid = 'usr_' + Math.random().toString(36).slice(2, 10);
-        const displayName = isUserAdmin ? 'Guhan M' : trimmedEmail.split('@')[0];
-        const username = isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-
-        const localUser: AuthUser = {
-          uid,
-          email: trimmedEmail,
-          displayName,
-        };
-
-        const localProfile: Profile = {
-          id: uid,
-          email: trimmedEmail,
-          display_name: displayName,
-          username,
-          role: isUserAdmin ? 'admin' : 'student',
-          department: isUserAdmin ? 'Computer Science & Engineering' : 'Engineering',
-          year: isUserAdmin ? '4th Year' : 'Student',
-          bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
-          skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
-          avatar_url: isUserAdmin ? 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede' : null,
-          is_seller: true,
-          is_verified: true,
-          trustScore: 90.0,
-        };
-
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user: localUser, profile: localProfile }));
-          } catch {}
-        }
-
-        setUser(localUser);
-        setProfile(localProfile);
-        return { success: true };
-      }
-
-      let errorMsg = err.message || 'Invalid email or password.';
-      if (err.code === 'auth/wrong-password') {
-        errorMsg = 'Incorrect password. Please verify your password or reset it.';
-      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
-        errorMsg = 'Invalid email or password. Please check your credentials or create an account.';
+      let errorMsg = 'Invalid email or password. Please check your credentials or create an account.';
+      if (err.code === 'auth/user-not-found') {
+        errorMsg = 'No account found with this email. Please sign up first.';
+      } else if (err.code === 'auth/wrong-password') {
+        errorMsg = 'Incorrect password. Please try again.';
       }
       return { success: false, error: errorMsg };
     }
@@ -421,7 +249,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signUp({ email, password, displayName, department, year }: SignUpParams) {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = displayName.trim();
-    const isUserAdmin = isAdminEmail(trimmedEmail);
 
     // 1. Attempt secure backend API registration
     try {
@@ -459,16 +286,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: cred.user.uid,
         email: trimmedEmail,
         display_name: trimmedName,
-        username: isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
-        role: isUserAdmin ? 'admin' : 'student',
-        department: department?.trim() || 'Computer Science & Engineering',
-        year: year?.trim() || '2nd Year',
-        bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
-        skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
-        avatar_url: isUserAdmin ? 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede' : null,
+        username: trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
+        role: 'student',
+        department: department?.trim() || 'Engineering',
+        year: year?.trim() || '1st Year',
+        bio: null,
+        skills: [],
+        avatar_url: null,
         is_seller: true,
-        is_verified: true,
-        trustScore: isUserAdmin ? 99.0 : 50.0,
+        is_verified: false,
+        trustScore: 50.0,
       };
 
       try {
@@ -493,7 +320,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn('Firebase signUp notice:', err);
 
       if (err.code === 'auth/email-already-in-use') {
-        // Try logging in with the existing account
         try {
           const loginCred = await signInWithEmailAndPassword(auth, trimmedEmail, password);
           const u: AuthUser = {
@@ -505,33 +331,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fetchProfile(loginCred.user.uid, trimmedEmail);
           return { success: true };
         } catch {
-          if (isUserAdmin) {
-            const uid = 'admin_guhan_' + trimmedEmail.replace(/[^a-zA-Z0-9]/g, '');
-            const localUser: AuthUser = { uid, email: trimmedEmail, displayName: 'Guhan M' };
-            const localProfile: Profile = {
-              id: uid,
-              email: trimmedEmail,
-              display_name: 'Guhan M',
-              username: 'guhan',
-              role: 'admin',
-              department: 'Computer Science & Engineering',
-              year: '4th Year',
-              bio: 'Full-stack developer, IoT builder & Founder of CampusCart.',
-              skills: ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'],
-              avatar_url: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede',
-              is_seller: true,
-              is_verified: true,
-              trustScore: 99.0,
-            };
-            if (typeof window !== 'undefined') {
-              try {
-                localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user: localUser, profile: localProfile }));
-              } catch {}
-            }
-            setUser(localUser);
-            setProfile(localProfile);
-            return { success: true };
-          }
           return { success: false, error: 'An account with this email already exists. Please sign in.' };
         }
       }
@@ -543,15 +342,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: uid,
         email: trimmedEmail,
         display_name: trimmedName,
-        username: isUserAdmin ? 'guhan' : trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
-        role: isUserAdmin ? 'admin' : 'student',
-        department: department?.trim() || 'Computer Science & Engineering',
-        year: year?.trim() || '2nd Year',
-        bio: isUserAdmin ? 'Full-stack developer, IoT builder & Founder of CampusCart.' : null,
-        skills: isUserAdmin ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : [],
-        avatar_url: isUserAdmin ? 'https://api.dicebear.com/7.x/bottts/svg?seed=GuhanSVCET&backgroundColor=b6e3f4,c0aede' : null,
+        username: trimmedEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'student',
+        role: 'student',
+        department: department?.trim() || 'Engineering',
+        year: year?.trim() || '1st Year',
+        bio: null,
+        skills: [],
+        avatar_url: null,
         is_seller: true,
-        is_verified: true,
+        is_verified: false,
         trustScore: 50.0,
       };
 
@@ -569,11 +368,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function updateUserProfile(data: Partial<Profile>) {
     if (!profile) return;
-    const isUserAdmin = isAdminEmail(profile.email) || profile.role === 'admin';
     const updated: Profile = {
       ...profile,
       ...data,
-      role: isUserAdmin ? 'admin' : (data.role || profile.role),
+      role: profile.role, // RBAC preservation: prevent role elevation on client profile update
     };
     setProfile(updated);
 
@@ -583,19 +381,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('campuscart_fallback_user', JSON.stringify({ user, profile: updated }));
         }
       } catch {}
-      window.dispatchEvent(new CustomEvent('campuscart_seller_updated'));
     }
 
     try {
-      await setDoc(doc(db, 'profiles', profile.id), updated, { merge: true });
-    } catch (err) {
-      console.warn('Firestore profile sync notice:', err);
+      if (user) {
+        await setDoc(doc(db, 'profiles', user.uid), updated, { merge: true });
+      }
+    } catch (e) {
+      console.warn('Firestore profile update notice:', e);
     }
   }
 
-  async function handleSignOut() {
+  async function signOut() {
     try {
-      // Clear secure cookies on backend
       await secureApiRequest('/auth/logout', { method: 'POST' });
     } catch {}
 
@@ -604,9 +402,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
 
     if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('campuscart_fallback_user');
-      } catch {}
+      localStorage.removeItem('campuscart_fallback_user');
     }
 
     setUser(null);
@@ -623,7 +419,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         updateUserProfile,
-        signOut: handleSignOut,
+        signOut,
       }}
     >
       {children}

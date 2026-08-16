@@ -11,6 +11,7 @@ import {
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { GigCard } from '@/components/gig-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -361,24 +362,27 @@ export default function ServicesPage() {
               ))}
             </div>
           ) : filteredGigs.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center my-6">
-              <Box className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-              <h3 className="font-display text-lg font-bold text-foreground">No services found</h3>
-              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto font-medium">
-                No student gigs match your current filter. Post a custom bounty to get it done!
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSelectedOutcome('all');
-                  setSearch('');
-                }}
-                className="mt-4 rounded-xl text-xs"
-              >
-                Reset Filters
-              </Button>
-            </div>
+            <EmptyState
+              icon={Sparkles}
+              title={search || selectedOutcome !== 'all' ? 'No freelance gigs match your filter' : 'Welcome to the Freelance Hub!'}
+              description={
+                search || selectedOutcome !== 'all'
+                  ? 'Try adjusting your search query or reset outcome filters to view more student services.'
+                  : 'The freelance board is clean. Offer your design, coding, tutoring, or CAD skills to earn on campus!'
+              }
+              actionLabel="+ Offer a Service / Gig"
+              actionHref="/seller/dashboard/services"
+              secondaryActionLabel={search || selectedOutcome !== 'all' ? 'Reset Filters' : 'Post a Bounty'}
+              onSecondaryAction={
+                search || selectedOutcome !== 'all'
+                  ? () => {
+                      setSelectedOutcome('all');
+                      setSearch('');
+                    }
+                  : undefined
+              }
+              secondaryActionHref={!search && selectedOutcome === 'all' ? '/services/bounties' : undefined}
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredGigs.map((gig) => (

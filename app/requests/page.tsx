@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
 import { RequestCard } from '@/components/requests/request-card';
 import { SkeletonRequestFeed } from '@/components/requests/skeleton-request-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { sendChatMessage } from '@/lib/firebase-queries';
 import type { CollaborationRequest, CollaborationTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -307,19 +308,33 @@ export default function RequestsForumPage() {
           </div>
         ) : filteredRequests.length === 0 ? (
           /* 3. Empty State */
-          <div className="rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center my-6">
-            <Lightbulb className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h2 className="font-display text-lg font-bold text-foreground">No discussions found</h2>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto font-medium">
-              Be the first student to pitch an idea or ask for a co-founder in this category!
-            </p>
-            <Button
-              onClick={() => setCreateModalOpen(true)}
-              className="btn-gradient-primary mt-4 rounded-xl text-xs font-bold"
-            >
-              Start Discussion
-            </Button>
-          </div>
+          <EmptyState
+            icon={Rocket}
+            title={selectedTag !== 'ALL' || search ? 'No discussions found in this view' : 'Welcome to the Collaboration Forum!'}
+            description={
+              selectedTag !== 'ALL' || search
+                ? 'No student pitches match your active filter. Try resetting your tags or post a new request!'
+                : 'The collaboration board is clean and open. Pitch your startup, find a hardware co-founder, or look for study teammates!'
+            }
+            actionLabel="+ Pitch an Idea"
+            onAction={() => {
+              if (!user) {
+                setAuthPromptOpen(true);
+              } else {
+                setCreateModalOpen(true);
+              }
+            }}
+            secondaryActionLabel={selectedTag !== 'ALL' || search ? 'Show All Discussions' : 'Explore Marketplace'}
+            onSecondaryAction={
+              selectedTag !== 'ALL' || search
+                ? () => {
+                    setSelectedTag('ALL');
+                    setSearch('');
+                  }
+                : undefined
+            }
+            secondaryActionHref={selectedTag === 'ALL' && !search ? '/marketplace' : undefined}
+          />
         ) : (
           /* 4. Real-time Dynamic Feed */
           <div className="space-y-4">
