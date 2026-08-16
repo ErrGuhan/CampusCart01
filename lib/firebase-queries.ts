@@ -1166,6 +1166,44 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
     console.warn('Firestore getConversations notice:', e);
   }
 
+  // 3. If user has no active chats yet, provide a welcoming verified founder conversation
+  if (convMap.size === 0 && userId) {
+    const sorted = ['seller-guhan', userId].sort();
+    const defaultConvId = `chat_${sorted[0]}_${sorted[1]}`;
+    const defaultConv: Conversation = {
+      id: defaultConvId,
+      participantIds: [userId, 'seller-guhan'],
+      participantNames: {
+        [userId]: 'You',
+        'seller-guhan': 'Guhan M (Founder)',
+      },
+      participantAvatars: {
+        [userId]: '',
+        'seller-guhan': 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+      },
+      lastMessage: '👋 Welcome to CampusCart! Connect with classmates to buy gear or collaborate on projects.',
+      lastMessageTimestamp: new Date().toISOString(),
+      unreadCount: {},
+    };
+    convMap.set(defaultConvId, defaultConv);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const welcomeMsg: ChatMessage = {
+          id: 'msg_welcome_init',
+          conversationId: defaultConvId,
+          senderId: 'seller-guhan',
+          senderName: 'Guhan M (Founder)',
+          senderAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+          recipientId: userId,
+          text: '👋 Welcome to CampusCart! Connect with classmates to buy gear or collaborate on projects.',
+          createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem(`campuscart_msgs_${defaultConvId}`, JSON.stringify([welcomeMsg]));
+      } catch {}
+    }
+  }
+
   const result = Array.from(convMap.values()).sort(
     (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
   );

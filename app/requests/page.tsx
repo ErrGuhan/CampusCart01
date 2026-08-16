@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
 import { RequestCard } from '@/components/requests/request-card';
 import { SkeletonRequestFeed } from '@/components/requests/skeleton-request-card';
+import { sendChatMessage } from '@/lib/firebase-queries';
 import type { CollaborationRequest, CollaborationTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -151,17 +152,39 @@ export default function RequestsForumPage() {
     setConnectModalOpen(true);
   }
 
-  function handleSendConnect() {
+  async function handleSendConnect() {
+    if (!user || !selectedReqForConnect) return;
     if (!connectMessage.trim()) {
       toast({ title: 'Please enter a message', variant: 'destructive' });
       return;
     }
-    toast({
-      title: 'Message Sent! ✉️',
-      description: `Your response has been sent to ${selectedReqForConnect?.authorName}.`,
-    });
-    setConnectMessage('');
-    setConnectModalOpen(false);
+
+    const sorted = [user.uid, selectedReqForConnect.authorId].sort();
+    const convId = `chat_${sorted[0]}_${sorted[1]}`;
+
+    try {
+      await sendChatMessage({
+        conversationId: convId,
+        senderId: user.uid,
+        senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
+        senderAvatar: profile?.avatar_url || '',
+        recipientId: selectedReqForConnect.authorId,
+        text: `[Re: "${selectedReqForConnect.title}"] ${connectMessage.trim()}`,
+      });
+
+      toast({
+        title: 'Message Sent! ✉️',
+        description: `Your response has been sent to ${selectedReqForConnect.authorName}. Opening chat...`,
+      });
+
+      const targetAuthorId = selectedReqForConnect.authorId;
+      const targetAuthorName = selectedReqForConnect.authorName;
+      setConnectMessage('');
+      setConnectModalOpen(false);
+      router.push(`/messages?user=${targetAuthorId}&name=${encodeURIComponent(targetAuthorName)}`);
+    } catch (err: any) {
+      toast({ title: 'Error sending message', description: err.message, variant: 'destructive' });
+    }
   }
 
   // Filter cached requests by client-side search query

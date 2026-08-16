@@ -5,16 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   MessageSquare, Send, X, Loader2, Sparkles,
-  Check, Handshake, DollarSign, ArrowRight, LogIn,
+  Check, Handshake, IndianRupee, ArrowRight, LogIn, ShieldCheck,
 } from 'lucide-react';
 import {
   collection,
   doc,
   addDoc,
   setDoc,
-  getDocs,
   query,
-  where,
   orderBy,
   onSnapshot,
 } from 'firebase/firestore';
@@ -25,16 +23,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-
-type ChatMessage = {
-  id: string;
-  senderId: string;
-  senderName: string;
-  text: string;
-  offerPrice?: number;
-  offerStatus?: 'pending' | 'accepted' | 'declined';
-  createdAt: any;
-};
+import { getMessages, sendChatMessage } from '@/lib/firebase-queries';
+import type { ChatMessage } from '@/lib/types';
 
 type ChatDialogProps = {
   isOpen: boolean;
@@ -80,48 +70,30 @@ export function ChatDialog({
     const computedChatId = `chat_${sortedUids[0]}_${sortedUids[1]}`;
     setChatId(computedChatId);
 
-    // Initial fallback message if none exists
+    // Initial greeting if conversation has no messages
     const initialGreeting: ChatMessage = {
       id: 'greeting_0',
+      conversationId: computedChatId,
       senderId: recipientId,
       senderName: recipientName,
+      senderAvatar: recipientAvatar || '',
+      recipientId: user.uid,
       text: product
         ? `Hey! Thanks for your interest in "${product.name}". Feel free to ask questions or make an offer!`
         : `Hey! How can I help you today?`,
       createdAt: new Date().toISOString(),
     };
 
-    // Load local cached messages first
-    try {
-      const localCached = localStorage.getItem(`campuscart_chat_${computedChatId}`);
-      if (localCached) {
-        setMessages(JSON.parse(localCached));
+    // Load initial messages
+    getMessages(computedChatId).then((msgs) => {
+      if (msgs.length > 0) {
+        setMessages(msgs);
       } else {
         setMessages([initialGreeting]);
       }
-    } catch {
-      setMessages([initialGreeting]);
-    }
+    });
 
-    // Ensure conversation parent document exists
-    try {
-      const chatRef = doc(db, 'chats', computedChatId);
-      setDoc(
-        chatRef,
-        {
-          participants: [user.uid, recipientId],
-          participantNames: {
-            [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
-            [recipientId]: recipientName,
-          },
-          product: product ? { id: product.id, name: product.name, price: product.price } : null,
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      ).catch(() => {});
-    } catch {}
-
-    // Listen to real-time messages
+    // Listen to real-time messages from Firestore
     let unsubscribe = () => {};
     try {
       const q = query(
@@ -138,31 +110,43 @@ export function ChatDialog({
               const d = docSnap.data();
               msgs.push({
                 id: docSnap.id,
+                conversationId: computedChatId,
                 senderId: d.senderId,
                 senderName: d.senderName,
+                senderAvatar: d.senderAvatar || '',
+                recipientId: d.recipientId || '',
                 text: d.text,
-                offerPrice: d.offerPrice,
-                offerStatus: d.offerStatus,
                 createdAt: d.createdAt,
               });
             });
             setMessages(msgs);
-            try {
-              localStorage.setItem(`campuscart_chat_${computedChatId}`, JSON.stringify(msgs));
-            } catch {}
           }
           setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
         },
         (err) => {
-          console.warn('Firestore onSnapshot notice:', err);
+          console.warn('Firestore onSnapshot notice in ChatDialog:', err);
         }
       );
     } catch (err) {
       console.warn('Chat listener notice:', err);
     }
 
+    const handleSync = () => {
+      getMessages(computedChatId).then((msgs) => setMessages(msgs));
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_message_sent', handleSync);
+      window.addEventListener('storage', handleSync);
+      return () => {
+        unsubscribe();
+        window.removeEventListener('campuscart_message_sent', handleSync);
+        window.removeEventListener('storage', handleSync);
+      };
+    }
+
     return () => unsubscribe();
-  }, [isOpen, user, recipientId, recipientName, product]);
+  }, [isOpen, user, recipientId, recipientName, recipientAvatar, product]);
 
   if (!isOpen) return null;
 
@@ -184,7 +168,7 @@ export function ChatDialog({
             <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose}>
               Cancel
             </Button>
-            <Button asChild className="flex-1 rounded-xl">
+            <Button asChild className="btn-gradient-primary flex-1 rounded-xl font-bold">
               <Link href="/login">
                 <LogIn className="h-4 w-4 mr-2" /> Sign In
               </Link>
@@ -197,59 +181,25 @@ export function ChatDialog({
 
   async function handleSendMessage(e?: React.FormEvent) {
     if (e) e.preventDefault();
-    if (!user || !chatId) return;
-
-    if (!inputText.trim()) return;
-
-    const newMsg: ChatMessage = {
-      id: 'msg_' + Date.now(),
-      senderId: user.uid,
-      senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
-      text: inputText.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    // Update local UI immediately
-    const updatedMessages = [...messages, newMsg];
-    setMessages(updatedMessages);
-    try {
-      localStorage.setItem(`campuscart_chat_${chatId}`, JSON.stringify(updatedMessages));
-    } catch {}
+    if (!user || !chatId || !inputText.trim()) return;
 
     const textToSend = inputText.trim();
     setInputText('');
     setSending(true);
 
     try {
-      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+      const sent = await sendChatMessage({
+        conversationId: chatId,
         senderId: user.uid,
-        senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
+        senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
+        senderAvatar: profile?.avatar_url || '',
+        recipientId,
         text: textToSend,
-        createdAt: new Date().toISOString(),
       });
 
-      await setDoc(doc(db, 'chats', chatId), {
-        participants: [user.uid, recipientId],
-        lastMessage: textToSend,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-
-      // Notify recipient
-      if (recipientId && recipientId !== user.uid) {
-        const notifDocId = 'notif_chat_' + Date.now();
-        const notifPayload = {
-          userId: recipientId,
-          title: `💬 Message from ${profile?.display_name || 'Student'}`,
-          message: textToSend.length > 60 ? textToSend.slice(0, 57) + '...' : textToSend,
-          type: 'message',
-          link: '/messages',
-          isRead: false,
-          created_at: new Date().toISOString(),
-        };
-        setDoc(doc(db, 'notifications', notifDocId), notifPayload).catch(() => {});
-      }
+      setMessages((prev) => [...prev, sent]);
     } catch (err: any) {
-      console.warn('Firestore message save notice:', err);
+      console.warn('Error sending chat message:', err);
     } finally {
       setSending(false);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -264,238 +214,146 @@ export function ChatDialog({
       return;
     }
 
-    const offerMsg: ChatMessage = {
-      id: 'offer_' + Date.now(),
-      senderId: user.uid,
-      senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
-      text: `🤝 Made an offer for ₹${priceNum}`,
-      offerPrice: priceNum,
-      offerStatus: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-
-    const updated = [...messages, offerMsg];
-    setMessages(updated);
-    try {
-      localStorage.setItem(`campuscart_chat_${chatId}`, JSON.stringify(updated));
-    } catch {}
-
+    const offerText = `🤝 Made an offer for ₹${priceNum}${product ? ` on "${product.name}"` : ''}`;
     setOfferMode(false);
-    toast({ title: 'Offer sent! 🎉', description: `Offered ₹${priceNum} to ${recipientName}.` });
-
     setSending(true);
+
     try {
-      await addDoc(collection(db, 'chats', chatId, 'messages'), {
+      const sent = await sendChatMessage({
+        conversationId: chatId,
         senderId: user.uid,
-        senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
-        text: `🤝 Made an offer for ₹${priceNum}`,
-        offerPrice: priceNum,
-        offerStatus: 'pending',
-        createdAt: new Date().toISOString(),
+        senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
+        senderAvatar: profile?.avatar_url || '',
+        recipientId,
+        text: offerText,
       });
 
-      await setDoc(doc(db, 'chats', chatId), {
-        participants: [user.uid, recipientId],
-        lastMessage: `🤝 Made an offer for ₹${priceNum}`,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-
-      // Notify seller
-      if (recipientId && recipientId !== user.uid) {
-        const notifDocId = 'notif_offer_' + Date.now();
-        const notifPayload = {
-          userId: recipientId,
-          title: `🤝 Price Offer Received!`,
-          message: `${profile?.display_name || 'A student'} offered ₹${priceNum}${product ? ` on "${product.name}"` : ''}.`,
-          type: 'offer',
-          link: '/messages',
-          isRead: false,
-          created_at: new Date().toISOString(),
-        };
-        setDoc(doc(db, 'notifications', notifDocId), notifPayload).catch(() => {});
-      }
+      setMessages((prev) => [...prev, sent]);
+      toast({ title: 'Offer sent! 🎉', description: `Offered ₹${priceNum} to ${recipientName}.` });
     } catch (err: any) {
-      console.warn('Firestore offer notice:', err);
+      toast({ title: 'Error sending offer', description: err.message, variant: 'destructive' });
     } finally {
       setSending(false);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }
   }
 
-  async function handleRespondToOffer(msgId: string, status: 'accepted' | 'declined') {
-    if (!chatId) return;
-
-    const updated = messages.map((m) => (m.id === msgId ? { ...m, offerStatus: status } : m));
-    setMessages(updated);
-    try {
-      localStorage.setItem(`campuscart_chat_${chatId}`, JSON.stringify(updated));
-    } catch {}
-
-    toast({
-      title: status === 'accepted' ? 'Offer accepted! 🎉' : 'Offer declined',
-      description: status === 'accepted' ? 'Coordinate with buyer for campus handover.' : undefined,
-    });
-
-    try {
-      await setDoc(
-        doc(db, 'chats', chatId, 'messages', msgId),
-        { offerStatus: status },
-        { merge: true }
-      );
-    } catch (err: any) {
-      console.warn('Firestore offer response notice:', err);
-    }
-  }
-
-  const initials = recipientName
-    ? recipientName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
-    : 'CC';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50">
-      <div className="relative w-full max-w-lg h-[90vh] sm:h-[620px] bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-secondary/30">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9 border border-border">
-              {recipientAvatar && <AvatarImage src={recipientAvatar} alt={recipientName} />}
-              <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                {initials}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50">
+      <div className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[600px] max-h-[90vh]">
+        {/* Modal Header */}
+        <div className="p-4 border-b border-border flex items-center justify-between bg-card/50 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="h-10 w-10 ring-2 ring-primary/20 shrink-0">
+              <AvatarImage src={recipientAvatar} alt={recipientName} />
+              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                {recipientName.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="font-semibold text-sm leading-none">{recipientName}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {recipientUsername ? `@${recipientUsername}` : 'SVCET Student'} • Active on campus
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-display font-bold text-sm text-foreground truncate">{recipientName}</h3>
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              </div>
+              <p className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Verified Student on Campus
               </p>
             </div>
           </div>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-xs text-primary font-bold h-8 px-2.5 rounded-xl hover:bg-primary/10"
+            >
+              <Link href={`/messages?user=${recipientId}&name=${encodeURIComponent(recipientName)}`}>
+                Full Inbox
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Product Context Banner */}
         {product && (
-          <div className="flex items-center justify-between px-4 py-2 bg-primary/5 border-b border-primary/10 text-xs">
-            <div className="flex items-center gap-2 min-w-0">
+          <div className="p-3 bg-secondary/40 border-b border-border/80 flex items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
               {product.image && (
-                <div className="relative h-7 w-7 rounded overflow-hidden border shrink-0">
-                  <Image src={product.image} alt={product.name} fill sizes="28px" className="object-cover" />
+                <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0 border border-border/60">
+                  <Image src={product.image} alt={product.name} fill className="object-cover" />
                 </div>
               )}
-              <span className="font-medium truncate max-w-[200px]">{product.name}</span>
-              <span className="font-bold text-primary">₹{product.price}</span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">{product.name}</p>
+                <p className="text-xs font-black text-primary">₹{product.price}</p>
+              </div>
             </div>
+
             <Button
               size="sm"
               variant="outline"
-              className="h-6 text-[10px] px-2 rounded-lg border-primary/30 text-primary hover:bg-primary/10"
               onClick={() => setOfferMode(!offerMode)}
+              className="h-8 text-xs font-bold rounded-xl border-primary/40 text-primary hover:bg-primary/10 shrink-0"
             >
-              <Handshake className="h-3 w-3 mr-1" />
+              <Handshake className="h-3.5 w-3.5 mr-1" />
               Make Offer
             </Button>
           </div>
         )}
 
-        {/* Offer Input Mode */}
-        {offerMode && (
-          <div className="p-3 bg-card border-b border-border space-y-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold">Offer your price:</span>
-              <button
-                onClick={() => setOfferMode(false)}
-                className="text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                Cancel
-              </button>
+        {/* Make Offer Collapsible Drawer */}
+        {offerMode && product && (
+          <div className="p-3 bg-primary/5 border-b border-primary/20 space-y-2 animate-in slide-in-from-top-2 shrink-0">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-foreground">Propose Price to {recipientName}:</span>
+              <span className="text-muted-foreground line-through">Listed: ₹{product.price}</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">₹</span>
+                <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="number"
-                  placeholder="Enter offer price"
                   value={offerPrice}
                   onChange={(e) => setOfferPrice(e.target.value)}
-                  className="pl-7 h-9 text-xs rounded-xl"
-                  autoFocus
+                  placeholder="Offer amount"
+                  className="pl-8 h-9 text-xs rounded-xl"
                 />
               </div>
-              <Button size="sm" onClick={handleSendOffer} disabled={sending} className="h-9 px-4 rounded-xl text-xs">
-                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Send Offer'}
+              <Button
+                size="sm"
+                onClick={handleSendOffer}
+                disabled={sending}
+                className="btn-gradient-primary rounded-xl text-xs font-bold h-9 px-3"
+              >
+                Send Offer
               </Button>
             </div>
           </div>
         )}
 
-        {/* Messages Feed */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3">
-          <div className="text-center my-2">
-            <span className="text-[10px] text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full border border-border">
-              🔒 Direct Student-to-Student Campus Chat
-            </span>
-          </div>
-
-          {messages.map((msg) => {
-            const isMe = msg.senderId === user.uid;
-
+        {/* Messages Body */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.map((m) => {
+            const isMe = m.senderId === user.uid;
             return (
-              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+              <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed shadow-2xs ${
                     isMe
-                      ? 'bg-primary text-primary-foreground rounded-br-none'
-                      : 'bg-muted text-foreground rounded-bl-none'
+                      ? 'bg-gradient-to-r from-primary to-cyan-500 text-white rounded-br-none'
+                      : 'bg-secondary text-foreground rounded-bl-none border border-border/60'
                   }`}
                 >
-                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-
-                  {/* Offer Interactive Card */}
-                  {msg.offerPrice && (
-                    <div className="mt-2 pt-2 border-t border-current/20 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-semibold">Offer: ₹{msg.offerPrice}</span>
-                        {msg.offerStatus === 'accepted' && (
-                          <Badge className="bg-emerald-500 text-white text-[10px] h-4">Accepted</Badge>
-                        )}
-                        {msg.offerStatus === 'declined' && (
-                          <Badge variant="destructive" className="text-[10px] h-4">Declined</Badge>
-                        )}
-                        {msg.offerStatus === 'pending' && (
-                          <Badge variant="outline" className="text-[10px] h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                            Pending
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* If I am the recipient and offer is pending, allow Accept/Decline */}
-                      {!isMe && msg.offerStatus === 'pending' && (
-                        <div className="flex gap-1.5 pt-1">
-                          <Button
-                            size="sm"
-                            className="h-6 text-[10px] px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1"
-                            onClick={() => handleRespondToOffer(msg.id, 'accepted')}
-                          >
-                            <Check className="h-3 w-3 mr-1" /> Accept
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 text-[10px] px-2.5 rounded-lg flex-1 border-border"
-                            onClick={() => handleRespondToOffer(msg.id, 'declined')}
-                          >
-                            Decline
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {m.text}
                 </div>
-                <span className="text-[9px] text-muted-foreground px-1 mt-0.5">
-                  {isMe ? 'You' : msg.senderName}
+                <span className="text-[9px] text-muted-foreground mt-1 px-1">
+                  {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             );
@@ -503,15 +361,20 @@ export function ChatDialog({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-card flex gap-2">
+        {/* Message Input Footer */}
+        <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-card/60 flex items-center gap-2 shrink-0">
           <Input
-            placeholder="Type a message or bargain..."
+            placeholder="Type a message to arrange pickup or details..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            className="flex-1 h-10 text-xs rounded-xl"
+            className="rounded-xl text-xs h-10 border-border/80"
           />
-          <Button type="submit" size="icon" disabled={sending || !inputText.trim()} className="h-10 w-10 shrink-0 rounded-xl">
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!inputText.trim() || sending}
+            className="btn-gradient-primary rounded-xl h-10 w-10 shrink-0 shadow-xs"
+          >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
