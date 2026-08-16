@@ -6,6 +6,8 @@ export interface IProduct extends Document {
   price: number;
   originalPrice?: number;
   category: string;
+  productType: 'PHYSICAL' | 'DIGITAL' | 'SERVICE';
+  externalLink?: string;
   images: string[];
   sellerId: mongoose.Types.ObjectId;
   campusId: string;
@@ -52,6 +54,16 @@ const ProductSchema = new Schema<IProduct>(
       type: String,
       required: [true, 'Category is required'],
       index: true,
+    },
+    productType: {
+      type: String,
+      enum: ['PHYSICAL', 'DIGITAL', 'SERVICE'],
+      default: 'PHYSICAL',
+      index: true,
+    },
+    externalLink: {
+      type: String,
+      trim: true,
     },
     images: {
       type: [String],

@@ -18,20 +18,19 @@ import type {
   CampusEvent, ChatMessage, Conversation, NotificationItem,
 } from './types';
 
-// Default categories list for instant availability & seeding
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'cat-handmade', name: 'Handmade', slug: 'handmade', icon: 'Hammer', productCount: 0 },
-  { id: 'cat-art-design', name: 'Art & Design', slug: 'art-design', icon: 'Palette', productCount: 0 },
-  { id: 'cat-electronics', name: 'Electronics', slug: 'electronics', icon: 'Cpu', productCount: 0 },
-  { id: 'cat-digital', name: 'Digital Products', slug: 'digital', icon: 'Monitor', productCount: 0 },
-  { id: 'cat-books', name: 'Books', slug: 'books', icon: 'BookOpen', productCount: 0 },
-  { id: 'cat-fashion', name: 'Fashion', slug: 'fashion', icon: 'Shirt', productCount: 0 },
-  { id: 'cat-accessories', name: 'Accessories', slug: 'accessories', icon: 'Watch', productCount: 0 },
-  { id: 'cat-stationery', name: 'Stationery', slug: 'stationery', icon: 'PenTool', productCount: 0 },
-  { id: 'cat-food', name: 'Food', slug: 'food', icon: 'Cookie', productCount: 0 },
-  { id: 'cat-college-supplies', name: 'College Supplies', slug: 'college-supplies', icon: 'Backpack', productCount: 0 },
-  { id: 'cat-services', name: 'Services', slug: 'services', icon: 'Wrench', productCount: 0 },
-  { id: 'cat-other', name: 'Other', slug: 'other', icon: 'Package', productCount: 0 },
+  { id: 'cat-hardware', name: 'Hardware & Tools', slug: 'hardware', icon: 'Cpu', productCount: 0 },
+  { id: 'cat-digital-assets', name: 'Digital Assets & Code', slug: 'digital-assets', icon: 'Monitor', productCount: 0 },
+  { id: 'cat-course-notes', name: 'Course Notes & Guides', slug: 'course-notes', icon: 'BookOpen', productCount: 0 },
+  { id: 'cat-components', name: 'Component Parts & DIY', slug: 'components', icon: 'Hammer', productCount: 0 },
+  { id: 'cat-design-templates', name: 'Design Templates', slug: 'design-templates', icon: 'Palette', productCount: 0 },
+  { id: 'cat-study-gear', name: 'Lab & Study Gear', slug: 'study-gear', icon: 'Backpack', productCount: 0 },
+  { id: 'cat-blueprints', name: 'Project Blueprints', slug: 'blueprints', icon: 'PenTool', productCount: 0 },
+  { id: 'cat-prototypes', name: 'App Prototypes', slug: 'prototypes', icon: 'Shirt', productCount: 0 },
+  { id: 'cat-media-audio', name: 'Audio & Media', slug: 'media-audio', icon: 'Watch', productCount: 0 },
+  { id: 'cat-hostel-essentials', name: 'Hostel Essentials', slug: 'hostel-essentials', icon: 'Cookie', productCount: 0 },
+  { id: 'cat-services', name: 'Services & Gigs', slug: 'services', icon: 'Wrench', productCount: 0 },
+  { id: 'cat-other-innovations', name: 'Other Innovations', slug: 'other-innovations', icon: 'Package', productCount: 0 },
 ];
 
 export const GIG_CATEGORIES = [

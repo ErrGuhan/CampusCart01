@@ -8,7 +8,11 @@ export interface IUser extends Document {
   username: string;
   role: 'student' | 'seller' | 'admin';
   department?: string;
+  major?: string;
   year?: string;
+  graduationYear?: number;
+  skills: string[];
+  studentsHelped: number;
   bio?: string;
   avatarUrl?: string;
   isVerified: boolean;
@@ -61,7 +65,11 @@ const UserSchema = new Schema<IUser>(
       default: 'student',
     },
     department: { type: String, default: 'Computer Science' },
+    major: { type: String, default: 'Computer Science & Engineering' },
     year: { type: String, default: '3rd Year' },
+    graduationYear: { type: Number, default: 2026 },
+    skills: [{ type: String, trim: true }],
+    studentsHelped: { type: Number, default: 0, min: 0 },
     bio: { type: String, maxlength: 500 },
     avatarUrl: { type: String },
     isVerified: { type: Boolean, default: false },

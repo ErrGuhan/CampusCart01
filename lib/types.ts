@@ -2,6 +2,8 @@ export type ProductStatus = 'active' | 'pending_approval' | 'draft' | 'paused' |
 
 export type ProductCondition = 'new' | 'like_new' | 'excellent' | 'good' | 'fair';
 
+export type ProductType = 'PHYSICAL' | 'DIGITAL' | 'SERVICE';
+
 export type Product = {
   id: string;
   slug: string;
@@ -10,7 +12,9 @@ export type Product = {
   price: number;
   discountPrice?: number;
   category: string;
+  productType?: ProductType;
   tags: string[];
+  externalLink?: string;
   images: string[];
   inventory: number;
   status: ProductStatus;
@@ -35,9 +39,12 @@ export type Seller = {
   displayName: string;
   avatar: string;
   department: string;
+  major?: string;
   year: string;
+  graduationYear?: number;
   bio: string;
   skills: string[];
+  studentsHelped?: number;
   rating: number;
   productCount: number;
   joinedAt: string;
@@ -269,4 +276,71 @@ export type NotificationItem = {
   link?: string;
   isRead: boolean;
   createdAt: string;
+};
+
+// ----------------- Campus Incubator & Collaboration Hub Types -----------------
+
+export type CollaborationTag =
+  | 'LOOKING_FOR_COFOUNDER'
+  | 'NEED_FEEDBACK'
+  | 'HARDWARE_HELP'
+  | 'BETA_TESTERS'
+  | 'GENERAL';
+
+export type CollaborationRequest = {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorUsername: string;
+  authorAvatar?: string;
+  authorMajor: string;
+  authorYear: string | number;
+  title: string;
+  description: string;
+  tags: CollaborationTag;
+  status: 'OPEN' | 'CLOSED';
+  viewsCount: number;
+  responsesCount: number;
+  createdAt: string;
+};
+
+export type BountyStatus = 'OPEN' | 'CLAIMED' | 'COMPLETED';
+
+export type CampusBounty = {
+  id: string;
+  creatorId: string;
+  creatorName: string;
+  creatorAvatar?: string;
+  solverId?: string | null;
+  solverName?: string;
+  solverAvatar?: string;
+  title: string;
+  description: string;
+  rewardAmount: number;
+  deadline: string;
+  category?: string;
+  status: BountyStatus;
+  claimedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+};
+
+export type UserPortfolio = {
+  user: {
+    id: string;
+    displayName: string;
+    username: string;
+    avatar?: string;
+    major?: string;
+    graduationYear?: number;
+    skills: string[];
+    studentsHelped: number;
+    totalRevenue: number;
+  };
+  physicalProducts: Product[];
+  digitalProducts: Product[];
+  services: ServiceGig[];
+  openRequests: CollaborationRequest[];
+  bountiesCreated: CampusBounty[];
+  bountiesClaimed: CampusBounty[];
 };

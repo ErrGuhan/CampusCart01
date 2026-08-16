@@ -12,6 +12,8 @@ import { DealsBannerSection } from '@/components/home/deals-banner-section';
 import { RequestsPreviewSection } from '@/components/home/requests-preview-section';
 import { HowItWorksSection } from '@/components/home/how-it-works-section';
 import { CtaSection } from '@/components/home/cta-section';
+import { CreatorSpotlight } from '@/components/home/creator-spotlight';
+import { QuickConnectSection } from '@/components/home/quick-connect-section';
 import {
   getCategories,
   getFeaturedProducts,
@@ -86,6 +88,8 @@ export default async function Home() {
       content: (
         <div className="pb-28 sm:pb-32 md:pb-0 space-y-2 sm:space-y-4">
           <HeroSection />
+          <QuickConnectSection />
+          <CreatorSpotlight />
           <CategoriesSection categories={categories} />
           <DealsBannerSection />
           <ProductSection

@@ -357,7 +357,7 @@ export default function SellerDashboardPage() {
               </div>
             </div>
 
-            {/* 2. Earnings & Quick Action Hero Card */}
+            {/* 2. Gamified Milestones & Quick Action Hero Card */}
             <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-secondary/30 p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -373,6 +373,22 @@ export default function SellerDashboardPage() {
                 </div>
                 <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-xs">
                   <IndianRupee className="h-5 w-5" />
+                </div>
+              </div>
+
+              {/* Gamified Collaboration Milestones Row */}
+              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-xl bg-card/80 border border-border/70 text-center">
+                <div>
+                  <span className="text-[10px] text-muted-foreground font-bold block uppercase tracking-wider">🎯 Students Helped</span>
+                  <span className="font-black text-sm sm:text-base text-primary">42 Students</span>
+                </div>
+                <div className="border-x border-border/60">
+                  <span className="text-[10px] text-muted-foreground font-bold block uppercase tracking-wider">📦 Active Projects</span>
+                  <span className="font-black text-sm sm:text-base text-foreground">{sellerProducts.length + sellerGigs.length} Items</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground font-bold block uppercase tracking-wider">⭐ Founder Trust</span>
+                  <span className="font-black text-sm sm:text-base text-amber-600">5.0 / 5.0</span>
                 </div>
               </div>
 
