@@ -1259,7 +1259,8 @@ export async function getMessages(conversationId: string): Promise<ChatMessage[]
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
 
-  if (typeof window !== 'undefined') {
+  // Sync merged result back to local cache
+  if (typeof window !== 'undefined' && result.length > 0) {
     try {
       localStorage.setItem(`campuscart_msgs_${conversationId}`, JSON.stringify(result));
     } catch {}
@@ -1271,44 +1272,67 @@ export async function getMessages(conversationId: string): Promise<ChatMessage[]
 export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>): Promise<ChatMessage> {
   const newMsg: ChatMessage = {
     ...msg,
-    id: 'msg_' + Date.now(),
+    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     createdAt: new Date().toISOString(),
   };
 
-  // 1. Save to local storage
+  // 1. Save to local storage immediately
   if (typeof window !== 'undefined') {
     try {
       const key = `campuscart_msgs_${msg.conversationId}`;
       const raw = localStorage.getItem(key);
-      const list = raw ? JSON.parse(raw) : [];
-      list.push(newMsg);
+      const list: ChatMessage[] = raw ? JSON.parse(raw) : [];
+      // Prevent duplicates
+      if (!list.some((m) => m.id === newMsg.id)) {
+        list.push(newMsg);
+      }
       localStorage.setItem(key, JSON.stringify(list));
 
       const convRaw = localStorage.getItem('campuscart_conversations');
       let convList: Conversation[] = convRaw ? JSON.parse(convRaw) : [];
       const convIndex = convList.findIndex((c) => c.id === msg.conversationId);
+      
       if (convIndex >= 0) {
         convList[convIndex].lastMessage = msg.text;
         convList[convIndex].lastMessageTimestamp = newMsg.createdAt;
+        if (!convList[convIndex].participantIds.includes(msg.senderId)) {
+          convList[convIndex].participantIds.push(msg.senderId);
+        }
+        if (msg.recipientId && !convList[convIndex].participantIds.includes(msg.recipientId)) {
+          convList[convIndex].participantIds.push(msg.recipientId);
+        }
+        if (msg.senderName) {
+          convList[convIndex].participantNames = {
+            ...(convList[convIndex].participantNames || {}),
+            [msg.senderId]: msg.senderName,
+          };
+        }
       } else {
         convList.unshift({
           id: msg.conversationId,
-          participantIds: [msg.senderId, msg.recipientId],
+          participantIds: [msg.senderId, msg.recipientId].filter(Boolean),
           participantNames: {
             [msg.senderId]: msg.senderName,
-            [msg.recipientId]: 'Campus Peer',
+            ...(msg.recipientId ? { [msg.recipientId]: 'Campus Peer' } : {}),
           },
           participantAvatars: {
             [msg.senderId]: msg.senderAvatar || '',
-            [msg.recipientId]: '',
+            ...(msg.recipientId ? { [msg.recipientId]: '' } : {}),
           },
           lastMessage: msg.text,
           lastMessageTimestamp: newMsg.createdAt,
-          unreadCount: { [msg.recipientId]: 1 },
+          unreadCount: msg.recipientId ? { [msg.recipientId]: 1 } : {},
         });
       }
+
+      // Sort with newest on top
+      convList.sort(
+        (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
+      );
       localStorage.setItem('campuscart_conversations', JSON.stringify(convList));
+
       window.dispatchEvent(new CustomEvent('campuscart_message_sent', { detail: newMsg }));
+      window.dispatchEvent(new Event('storage'));
     } catch {}
   }
 
@@ -1318,19 +1342,23 @@ export async function sendChatMessage(msg: Omit<ChatMessage, 'id' | 'createdAt'>
       senderId: newMsg.senderId,
       senderName: newMsg.senderName,
       senderAvatar: newMsg.senderAvatar || '',
-      recipientId: newMsg.recipientId,
+      recipientId: newMsg.recipientId || '',
       text: newMsg.text,
       createdAt: newMsg.createdAt,
     });
 
-    await setDoc(doc(db, 'chats', msg.conversationId), {
-      participants: [msg.senderId, msg.recipientId],
-      lastMessage: msg.text,
-      updatedAt: newMsg.createdAt,
-      participantNames: {
-        [msg.senderId]: msg.senderName,
+    await setDoc(
+      doc(db, 'chats', msg.conversationId),
+      {
+        participants: [msg.senderId, msg.recipientId].filter(Boolean),
+        lastMessage: msg.text,
+        updatedAt: newMsg.createdAt,
+        participantNames: {
+          [msg.senderId]: msg.senderName,
+        },
       },
-    }, { merge: true });
+      { merge: true }
+    );
   } catch (e) {
     console.warn('Firestore sendChatMessage notice:', e);
   }

@@ -32,6 +32,16 @@ const QUICK_STARTERS = [
   '🤝 I saw your listing on CampusCart and would love to discuss!',
 ];
 
+// Helper to merge message arrays deduplicating by ID and sorting chronologically
+function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
+  const map = new Map<string, ChatMessage>();
+  existing.forEach((m) => map.set(m.id, m));
+  incoming.forEach((m) => map.set(m.id, m));
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+}
+
 function MessagesContent() {
   const { user, profile, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
@@ -48,20 +58,30 @@ function MessagesContent() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load and sort conversations for the user
+  // Load and merge conversations for the user
   const loadUserConversations = useCallback(async () => {
     if (!user) return;
 
     const convs = await getConversations(user.uid);
 
-    // Sort with newest messages on top
+    // Sort newest on top
     const sorted = [...convs].sort((a, b) => {
       const timeA = new Date(a.lastMessageTimestamp).getTime() || 0;
       const timeB = new Date(b.lastMessageTimestamp).getTime() || 0;
       return timeB - timeA;
     });
 
-    setConversations(sorted);
+    setConversations((prev) => {
+      const map = new Map<string, Conversation>();
+      sorted.forEach((c) => map.set(c.id, c));
+      // Preserve any active or local threads in current state
+      prev.forEach((c) => {
+        if (!map.has(c.id)) map.set(c.id, c);
+      });
+      return Array.from(map.values()).sort(
+        (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
+      );
+    });
 
     if (!activeConvId && sorted.length > 0 && !targetUserParam) {
       setActiveConvId(sorted[0].id);
@@ -80,34 +100,36 @@ function MessagesContent() {
     setActiveConvId(computedId);
     setMobileView('chat');
 
+    const draftConv: Conversation = {
+      id: computedId,
+      participantIds: [user.uid, targetUserParam],
+      participantNames: {
+        [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
+        [targetUserParam]: targetNameParam || 'Campus Peer',
+      },
+      participantAvatars: {
+        [user.uid]: profile?.avatar_url || '',
+        [targetUserParam]: '',
+      },
+      lastMessage: 'Conversation active',
+      lastMessageTimestamp: new Date().toISOString(),
+      unreadCount: {},
+    };
+
     setConversations((prev) => {
       if (prev.some((c) => c.id === computedId)) return prev;
-      return [
-        {
-          id: computedId,
-          participantIds: [user.uid, targetUserParam],
-          participantNames: {
-            [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
-            [targetUserParam]: targetNameParam || 'Campus Peer',
-          },
-          participantAvatars: {
-            [user.uid]: profile?.avatar_url || '',
-            [targetUserParam]: '',
-          },
-          lastMessage: 'Conversation started',
-          lastMessageTimestamp: new Date().toISOString(),
-          unreadCount: {},
-        },
-        ...prev,
-      ];
+      return [draftConv, ...prev];
     });
   }, [user, targetUserParam, targetNameParam, profile]);
 
-  // Real-time listener for active conversation
+  // Real-time listener for active conversation (with lossless message merging)
   useEffect(() => {
     if (!activeConvId) return;
 
-    getMessages(activeConvId).then((msgs) => setMessages(msgs));
+    // 1. Load local & database messages first
+    getMessages(activeConvId).then((msgs) => {
+      setMessages((prev) => mergeMessages(prev, msgs));
+    });
 
     let unsubscribe = () => {};
     try {
@@ -115,31 +137,40 @@ function MessagesContent() {
         collection(db, 'chats', activeConvId, 'messages'),
         orderBy('createdAt', 'asc')
       );
-      unsubscribe = onSnapshot(q, (snap) => {
-        if (!snap.empty) {
-          const msgs: ChatMessage[] = [];
-          snap.forEach((d) => {
-            const data = d.data();
-            msgs.push({
-              id: d.id,
-              conversationId: activeConvId,
-              senderId: data.senderId,
-              senderName: data.senderName,
-              senderAvatar: data.senderAvatar || '',
-              recipientId: data.recipientId || '',
-              text: data.text || '',
-              createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
+      unsubscribe = onSnapshot(
+        q,
+        (snap) => {
+          if (!snap.empty) {
+            const incoming: ChatMessage[] = [];
+            snap.forEach((d) => {
+              const data = d.data();
+              incoming.push({
+                id: d.id,
+                conversationId: activeConvId,
+                senderId: data.senderId,
+                senderName: data.senderName,
+                senderAvatar: data.senderAvatar || '',
+                recipientId: data.recipientId || '',
+                text: data.text || '',
+                createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
+              });
             });
-          });
-          setMessages(msgs);
+            // Merge losslessly so local optimistic messages never get erased
+            setMessages((prev) => mergeMessages(prev, incoming));
+          }
+        },
+        (err) => {
+          console.warn('Firestore snapshot notice in MessagesPage:', err);
         }
-      });
+      );
     } catch (e) {
-      console.warn('Firestore onSnapshot notice in MessagesPage:', e);
+      console.warn('Firestore listener setup notice:', e);
     }
 
     const handleSync = () => {
-      getMessages(activeConvId).then((msgs) => setMessages(msgs));
+      getMessages(activeConvId).then((msgs) => {
+        setMessages((prev) => mergeMessages(prev, msgs));
+      });
       loadUserConversations();
     };
 
@@ -167,12 +198,54 @@ function MessagesContent() {
 
     const currentConv = conversations.find((c) => c.id === activeConvId);
     const otherId = currentConv?.participantIds.find((id) => id !== user.uid) || targetUserParam || 'seller-guhan';
+    const otherName = currentConv?.participantNames?.[otherId] || targetNameParam || 'Campus Peer';
+    const otherAvatar = currentConv?.participantAvatars?.[otherId] || '';
 
-    setSending(true);
+    const tempMsg: ChatMessage = {
+      id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      conversationId: activeConvId,
+      senderId: user.uid,
+      senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
+      senderAvatar: profile?.avatar_url || '',
+      recipientId: otherId,
+      text: textToSend,
+      createdAt: new Date().toISOString(),
+    };
+
+    // 1. Optimistically append message immediately to local state so it NEVER disappears
+    setMessages((prev) => mergeMessages(prev, [tempMsg]));
     setInputMsg('');
+    setSending(true);
+
+    // 2. Update conversation list preview in state
+    setConversations((prev) => {
+      const map = new Map<string, Conversation>();
+      prev.forEach((c) => map.set(c.id, c));
+      const existing = map.get(activeConvId);
+      map.set(activeConvId, {
+        id: activeConvId,
+        participantIds: existing?.participantIds || [user.uid, otherId],
+        participantNames: {
+          ...(existing?.participantNames || {}),
+          [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
+          [otherId]: otherName,
+        },
+        participantAvatars: {
+          ...(existing?.participantAvatars || {}),
+          [user.uid]: profile?.avatar_url || '',
+          [otherId]: otherAvatar,
+        },
+        lastMessage: tempMsg.text,
+        lastMessageTimestamp: tempMsg.createdAt,
+        unreadCount: existing?.unreadCount || {},
+      });
+      return Array.from(map.values()).sort(
+        (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
+      );
+    });
 
     try {
-      const sent = await sendChatMessage({
+      await sendChatMessage({
         conversationId: activeConvId,
         senderId: user.uid,
         senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
@@ -180,24 +253,11 @@ function MessagesContent() {
         recipientId: otherId,
         text: textToSend,
       });
-
-      setMessages((prev) => [...prev, sent]);
-
-      // Update conversation list preview
-      setConversations((prev) =>
-        prev
-          .map((c) =>
-            c.id === activeConvId
-              ? { ...c, lastMessage: sent.text, lastMessageTimestamp: sent.createdAt }
-              : c
-          )
-          .sort((a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime())
-      );
     } catch (err: any) {
-      toast({ title: 'Message failed to send', description: err.message, variant: 'destructive' });
+      toast({ title: 'Message delivery warning', description: err.message, variant: 'destructive' });
     } finally {
       setSending(false);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     }
   }
 
@@ -213,9 +273,30 @@ function MessagesContent() {
     });
   }, [conversations, search, user?.uid]);
 
+  // Robust active conversation resolver (with fallback synthesis so chat window NEVER disappears)
   const activeConv = useMemo(() => {
-    return conversations.find((c) => c.id === activeConvId);
-  }, [conversations, activeConvId]);
+    const found = conversations.find((c) => c.id === activeConvId);
+    if (found) return found;
+    if (activeConvId && user) {
+      const targetId = targetUserParam || 'seller-guhan';
+      return {
+        id: activeConvId,
+        participantIds: [user.uid, targetId],
+        participantNames: {
+          [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'You',
+          [targetId]: targetNameParam || 'Campus Peer',
+        },
+        participantAvatars: {
+          [user.uid]: profile?.avatar_url || '',
+          [targetId]: '',
+        },
+        lastMessage: 'Conversation active',
+        lastMessageTimestamp: new Date().toISOString(),
+        unreadCount: {},
+      };
+    }
+    return null;
+  }, [conversations, activeConvId, user, targetUserParam, targetNameParam, profile]);
 
   const otherParticipant = useMemo(() => {
     if (!activeConv || !user) return null;
