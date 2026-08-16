@@ -142,7 +142,7 @@ export default async function Home() {
               <p className="text-xs text-muted-foreground">Discover campus creators and manage your store</p>
             </div>
             <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
-              <Link href="/sellers">All Creators</Link>
+              <Link href="/studio">Open Studio</Link>
             </Button>
           </div>
           <CreatorsSection sellers={sellers} />
@@ -151,7 +151,7 @@ export default async function Home() {
             <p className="text-xs text-muted-foreground">List your notes, project components, or offer your skills as a freelancer.</p>
             <div className="flex justify-center gap-2.5 pt-1">
               <Button asChild size="sm" className="rounded-xl text-xs">
-                <Link href="/seller/dashboard">Go to Studio</Link>
+                <Link href="/studio">Go to Studio</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
                 <Link href="/dashboard">My Account</Link>

@@ -43,8 +43,8 @@ export function BottomNav() {
       panelIndex: 3,
     },
     {
-      href: user ? (profile?.is_seller ? '/seller/dashboard' : '/dashboard') : '/login',
-      label: user ? (profile?.is_seller ? 'Studio' : 'Dashboard') : 'Studio',
+      href: '/studio',
+      label: 'Studio',
       icon: profile?.is_seller ? Store : User,
       panelIndex: 4,
     },
