@@ -10,6 +10,7 @@ import { ProductCard } from '@/components/product-card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -239,7 +240,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-6 sm:py-8 min-h-screen w-full min-w-0 overflow-hidden">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-8 min-h-screen w-full min-w-0 overflow-hidden pb-28 sm:pb-32 bg-radial-wash">
         {/* Page Header */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4 w-full min-w-0">
           <div className="min-w-0 flex-1">
@@ -247,16 +248,16 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
               <Sparkles className="h-3.5 w-3.5" />
               <span>Campus Marketplace</span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               All Products & Study Supplies
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-              Showing <strong className="text-foreground">{filtered.length}</strong> listings from student creators
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-medium">
+              Showing <strong className="text-foreground font-bold">{filtered.length}</strong> listings from student creators
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Button asChild size="sm" variant="outline" className="rounded-xl text-xs gap-1.5">
+            <Button asChild size="sm" variant="outline" className="rounded-xl text-xs gap-1.5 touch-target min-h-[44px] sm:min-h-auto">
               <Link href="/requests">
                 <Tag className="h-3.5 w-3.5 text-emerald-600" />
                 Post Request
@@ -266,24 +267,24 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
         </div>
 
         {/* Search, Filter Bar, and Sort */}
-        <div className="flex flex-col gap-3 mb-6 w-full min-w-0">
+        <div className="flex flex-col gap-3.5 mb-8 w-full min-w-0">
           <div className="flex items-center gap-2 sm:gap-3 w-full min-w-0">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search products by title, category, or creator..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-8 h-10 rounded-xl bg-card text-xs border-border/80"
+                className="pl-10 pr-8 h-11 rounded-2xl bg-card text-xs border-border/80 shadow-2xs"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -294,7 +295,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 <Button
                   variant="outline"
                   size="sm"
-                  className="lg:hidden h-10 px-3 rounded-xl gap-1.5 text-xs font-semibold shrink-0"
+                  className="lg:hidden h-11 px-3.5 rounded-2xl gap-1.5 text-xs font-bold shrink-0 min-h-[44px]"
                 >
                   <SlidersHorizontal className="h-4 w-4" />
                   <span>Filters</span>
@@ -315,7 +316,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 <SheetFooter className="pt-6 border-t border-border mt-6">
                   <Button
                     onClick={() => setShowFiltersMobile(false)}
-                    className="w-full rounded-xl text-xs font-bold"
+                    className="btn-gradient-primary w-full rounded-xl text-xs font-bold h-10"
                   >
                     Show {filtered.length} Results
                   </Button>
@@ -325,10 +326,10 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
 
             {/* Sort Dropdown */}
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[140px] sm:w-[170px] h-10 rounded-xl text-xs font-semibold shrink-0">
+              <SelectTrigger className="w-[140px] sm:w-[170px] h-11 rounded-2xl text-xs font-semibold shrink-0">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
+              <SelectContent className="rounded-2xl">
                 {sortOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value} className="text-xs">
                     {opt.label}
@@ -338,16 +339,17 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
             </Select>
           </div>
 
-          {/* Quick Category Filter Pills */}
-          <div className="w-full flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {/* Quick Category Filter Pills - 44px touch target */}
+          <div className="w-full flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
             <button
               type="button"
               onClick={() => setSelectedCategories([])}
-              className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all select-none ${
+              className={cn(
+                'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold shrink-0 transition-all select-none shadow-2xs border',
                 selectedCategories.length === 0
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'bg-card border border-border/80 text-muted-foreground hover:text-foreground'
-              }`}
+                  ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
+                  : 'bg-card border-border/80 text-foreground/80 hover:text-foreground'
+              )}
             >
               All Items
             </button>
@@ -358,14 +360,15 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                   key={cat.id}
                   type="button"
                   onClick={() => toggleCategory(cat.slug)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all select-none flex items-center gap-1 ${
+                  className={cn(
+                    'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold shrink-0 transition-all select-none flex items-center gap-1.5 shadow-2xs border',
                     isSelected
-                      ? 'bg-primary text-primary-foreground shadow-xs'
-                      : 'bg-card border border-border/80 text-muted-foreground hover:text-foreground'
-                  }`}
+                      ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
+                      : 'bg-card border-border/80 text-foreground/80 hover:text-foreground'
+                  )}
                 >
                   <span>{cat.name}</span>
-                  {isSelected && <Check className="h-3 w-3" />}
+                  {isSelected && <Check className="h-3.5 w-3.5" />}
                 </button>
               );
             })}
@@ -373,7 +376,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
         </div>
 
         {/* Main Products Grid & Sidebar Layout */}
-        <div className="flex flex-col lg:flex-row gap-6 w-full">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 w-full">
           {/* Desktop Filter Sidebar */}
           <aside className="hidden lg:block w-60 shrink-0">
             <div className="sticky top-20 rounded-3xl border border-border/80 bg-card p-5 shadow-xs">
@@ -389,34 +392,34 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
             </div>
           </aside>
 
-          {/* Product Grid Area */}
+          {/* Product Grid Area - Enhanced gap and breathing room */}
           <div className="flex-1 min-w-0">
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border py-16 px-4 text-center bg-card/40">
                 <Search className="h-10 w-10 text-muted-foreground/40 mb-3" />
                 <h3 className="text-base font-bold text-foreground">No products match your criteria</h3>
-                <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+                <p className="mt-1 text-xs text-muted-foreground max-w-sm font-medium">
                   Try adjusting your search terms, changing categories, or post a request on the campus board.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2.5 justify-center">
                   {activeFilterCount > 0 && (
-                    <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={clearFilters}>
+                    <Button variant="outline" size="sm" className="rounded-xl text-xs min-h-[44px] sm:min-h-auto" onClick={clearFilters}>
                       Clear all filters
                     </Button>
                   )}
-                  <Button asChild size="sm" className="rounded-xl text-xs font-bold shadow-xs">
+                  <Button asChild size="sm" className="btn-gradient-primary rounded-xl text-xs font-bold shadow-xs min-h-[44px] sm:min-h-auto">
                     <Link href="/seller/dashboard/products">
                       <Plus className="h-3.5 w-3.5 mr-1" />
                       List a Product
                     </Link>
                   </Button>
-                  <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
+                  <Button asChild size="sm" variant="outline" className="rounded-xl text-xs min-h-[44px] sm:min-h-auto">
                     <Link href="/requests">Post Product Request</Link>
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6">
                 {filtered.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

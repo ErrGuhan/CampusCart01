@@ -557,7 +557,7 @@ export function Navbar() {
                 <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-9 px-3">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button size="sm" asChild className="rounded-xl text-xs h-9 px-3.5 shadow-xs font-bold">
+                <Button size="sm" asChild className="btn-gradient-primary rounded-xl text-xs h-9 px-3.5 shadow-xs font-bold">
                   <Link href="/register">Join Campus</Link>
                 </Button>
               </div>
@@ -581,23 +581,21 @@ export function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search textbooks, drawing boards, projects, gigs..."
-                className="pl-10 pr-8 h-11 rounded-2xl bg-secondary/80 text-xs border-border/80 shadow-xs"
+                className="pl-10 pr-20 h-11 rounded-2xl bg-secondary/80 text-xs border-border/80 shadow-xs"
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+              <Button
+                type="submit"
+                size="sm"
+                className="btn-gradient-primary absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-3 rounded-xl text-xs font-bold shadow-2xs"
+              >
+                Go
+              </Button>
             </div>
           </form>
         )}
 
-        {/* Mobile Quick Category Horizontal Carousel Strip - Slightly larger and spacious */}
-        <div className="w-full min-w-0 flex sm:hidden items-center gap-2 overflow-x-auto pb-2.5 pt-0.5 scrollbar-none">
+        {/* Mobile Quick Category Horizontal Carousel Strip - 44px min touch target */}
+        <div className="w-full min-w-0 flex sm:hidden items-center gap-2 overflow-x-auto pb-2.5 pt-1 scrollbar-none">
           {mobileQuickChips.map((chip) => {
             const active = pathname === chip.href;
             return (
@@ -605,13 +603,13 @@ export function Navbar() {
                 key={chip.href}
                 href={chip.href}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all select-none active:scale-95 shadow-2xs',
+                  'inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none active:scale-95 shadow-2xs border',
                   active
-                    ? 'bg-primary text-primary-foreground shadow-xs'
-                    : 'bg-secondary/80 text-muted-foreground hover:text-foreground border border-border/60'
+                    ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
+                    : 'bg-card text-foreground/80 hover:text-foreground border-border/70 hover:border-primary/40'
                 )}
               >
-                <span>{chip.icon}</span>
+                <span className="text-sm">{chip.icon}</span>
                 <span>{chip.label}</span>
               </Link>
             );

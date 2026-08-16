@@ -30,14 +30,14 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+      {/* Content - Spacious padding for airy feel */}
+      <div className="flex flex-1 flex-col p-4 sm:p-5 gap-1.5">
         {/* Freelancer Header */}
         <Link
           href={`/seller/${gig.seller.username}`}
-          className="flex items-center gap-2 mb-2.5 group/seller"
+          className="flex items-center gap-2.5 mb-2 group/seller"
         >
-          <Avatar className="h-6 w-6 sm:h-7 sm:w-7 ring-1 ring-border shrink-0">
+          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-1 ring-border shrink-0">
             <AvatarImage src={gig.seller.avatar} alt={gig.seller.displayName} />
             <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
               {initials}
@@ -48,14 +48,14 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
               {gig.seller.displayName}
             </p>
             {gig.seller.department && (
-              <p className="text-[10px] text-muted-foreground truncate">
+              <p className="text-[11px] text-muted-foreground truncate font-medium">
                 {gig.seller.department}
               </p>
             )}
           </div>
           {gig.isVerified && (
             <span title="Verified Student Freelancer" className="text-primary">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+              <CheckCircle2 className="h-4 w-4" />
             </span>
           )}
         </Link>
@@ -69,11 +69,11 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
 
         {/* Tags */}
         {gig.tags && gig.tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {gig.tags.slice(0, 3).map((tag, idx) => (
               <span
                 key={idx}
-                className="text-[9px] sm:text-[10px] rounded-md bg-secondary/80 px-1.5 py-0.5 text-muted-foreground font-medium"
+                className="text-[10px] sm:text-[11px] rounded-md bg-secondary/80 px-2 py-0.5 text-foreground/80 font-medium"
               >
                 #{tag}
               </span>
@@ -82,15 +82,15 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
         )}
 
         {/* Footer info: Delivery time & Price */}
-        <div className="mt-3.5 pt-2.5 border-t border-border/60 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
-            <Clock className="h-3 w-3" />
+        <div className="mt-3.5 pt-3 border-t border-border/60 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold">
+            <Clock className="h-3.5 w-3.5" />
             <span>{gig.deliveryTimeDays} {gig.deliveryTimeDays === 1 ? 'day' : 'days'}</span>
           </div>
 
           <div className="text-right">
-            <span className="text-[9px] text-muted-foreground block leading-none">Starting from</span>
-            <span className="text-xs sm:text-sm font-extrabold text-foreground group-hover:text-indigo-600 transition-colors">
+            <span className="text-[10px] text-muted-foreground block leading-none font-medium">Starting from</span>
+            <span className="text-xs sm:text-sm font-black text-foreground group-hover:text-indigo-600 transition-colors">
               ₹{gig.startingPrice}
             </span>
           </div>

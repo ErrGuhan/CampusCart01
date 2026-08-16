@@ -15,7 +15,7 @@
     --secondary: 210 32% 95%;
     --secondary-foreground: 222 47% 12%;
     --muted: 210 30% 95%;
-    --muted-foreground: 215 16% 45%;
+    --muted-foreground: 215 22% 34%; /* Enhanced contrast for crisp readability */
     --accent: 199 89% 95%;
     --accent-foreground: 199 89% 28%;
     --destructive: 0 84% 60%;
@@ -46,7 +46,7 @@
     --secondary: 222 47% 13%;
     --secondary-foreground: 213 31% 96%;
     --muted: 222 47% 13%;
-    --muted-foreground: 215 20% 65%;
+    --muted-foreground: 215 20% 70%; /* Crisp light-slate for dark mode */
     --accent: 222 47% 14%;
     --accent-foreground: 199 89% 70%;
     --destructive: 0 72% 51%;
@@ -79,7 +79,7 @@
     width: 100% !important;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground leading-normal;
     font-feature-settings: "rlig" 1, "calt" 1;
     overflow-x: hidden !important;
     max-width: 100vw !important;
@@ -98,24 +98,50 @@
     text-wrap: balance;
   }
   .container-px {
-    @apply px-3.5 sm:px-6 lg:px-8;
+    @apply px-4 sm:px-6 lg:px-8;
   }
   .glass-card {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.4);
   }
   .dark .glass-card {
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
-  /* Mobile-optimized touch targets */
+  /* Modern Linear Gradient CTA */
+  .btn-gradient-primary {
+    background: linear-gradient(135deg, hsl(199, 89%, 48%) 0%, hsl(186, 94%, 42%) 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px 0 rgba(8, 145, 178, 0.25);
+    transition: all 0.2s ease;
+  }
+  .btn-gradient-primary:hover {
+    background: linear-gradient(135deg, hsl(199, 89%, 44%) 0%, hsl(186, 94%, 38%) 100%);
+    box-shadow: 0 6px 20px 0 rgba(8, 145, 178, 0.35);
+  }
+  .btn-gradient-primary:active {
+    transform: scale(0.97);
+  }
+
+  /* Soft Background Washes */
+  .bg-radial-wash {
+    background-image: 
+      radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.10) 0%, rgba(6, 182, 212, 0.04) 45%, transparent 75%);
+  }
+
+  .dark .bg-radial-wash {
+    background-image: 
+      radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.16) 0%, rgba(6, 182, 212, 0.06) 45%, transparent 75%);
+  }
+
+  /* Mobile-optimized touch targets (44px min) */
   .touch-target {
-    min-height: 2.75rem;
-    min-width: 2.75rem;
+    min-height: 44px;
+    min-width: 44px;
   }
   @media (min-width: 640px) {
     .touch-target {
@@ -123,7 +149,10 @@
       min-width: auto;
     }
   }
-  /* Safe area inset utilities */
+  /* Safe area inset utilities (90px - 110px for bottom nav + FAB) */
+  .pb-safe-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom, 1rem) + 6.5rem);
+  }
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 1rem);
   }

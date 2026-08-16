@@ -124,13 +124,13 @@ export function CampusCartAIAssistant() {
 
   return (
     <>
-      {/* Floating Action Button (FAB) Launcher */}
+      {/* Floating Action Button (FAB) - Gradient Styled with 48px+ Touch Target */}
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setOpen(!open)}
         aria-label="Open AI shopping assistant"
-        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-primary/20"
+        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-primary to-cyan-500 text-white shadow-xl hover:shadow-cyan-500/30 hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-primary/20"
       >
-        {open ? <X className="h-5 w-5" /> : <Sparkles className="h-5 w-5 animate-pulse" />}
+        {open ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" />}
       </button>
 
       {/* Chat Window */}

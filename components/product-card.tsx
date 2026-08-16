@@ -106,72 +106,72 @@ export function ProductCard({ product, className, priority = false }: ProductCar
           )}
         </div>
 
-        {/* Wishlist Button */}
+        {/* Wishlist Button - 44px touch target on mobile */}
         <button
           type="button"
           aria-label="Add to wishlist"
           onClick={toggleWishlist}
-          className="absolute top-2 right-2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-background/85 text-muted-foreground shadow-xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10"
+          className="absolute top-2.5 right-2.5 flex h-9 w-9 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-background/90 text-foreground/80 shadow-xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10 border border-border/40"
         >
-          <Heart className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', isWishlisted && 'fill-destructive text-destructive')} />
+          <Heart className={cn('h-4 w-4', isWishlisted && 'fill-destructive text-destructive')} />
         </button>
 
         {product.status === 'out_of_stock' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[1px] z-10">
-            <span className="rounded-full bg-foreground/90 px-2.5 py-0.5 text-[10px] font-bold text-background">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/75 backdrop-blur-[2px] z-10">
+            <span className="rounded-full bg-foreground/90 px-3 py-1 text-[11px] font-bold text-background shadow-xs">
               Out of Stock
             </span>
           </div>
         )}
       </div>
 
-      {/* Card Content */}
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3.5">
-        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground">
-          <span className="truncate max-w-[70px] sm:max-w-[100px] font-medium">{product.category}</span>
-          <span>•</span>
-          <span className="truncate max-w-[70px] sm:max-w-[100px]">{product.seller.displayName}</span>
+      {/* Card Content - Increased padding for airy, de-cluttered feel */}
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4.5 gap-1.5">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/75">
+          <span className="truncate max-w-[80px] sm:max-w-[110px] text-primary">{product.category}</span>
+          <span className="text-muted-foreground">•</span>
+          <span className="truncate max-w-[80px] sm:max-w-[110px] text-muted-foreground">{product.seller.displayName}</span>
         </div>
 
-        <h3 className="mt-1 line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors min-h-[2.25rem] sm:min-h-[2.5rem]">
+        <h3 className="line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors min-h-[2.25rem] sm:min-h-[2.5rem]">
           {product.name}
         </h3>
 
         {/* Rating & Trust */}
-        <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px] sm:text-xs">
+        <div className="mt-1 flex items-center justify-between gap-1 text-[11px] sm:text-xs">
           <div className="flex items-center gap-1">
             {product.reviewCount > 0 ? (
               <>
-                <Star className="h-3 w-3 fill-amber-500 text-amber-500 shrink-0" />
-                <span className="font-bold text-foreground">{product.rating.toFixed(1)}</span>
-                <span className="text-muted-foreground">({product.reviewCount})</span>
+                <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                <span className="font-extrabold text-foreground">{product.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground font-medium">({product.reviewCount})</span>
               </>
             ) : (
-              <span className="text-muted-foreground text-[10px]">New listing</span>
+              <span className="text-muted-foreground font-medium text-[11px]">New item</span>
             )}
           </div>
 
           {product.pickupAvailable && (
-            <span className="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded">
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
               📍 Pickup
             </span>
           )}
         </div>
 
-        {/* Price & Quick Add Button */}
-        <div className="mt-auto pt-2 sm:pt-3 flex items-end justify-between gap-1 border-t border-border/50">
+        {/* Price & Quick Add Button - Sized for touch */}
+        <div className="mt-auto pt-2.5 sm:pt-3.5 flex items-end justify-between gap-1.5 border-t border-border/60">
           <div className="flex flex-col min-w-0">
             {hasDiscount ? (
-              <div className="flex items-baseline gap-1 flex-wrap">
-                <span className="text-sm sm:base font-extrabold text-foreground">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-sm sm:text-base font-black text-foreground">
                   ₹{product.discountPrice}
                 </span>
-                <span className="text-[10px] text-muted-foreground line-through">
+                <span className="text-[11px] text-muted-foreground line-through font-medium">
                   ₹{product.price}
                 </span>
               </div>
             ) : (
-              <span className="text-sm sm:text-base font-extrabold text-foreground">
+              <span className="text-sm sm:text-base font-black text-foreground">
                 ₹{product.price}
               </span>
             )}
@@ -181,9 +181,9 @@ export function ProductCard({ product, className, priority = false }: ProductCar
             type="button"
             aria-label="Quick add to cart"
             onClick={handleQuickAdd}
-            className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all hover:bg-primary hover:text-primary-foreground active:scale-90 shadow-2xs"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all hover:bg-gradient-to-r hover:from-primary hover:to-cyan-500 hover:text-white active:scale-90 shadow-2xs border border-primary/20"
           >
-            <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <ShoppingBag className="h-4 w-4" />
           </button>
         </div>
       </div>
