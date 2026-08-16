@@ -47,13 +47,13 @@ export default async function Home() {
               <Link href="/marketplace">Full Market</Link>
             </Button>
           </div>
-          <CategoriesSection categories={categories} />
           <ProductSection
             title="Explore Trending Items"
             subtitle="Top-rated listings available now"
             products={trending}
             viewAllHref="/marketplace"
           />
+          <CategoriesSection categories={categories} />
         </div>
       ),
     },
