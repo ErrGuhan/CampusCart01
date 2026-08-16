@@ -7,24 +7,57 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
+import { useSwipe } from '@/components/layout/swipe-context';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
   const pathname = usePathname();
   const { user, profile } = useAuth();
   const { totalItems } = useCart();
+  const swipe = useSwipe();
 
+  // Strict order: [Market, Freelance, Home, Requests, Studio]
   const items = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/marketplace', label: 'Market', icon: ShoppingBag },
-    { href: '/services', label: 'Freelance', icon: Sparkles },
-    { href: '/requests', label: 'Requests', icon: Tag },
+    {
+      href: '/marketplace',
+      label: 'Market',
+      icon: ShoppingBag,
+      panelIndex: 0,
+    },
+    {
+      href: '/services',
+      label: 'Freelance',
+      icon: Sparkles,
+      panelIndex: 1,
+    },
+    {
+      href: '/',
+      label: 'Home',
+      icon: Home,
+      panelIndex: 2,
+    },
+    {
+      href: '/requests',
+      label: 'Requests',
+      icon: Tag,
+      panelIndex: 3,
+    },
     {
       href: user ? (profile?.is_seller ? '/seller/dashboard' : '/dashboard') : '/login',
-      label: user ? (profile?.is_seller ? 'Studio' : 'Dashboard') : 'Sign In',
+      label: user ? (profile?.is_seller ? 'Studio' : 'Dashboard') : 'Studio',
       icon: profile?.is_seller ? Store : User,
+      panelIndex: 4,
     },
   ];
+
+  const isSwipeActive = swipe?.isSwipeActive && pathname === '/';
+
+  const handleNavClick = (e: React.MouseEvent, panelIndex: number, href: string) => {
+    if (isSwipeActive && window.innerWidth <= 768) {
+      e.preventDefault();
+      swipe?.scrollToPanel(panelIndex, true);
+    }
+  };
 
   return (
     <nav
@@ -33,17 +66,19 @@ export function BottomNav() {
     >
       <div className="grid grid-cols-5 h-16 max-w-md mx-auto items-center px-1.5">
         {items.map((item) => {
-          const isActive =
-            item.href === '/'
-              ? pathname === '/'
-              : pathname === item.href || pathname.startsWith(item.href);
+          const isActive = isSwipeActive
+            ? swipe?.activeIndex === item.panelIndex
+            : item.href === '/'
+            ? pathname === '/'
+            : pathname === item.href || pathname.startsWith(item.href);
 
           const Icon = item.icon;
 
           return (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
+              onClick={(e) => handleNavClick(e, item.panelIndex, item.href)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all relative select-none active:scale-90',
                 isActive
@@ -82,3 +117,4 @@ export function BottomNav() {
     </nav>
   );
 }
+

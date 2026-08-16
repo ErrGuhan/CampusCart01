@@ -1,74 +1,155 @@
 'use client';
 
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { useSwipe } from './swipe-context';
+
+export interface SwipePanelConfig {
+  id: string;
+  label: string;
+  isHome?: boolean;
+  content: React.ReactNode;
+}
 
 interface SwipeLayoutProps {
-  leftPanelContent: React.ReactNode;
-  homeCenterContent: React.ReactNode;
-  rightPanelContent: React.ReactNode;
+  panels: SwipePanelConfig[];
+  initialIndex?: number; // Defaults to 2 (Home in 5-panel layout)
 }
 
 export function SwipeLayout({
-  leftPanelContent,
-  homeCenterContent,
-  rightPanelContent,
+  panels,
+  initialIndex = 2,
 }: SwipeLayoutProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const swipe = useSwipe();
+  const isScrollingProgrammatically = useRef(false);
 
-  // Use useLayoutEffect in browser to position immediately before paint
   const useIsomorphicLayoutEffect =
     typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
+  // 1. Initialize container registration and instant default Home (index 2) scroll
   useIsomorphicLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    if (swipe?.registerContainer) {
+      swipe.registerContainer(container);
+    }
+
     const setInitialCenterPosition = () => {
       if (window.innerWidth <= 768) {
-        // Center panel is at index 1 -> 1 * clientWidth (100vw)
         const panelWidth = container.clientWidth || window.innerWidth;
         container.scrollTo({
-          left: panelWidth,
+          left: initialIndex * panelWidth,
           behavior: 'instant' as ScrollBehavior,
         });
+        swipe?.setActiveIndex(initialIndex);
       }
     };
 
     setInitialCenterPosition();
 
-    // Re-adjust if device orientation or viewport width changes
-    window.addEventListener('resize', setInitialCenterPosition);
-    return () => window.removeEventListener('resize', setInitialCenterPosition);
-  }, []);
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        const panelWidth = container.clientWidth || window.innerWidth;
+        const currentIdx = swipe?.activeIndex ?? initialIndex;
+        container.scrollTo({
+          left: currentIdx * panelWidth,
+          behavior: 'instant' as ScrollBehavior,
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (swipe?.registerContainer) {
+        swipe.registerContainer(null);
+      }
+    };
+  }, [initialIndex]);
+
+  // 2. Throttled scroll listener with requestAnimationFrame calculating Math.round(scrollLeft / clientWidth)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (container && window.innerWidth <= 768) {
+            const panelWidth = container.clientWidth || window.innerWidth;
+            if (panelWidth > 0) {
+              const currentPos = container.scrollLeft;
+              const computedIndex = Math.round(currentPos / panelWidth);
+              if (
+                computedIndex >= 0 &&
+                computedIndex < panels.length &&
+                computedIndex !== swipe?.activeIndex
+              ) {
+                swipe?.setActiveIndex(computedIndex);
+              }
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [panels.length, swipe]);
+
+  // 3. IntersectionObserver for exact snap synchronization
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            const indexAttr = entry.target.getAttribute('data-panel-index');
+            if (indexAttr !== null) {
+              const index = parseInt(indexAttr, 10);
+              if (!isNaN(index) && index !== swipe?.activeIndex) {
+                swipe?.setActiveIndex(index);
+              }
+            }
+          }
+        });
+      },
+      {
+        root: container,
+        threshold: 0.6,
+      }
+    );
+
+    const panelElements = container.querySelectorAll('.swipe-panel');
+    panelElements.forEach((panel) => observer.observe(panel));
+
+    return () => observer.disconnect();
+  }, [panels.length, swipe]);
 
   return (
     <div
       ref={containerRef}
       className="swipe-container swipe-scrollbar-hidden"
     >
-      {/* LEFT PANEL */}
-      <section
-        aria-label="Discovery Feed"
-        className="swipe-panel swipe-panel-side swipe-scrollbar-hidden"
-      >
-        {leftPanelContent}
-      </section>
-
-      {/* CENTER PANEL (Home - Default Landing Screen) */}
-      <section
-        aria-label="Home Feed"
-        className="swipe-panel swipe-scrollbar-hidden"
-      >
-        {homeCenterContent}
-      </section>
-
-      {/* RIGHT PANEL */}
-      <section
-        aria-label="Services and Requests Feed"
-        className="swipe-panel swipe-panel-side swipe-scrollbar-hidden"
-      >
-        {rightPanelContent}
-      </section>
+      {panels.map((panel, idx) => (
+        <section
+          key={panel.id}
+          data-panel-index={idx}
+          aria-label={panel.label}
+          className={`swipe-panel swipe-scrollbar-hidden ${
+            panel.isHome ? 'swipe-panel-home' : 'swipe-panel-side'
+          }`}
+        >
+          {panel.content}
+        </section>
+      ))}
     </div>
   );
 }

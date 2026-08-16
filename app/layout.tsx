@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter, Sora } from 'next/font/google';
 import { AuthProvider } from '@/components/auth-provider';
 import { CartProvider } from '@/components/cart-provider';
+import { SwipeProvider } from '@/components/layout/swipe-context';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { CampusCartAIAssistant } from '@/components/ai-assistant';
 import { Toaster } from '@/components/ui/toaster';
@@ -62,10 +63,12 @@ export default function RootLayout({
       <body className="font-sans antialiased pb-16 md:pb-0 min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden">
         <AuthProvider>
           <CartProvider>
-            {children}
-            <BottomNav />
-            <CampusCartAIAssistant />
-            <Toaster />
+            <SwipeProvider>
+              {children}
+              <BottomNav />
+              <CampusCartAIAssistant />
+              <Toaster />
+            </SwipeProvider>
           </CartProvider>
         </AuthProvider>
       </body>

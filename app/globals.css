@@ -192,6 +192,8 @@
     display: flex;
     flex-direction: row;
     width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
     height: calc(100dvh - 4rem - 4rem);
     overflow-x: auto;
     overflow-y: hidden;
@@ -203,9 +205,11 @@
 
   .swipe-panel {
     flex: 0 0 100vw;
+    flex-shrink: 0;
     width: 100vw;
     min-width: 100vw;
     max-width: 100vw;
+    box-sizing: border-box;
     height: 100%;
     scroll-snap-align: center;
     scroll-snap-stop: always;
