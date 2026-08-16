@@ -183,3 +183,66 @@
   scrollbar-width: none;
 }
 
+/* ==========================================================================
+   Mobile-Only Instagram-Style Horizontal Swipe Mechanics
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .swipe-container {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: calc(100dvh - 4rem - 4rem);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+  }
+
+  .swipe-panel {
+    flex: 0 0 100vw;
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    height: 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (min-width: 769px) {
+  .swipe-container {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .swipe-panel {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .swipe-panel-side {
+    display: none;
+  }
+}
+
+.swipe-scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.swipe-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
