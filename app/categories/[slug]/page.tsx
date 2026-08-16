@@ -4,6 +4,7 @@ import { ChevronRight, Package, ArrowRight, Tag } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { getCategories, getProductsByCategory, DEFAULT_CATEGORIES } from '@/lib/firebase-queries';
 
@@ -67,21 +68,15 @@ export default async function CategoryDetailPage({ params }: Props) {
         </div>
 
         {categoryProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border py-16 px-4 text-center bg-card/40 my-6">
-            <Package className="h-10 w-10 text-muted-foreground/40 mb-3" />
-            <h3 className="text-base font-bold text-foreground">No products in this category yet</h3>
-            <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-              Be the first student to list notes, equipment or supplies in this category.
-            </p>
-            <div className="mt-5 flex gap-2">
-              <Button asChild size="sm" className="rounded-xl text-xs font-bold">
-                <Link href="/categories">Browse all categories</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline" className="rounded-xl text-xs">
-                <Link href="/requests">Post a Request</Link>
-              </Button>
-            </div>
-          </div>
+          <EmptyState
+            icon={Package}
+            title={`No products in ${category.name} yet`}
+            description="Be the first student to list textbooks, lab equipment, or project components in this category!"
+            actionLabel="+ List Item in this Category"
+            actionHref="/seller/dashboard/products"
+            secondaryActionLabel="Browse All Categories"
+            secondaryActionHref="/categories"
+          />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {categoryProducts.map((product) => (

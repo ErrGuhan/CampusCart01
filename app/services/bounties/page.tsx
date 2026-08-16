@@ -10,6 +10,7 @@ import {
 import { collection, addDoc } from 'firebase/firestore';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -227,26 +228,26 @@ export default function CampusBountiesPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20 text-center bg-card/40">
-              <Zap className="h-12 w-12 text-primary/40 mb-3" />
-              <h3 className="text-lg font-bold">No open bounties at the moment</h3>
-              <p className="mt-1 text-sm text-muted-foreground max-w-md">
-                Need something done for your club event or semester project? Post a bounty and let skilled classmates help you out.
-              </p>
-              <Button
-                className="mt-5 rounded-xl"
-                onClick={() => {
-                  if (!user) {
-                    setAuthPromptOpen(true);
-                    return;
-                  }
-                  setPostModalOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Post the First Bounty
-              </Button>
-            </div>
+            <EmptyState
+              icon={Zap}
+              title={search ? 'No bounties match your search' : 'No open campus bounties yet'}
+              description={
+                search
+                  ? 'Try searching with different keywords or clear your search query.'
+                  : 'Need help with a coding script, symposium poster, CAD model, or lab setup? Post a bounty!'
+              }
+              actionLabel="+ Post a Campus Bounty"
+              onAction={() => {
+                if (!user) {
+                  setAuthPromptOpen(true);
+                  return;
+                }
+                setPostModalOpen(true);
+              }}
+              secondaryActionLabel={search ? 'Clear Search' : 'Explore All Freelancers'}
+              onSecondaryAction={search ? () => setSearch('') : undefined}
+              secondaryActionHref={!search ? '/services' : undefined}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {filtered.map((bounty) => (

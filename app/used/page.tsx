@@ -9,6 +9,7 @@ import {
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -184,16 +185,28 @@ export default function UsedMarketplacePage() {
             ))}
           </div>
         ) : usedProducts.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-14 text-center bg-card/40 my-6">
-            <Recycle className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="font-display text-base font-bold">No used items match this filter</h3>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              Be the first student to pass down a textbook, drafter, or calculator to your juniors!
-            </p>
-            <Button asChild size="sm" className="mt-5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white">
-              <Link href="/seller/dashboard/products">List a Used Item</Link>
-            </Button>
-          </div>
+          <EmptyState
+            icon={Recycle}
+            title={search || selectedCondition !== 'all' || selectedCategory !== 'all' ? 'No pre-owned items match this filter' : 'No pre-owned items listed yet'}
+            description={
+              search || selectedCondition !== 'all' || selectedCategory !== 'all'
+                ? 'Try adjusting your search query, condition, or category filters.'
+                : 'Be the first student to pass down a textbook, drafter, lab coat, or calculator to juniors!'
+            }
+            actionLabel="+ Sell a Used Item"
+            actionHref="/seller/dashboard/products"
+            secondaryActionLabel={search || selectedCondition !== 'all' || selectedCategory !== 'all' ? 'Reset Filters' : 'Post What You Need'}
+            onSecondaryAction={
+              search || selectedCondition !== 'all' || selectedCategory !== 'all'
+                ? () => {
+                    setSearch('');
+                    setSelectedCondition('all');
+                    setSelectedCategory('all');
+                  }
+                : undefined
+            }
+            secondaryActionHref={!search && selectedCondition === 'all' && selectedCategory === 'all' ? '/requests' : undefined}
+          />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {usedProducts.map((product) => (

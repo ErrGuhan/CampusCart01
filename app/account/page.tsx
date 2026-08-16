@@ -296,7 +296,7 @@ export default function AccountDashboardPage() {
                   ))}
                 </div>
                 <Button className="mt-4" asChild>
-                  <Link href="/register">
+                  <Link href="/seller/dashboard/products">
                     Start Selling
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
