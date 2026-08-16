@@ -83,8 +83,14 @@ export default function GigDetailPage() {
     );
   }
 
-  const initials = gig.seller.displayName
-    ? gig.seller.displayName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+  const sellerDisplayName = gig.seller?.displayName || 'Campus Creator';
+  const sellerUsername = gig.seller?.username || 'creator';
+  const sellerAvatar = gig.seller?.avatar || 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg';
+  const sellerDepartment = gig.seller?.department || 'Student Creator';
+  const sellerYear = gig.seller?.year || '2026';
+
+  const initials = sellerDisplayName
+    ? sellerDisplayName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
     : 'CC';
 
   async function handleHire() {
@@ -113,7 +119,7 @@ export default function GigDetailPage() {
       gigId: gig.id,
       gigTitle: gig.title,
       sellerId: gig.sellerId,
-      sellerName: gig.seller.displayName,
+      sellerName: sellerDisplayName,
       buyerId: user.uid,
       buyerName: profile?.display_name || user.email?.split('@')[0],
       buyerEmail: user.email,
@@ -162,7 +168,7 @@ export default function GigDetailPage() {
 
     toast({
       title: 'Order submitted to freelancer! 🎉',
-      description: `${gig.seller.displayName} will review your request and coordinate with you.`,
+      description: `${sellerDisplayName} will review your request and coordinate with you.`,
     });
 
     setOrderModalOpen(false);
@@ -197,7 +203,7 @@ export default function GigDetailPage() {
               {/* Freelancer Header */}
               <div className="flex items-center gap-3 p-4 rounded-2xl border border-border bg-card">
                 <Avatar className="h-12 w-12 border border-border">
-                  <AvatarImage src={gig.seller.avatar} alt={gig.seller.displayName} />
+                  <AvatarImage src={sellerAvatar} alt={sellerDisplayName} />
                   <AvatarFallback className="bg-primary/10 text-primary font-bold">
                     {initials}
                   </AvatarFallback>
@@ -205,19 +211,19 @@ export default function GigDetailPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <Link
-                      href={`/seller/${gig.seller.username}`}
+                      href={`/seller/${sellerUsername}`}
                       className="font-semibold text-sm hover:text-primary transition-colors"
                     >
-                      {gig.seller.displayName}
+                      {sellerDisplayName}
                     </Link>
                     {gig.isVerified && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {gig.seller.department || 'Student Creator'} • Year {gig.seller.year || '2026'}
+                    {sellerDepartment} • Year {sellerYear}
                   </p>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/seller/${gig.seller.username}`}>View Portfolio</Link>
+                  <Link href={`/seller/${sellerUsername}`}>View Portfolio</Link>
                 </Button>
               </div>
 

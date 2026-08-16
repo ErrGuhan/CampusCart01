@@ -68,14 +68,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = useCallback((product: CartItemData, quantity: number = 1) => {
     setItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
+      const safeMax = product.maxQuantity && product.maxQuantity > 0 ? product.maxQuantity : 99;
       if (existing) {
+        const currentMax = existing.maxQuantity && existing.maxQuantity > 0 ? existing.maxQuantity : 99;
         return prev.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: Math.min(item.maxQuantity, item.quantity + quantity) }
+            ? { ...item, quantity: Math.min(currentMax, (item.quantity || 0) + quantity) }
             : item
         );
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, maxQuantity: safeMax, quantity: Math.max(1, quantity) }];
     });
   }, []);
 
@@ -85,11 +87,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, Math.min(item.maxQuantity, quantity)) }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id === id) {
+          const maxQ = item.maxQuantity && item.maxQuantity > 0 ? item.maxQuantity : 99;
+          return { ...item, quantity: Math.max(1, Math.min(maxQ, Number(quantity) || 1)) };
+        }
+        return item;
+      })
     );
   }, []);
 

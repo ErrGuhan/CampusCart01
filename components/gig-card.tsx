@@ -8,8 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import type { ServiceGig } from '@/lib/types';
 
 export function GigCard({ gig }: { gig: ServiceGig }) {
-  const initials = gig.seller.displayName
-    ? gig.seller.displayName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+  const sellerDisplayName = gig.seller?.displayName || 'Campus Creator';
+  const sellerUsername = gig.seller?.username || 'creator';
+  const sellerAvatar = gig.seller?.avatar || 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg';
+  const sellerDepartment = gig.seller?.department || '';
+
+  const initials = sellerDisplayName
+    ? sellerDisplayName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
     : 'CC';
 
   return (
@@ -34,22 +39,22 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
       <div className="flex flex-1 flex-col p-4 sm:p-5 gap-1.5">
         {/* Freelancer Header */}
         <Link
-          href={`/seller/${gig.seller.username}`}
+          href={`/seller/${sellerUsername}`}
           className="flex items-center gap-2.5 mb-2 group/seller"
         >
           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-1 ring-border shrink-0">
-            <AvatarImage src={gig.seller.avatar} alt={gig.seller.displayName} />
+            <AvatarImage src={sellerAvatar} alt={sellerDisplayName} />
             <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold group-hover/seller:text-primary transition-colors truncate text-foreground">
-              {gig.seller.displayName}
+              {sellerDisplayName}
             </p>
-            {gig.seller.department && (
+            {sellerDepartment && (
               <p className="text-[11px] text-muted-foreground truncate font-medium">
-                {gig.seller.department}
+                {sellerDepartment}
               </p>
             )}
           </div>

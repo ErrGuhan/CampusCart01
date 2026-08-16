@@ -26,10 +26,14 @@ export default async function SellerProfilePage({ params }: Props) {
     getGigsBySeller(username),
   ]);
 
-  const joinDate = new Date(seller.joinedAt).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
+  const joinDate = seller.joinedAt
+    ? !isNaN(new Date(seller.joinedAt).getTime())
+      ? new Date(seller.joinedAt).toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        })
+      : 'Recently'
+    : 'Recently';
 
   return (
     <>
@@ -49,7 +53,7 @@ export default async function SellerProfilePage({ params }: Props) {
             <Avatar className="h-24 w-24 ring-2 ring-border shrink-0">
               <AvatarImage src={seller.avatar} alt={seller.displayName} />
               <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
-                {seller.displayName.charAt(0)}
+                {seller.displayName?.charAt(0) || 'C'}
               </AvatarFallback>
             </Avatar>
 

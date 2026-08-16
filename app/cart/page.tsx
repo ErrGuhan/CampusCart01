@@ -89,7 +89,7 @@ export default function CartPage() {
                     className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-secondary/50"
                   >
                     <Image
-                      src={item.image}
+                      src={item.image || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
                       alt={item.name}
                       fill
                       sizes="96px"

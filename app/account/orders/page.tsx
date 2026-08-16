@@ -120,13 +120,15 @@ export default function OrdersPage() {
                         </Badge>
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString('en-US', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {order.createdAt && !isNaN(new Date(order.createdAt).getTime())
+                          ? new Date(order.createdAt).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'Recent order'}
                       </p>
                       <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">

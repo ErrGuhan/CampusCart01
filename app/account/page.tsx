@@ -208,7 +208,9 @@ export default function AccountDashboardPage() {
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {order.createdAt && !isNaN(new Date(order.createdAt).getTime())
+                            ? new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : 'Recent'}
                           {' · '}
                           {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
                         </p>

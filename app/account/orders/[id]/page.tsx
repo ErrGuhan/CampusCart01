@@ -177,7 +177,13 @@ export default function OrderDetailPage() {
                         href={`/products/${item.slug}`}
                         className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary/50"
                       >
-                        <Image src={item.image} alt={item.name} fill sizes="64px" className="object-cover" />
+                        <Image
+                          src={item.image || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
+                          alt={item.name}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
                       </Link>
                       <div className="flex flex-1 flex-col">
                         <Link href={`/products/${item.slug}`} className="text-sm font-medium hover:text-primary transition-colors line-clamp-1">

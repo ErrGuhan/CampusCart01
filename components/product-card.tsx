@@ -57,7 +57,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      image: product.images[0],
+      image: product.images?.[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg',
       sellerId: product.seller?.id,
       sellerName: product.seller?.displayName || 'Campus Creator',
       sellerUsername: product.seller?.username || 'seller',
@@ -130,7 +130,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/75">
           <span className="truncate max-w-[80px] sm:max-w-[110px] text-primary">{product.category}</span>
           <span className="text-muted-foreground">•</span>
-          <span className="truncate max-w-[80px] sm:max-w-[110px] text-muted-foreground">{product.seller.displayName}</span>
+          <span className="truncate max-w-[80px] sm:max-w-[110px] text-muted-foreground">{product.seller?.displayName || 'Campus Creator'}</span>
         </div>
 
         <h3 className="line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors min-h-[2.25rem] sm:min-h-[2.5rem]">
