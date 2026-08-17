@@ -49,9 +49,9 @@ export function HeroSection() {
         <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3">
           <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.12]">
             {user ? (
-              <span>What are you looking for today?</span>
+              <span>What are you <span className="text-gradient-primary">looking for</span> today?</span>
             ) : (
-              <span>Buy, Sell & Trade on Campus</span>
+              <span>Buy, Sell & Trade on <span className="text-gradient-primary">Campus</span></span>
             )}
           </h1>
           <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium max-w-xl mx-auto leading-relaxed">

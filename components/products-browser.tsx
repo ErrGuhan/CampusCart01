@@ -277,7 +277,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 placeholder="Search products by title, category, or creator..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 pr-8 h-11 rounded-2xl bg-card text-xs border-border/80 shadow-2xs"
+                className="pl-10 pr-8 h-11 rounded-2xl bg-white/80 dark:bg-card/80 backdrop-blur-xl text-xs border-white/80 dark:border-border/80 shadow-xs placeholder:text-muted-foreground/70 font-medium"
               />
               {search && (
                 <button
@@ -296,12 +296,12 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 <Button
                   variant="outline"
                   size="sm"
-                  className="lg:hidden h-11 px-3.5 rounded-2xl gap-1.5 text-xs font-bold shrink-0 min-h-[44px]"
+                  className="lg:hidden h-11 px-3.5 rounded-2xl gap-1.5 text-xs font-bold shrink-0 min-h-[44px] bg-white/80 dark:bg-card/80 backdrop-blur-xl border-white/80 dark:border-border/80"
                 >
-                  <SlidersHorizontal className="h-4 w-4" />
+                  <SlidersHorizontal className="h-4 w-4 text-primary" />
                   <span>Filters</span>
                   {activeFilterCount > 0 && (
-                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px] h-4 ml-0.5">
+                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px] h-4 ml-0.5 bg-primary/10 text-primary font-bold">
                       {activeFilterCount}
                     </Badge>
                   )}
@@ -327,7 +327,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
 
             {/* Sort Dropdown */}
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[140px] sm:w-[170px] h-11 rounded-2xl text-xs font-semibold shrink-0">
+              <SelectTrigger className="w-[140px] sm:w-[170px] h-11 rounded-2xl text-xs font-bold shrink-0 bg-white/80 dark:bg-card/80 backdrop-blur-xl border-white/80 dark:border-border/80 shadow-xs">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl">
@@ -346,10 +346,10 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
               type="button"
               onClick={() => setSelectedCategories([])}
               className={cn(
-                'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold shrink-0 transition-all select-none shadow-2xs border',
+                'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-extrabold shrink-0 transition-all select-none shadow-2xs border active:scale-95',
                 selectedCategories.length === 0
-                  ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
-                  : 'bg-card border-border/80 text-foreground/80 hover:text-foreground'
+                  ? 'bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 text-white border-transparent shadow-md scale-102'
+                  : 'bg-white/80 dark:bg-card/80 backdrop-blur-md border-white/80 dark:border-border/80 text-foreground/80 hover:bg-white/95 dark:hover:bg-card/95 hover:text-foreground'
               )}
             >
               All Items
@@ -362,10 +362,10 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                   type="button"
                   onClick={() => toggleCategory(cat.slug)}
                   className={cn(
-                    'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold shrink-0 transition-all select-none flex items-center gap-1.5 shadow-2xs border',
+                    'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-extrabold shrink-0 transition-all select-none flex items-center gap-1.5 shadow-2xs border active:scale-95',
                     isSelected
-                      ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
-                      : 'bg-card border-border/80 text-foreground/80 hover:text-foreground'
+                      ? 'bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 text-white border-transparent shadow-md scale-102'
+                      : 'bg-white/80 dark:bg-card/80 backdrop-blur-md border-white/80 dark:border-border/80 text-foreground/80 hover:bg-white/95 dark:hover:bg-card/95 hover:text-foreground'
                   )}
                 >
                   <span>{cat.name}</span>
