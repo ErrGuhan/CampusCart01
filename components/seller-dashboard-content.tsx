@@ -126,33 +126,61 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
     );
   }, [sellerOrders]);
 
-  // Real Calculated Metrics
-  const totalRevenue = useMemo(() => {
-    return sellerOrders.reduce((sum, o) => {
-      if (o.status === 'cancelled' || o.status === 'refunded') return sum;
+  // Delivered handovers (Completed with PIN verification)
+  const deliveredOrders = useMemo(() => {
+    return sellerOrders.filter((o) => o.status === 'delivered');
+  }, [sellerOrders]);
+
+  // Real Calculated Delivered Profit (Available Balance)
+  const deliveredProfit = useMemo(() => {
+    return deliveredOrders.reduce((sum, o) => {
       const sellerItems = o.items.filter((i) => {
-        const itemUser = i.sellerUsername?.toLowerCase() || '';
+        const itemUser = (i.sellerUsername || '').toLowerCase();
+        const itemSellerId = i.sellerId || '';
         return (
-          itemUser === username ||
+          (user?.uid && itemSellerId === user.uid) ||
+          (username && itemUser === username) ||
           (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
         );
       });
       return sum + sellerItems.reduce((s, i) => s + (i.discountPrice ?? i.price) * i.quantity, 0);
     }, 0);
-  }, [sellerOrders, username, isGuhanOrAdmin]);
+  }, [deliveredOrders, user?.uid, username, isGuhanOrAdmin]);
 
-  const totalUnits = useMemo(() => {
-    return sellerOrders.reduce((sum, o) => {
+  // Pending Escrow Earnings (Awaiting PIN Handover)
+  const pendingProfit = useMemo(() => {
+    return pendingOrders.reduce((sum, o) => {
       const sellerItems = o.items.filter((i) => {
-        const itemUser = i.sellerUsername?.toLowerCase() || '';
+        const itemUser = (i.sellerUsername || '').toLowerCase();
+        const itemSellerId = i.sellerId || '';
         return (
-          itemUser === username ||
+          (user?.uid && itemSellerId === user.uid) ||
+          (username && itemUser === username) ||
           (isGuhanOrAdmin && (itemUser === 'guhan' || itemUser === 'guhan24td0781'))
         );
       });
-      return sum + sellerItems.reduce((s, i) => s + i.quantity, 0);
+      return sum + sellerItems.reduce((s, i) => s + (i.discountPrice ?? i.price) * i.quantity, 0);
     }, 0);
-  }, [sellerOrders, username, isGuhanOrAdmin]);
+  }, [pendingOrders, user?.uid, username, isGuhanOrAdmin]);
+
+  // Real Count of Unique Students Helped / Contributed
+  const studentsHelpedCount = useMemo(() => {
+    const buyerSet = new Set<string>();
+    sellerOrders.forEach((o) => {
+      if (o.status !== 'cancelled' && o.status !== 'refunded') {
+        const buyerIdentifier = o.buyerId || o.buyerEmail || o.buyerName || o.id;
+        buyerSet.add(buyerIdentifier.toLowerCase());
+      }
+    });
+    return buyerSet.size;
+  }, [sellerOrders]);
+
+  // Real Count of Active Listings (Products + Gigs)
+  const activeListingsCount = useMemo(() => {
+    const activeProds = sellerProducts.filter((p) => p.status === 'active').length;
+    const activeG = sellerGigs.filter((g) => g.status === 'active').length;
+    return activeProds + activeG;
+  }, [sellerProducts, sellerGigs]);
 
   const avgRating = useMemo(() => {
     const allRatings = [
@@ -386,11 +414,16 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
                     </span>
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                       <CheckCircle2 className="h-3 w-3" />
-                      {totalUnits} orders fulfilled
+                      {deliveredOrders.length} {deliveredOrders.length === 1 ? 'order fulfilled' : 'orders fulfilled'}
                     </span>
                   </div>
-                  <div className="text-3xl sm:text-4xl font-black font-display text-foreground tracking-tight mt-1.5 flex items-baseline gap-1">
-                    <span>₹{totalRevenue.toLocaleString()}</span>
+                  <div className="text-3xl sm:text-4xl font-black font-display text-foreground tracking-tight mt-1.5 flex items-baseline gap-2 flex-wrap">
+                    <span>₹{deliveredProfit.toLocaleString()}</span>
+                    {pendingProfit > 0 && (
+                      <span className="text-xs sm:text-sm font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                        + ₹{pendingProfit} pending handover
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -399,15 +432,15 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
                 </div>
               </div>
 
-              {/* 3 Clean Stats Pills */}
+              {/* 3 Clean Real-Time Dynamic Stats Pills */}
               <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                 <div className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center">
                   <span className="text-[11px] text-muted-foreground font-semibold block leading-tight">Students Helped</span>
-                  <span className="font-extrabold text-base sm:text-lg text-foreground mt-0.5 block">42</span>
+                  <span className="font-extrabold text-base sm:text-lg text-foreground mt-0.5 block">{studentsHelpedCount}</span>
                 </div>
                 <div className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center">
                   <span className="text-[11px] text-muted-foreground font-semibold block leading-tight">Active Listings</span>
-                  <span className="font-extrabold text-base sm:text-lg text-foreground mt-0.5 block">{sellerProducts.length + sellerGigs.length}</span>
+                  <span className="font-extrabold text-base sm:text-lg text-foreground mt-0.5 block">{activeListingsCount}</span>
                 </div>
                 <div className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center">
                   <span className="text-[11px] text-muted-foreground font-semibold block leading-tight">Creator Rating</span>
