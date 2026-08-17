@@ -71,8 +71,17 @@ function MessagesContent() {
   const [sending, setSending] = useState(false);
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Smoothly scroll only the chat message list without jumping the window
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTo({
+        top: chatScrollContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+    }
+  }, []);
 
   // Load and merge real conversations for the authenticated user
   const loadUserConversations = useCallback(async () => {
@@ -142,6 +151,7 @@ function MessagesContent() {
 
     getMessages(activeConvId).then((msgs) => {
       setMessages((prev) => mergeMessages(prev, msgs));
+      setTimeout(() => scrollToBottom(false), 50);
     });
 
     let unsubscribe = () => {};
@@ -169,6 +179,7 @@ function MessagesContent() {
               });
             });
             setMessages((prev) => mergeMessages(prev, incoming));
+            setTimeout(() => scrollToBottom(true), 50);
           }
         },
         (err) => {
@@ -182,6 +193,7 @@ function MessagesContent() {
     const handleSync = () => {
       getMessages(activeConvId).then((msgs) => {
         setMessages((prev) => mergeMessages(prev, msgs));
+        setTimeout(() => scrollToBottom(false), 50);
       });
       loadUserConversations();
     };
@@ -197,11 +209,11 @@ function MessagesContent() {
     }
 
     return () => unsubscribe();
-  }, [activeConvId, loadUserConversations]);
+  }, [activeConvId, loadUserConversations, scrollToBottom]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    scrollToBottom(true);
+  }, [messages.length, scrollToBottom]);
 
   async function handleSend(e?: React.FormEvent, customText?: string) {
     if (e) e.preventDefault();
@@ -232,6 +244,7 @@ function MessagesContent() {
     setMessages((prev) => mergeMessages(prev, [tempMsg]));
     setInputMsg('');
     setSending(true);
+    setTimeout(() => scrollToBottom(true), 30);
 
     setConversations((prev) => {
       const map = new Map<string, Conversation>();
@@ -274,7 +287,7 @@ function MessagesContent() {
       toast({ title: 'Message delivery notice', description: err.message, variant: 'destructive' });
     } finally {
       setSending(false);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+      setTimeout(() => scrollToBottom(true), 50);
     }
   }
 
@@ -388,11 +401,12 @@ function MessagesContent() {
   return (
     <>
       <Navbar />
-      {/* Ambient Pastel Gradient Wrapper matching reference UI */}
-      <main className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-[#F7F2FF] via-[#FAF7FF] to-[#FFF5ED] dark:from-[#150F22] dark:via-[#110C1B] dark:to-[#170E1B] py-3 sm:py-6 pb-24 md:pb-8">
+      {/* Ambient Pastel Gradient Wrapper with controlled bottom clearance */}
+      <main className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-[#F7F2FF] via-[#FAF7FF] to-[#FFF5ED] dark:from-[#150F22] dark:via-[#110C1B] dark:to-[#170E1B] py-2 sm:py-6 pb-24 md:pb-8">
         <div className="container-px mx-auto max-w-5xl">
           
-          <div className="rounded-[32px] border border-white/80 dark:border-border/60 bg-white/70 dark:bg-card/70 backdrop-blur-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-120px)] min-h-[580px] max-h-[820px]">
+          {/* Main Card Container with rock-solid fixed height to avoid layout jump */}
+          <div className="rounded-[28px] sm:rounded-[32px] border border-white/80 dark:border-border/60 bg-white/75 dark:bg-card/75 backdrop-blur-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-135px)] md:h-[calc(100dvh-150px)] min-h-[500px] max-h-[820px]">
             
             {/* =========================================================================
                 LEFT PANEL: Chats List View (Reference Screen 2)
@@ -403,7 +417,7 @@ function MessagesContent() {
               }`}
             >
               {/* Chats Header: Title + Search/Bell Icons */}
-              <div className="p-4 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-4">
+              <div className="p-3.5 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                     Chats
@@ -412,28 +426,28 @@ function MessagesContent() {
                     <button
                       type="button"
                       aria-label="Search"
-                      className="h-10 w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
-                      <Search className="h-4.5 w-4.5" />
+                      <Search className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </button>
                     <button
                       type="button"
                       aria-label="Notifications"
-                      className="h-10 w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
-                      <Bell className="h-4.5 w-4.5" />
+                      <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </button>
                   </div>
                 </div>
 
                 {/* Translucent Frosted Search Pill */}
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
                     placeholder="Search Chats"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-11 h-11 text-xs sm:text-sm rounded-2xl bg-white/70 dark:bg-card/70 border border-white/70 dark:border-border/70 shadow-2xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-purple-500/20"
+                    className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-white/70 dark:bg-card/70 border border-white/70 dark:border-border/70 shadow-2xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-purple-500/20"
                   />
                   {search && (
                     <button
@@ -448,7 +462,7 @@ function MessagesContent() {
               </div>
 
               {/* Chat Thread Cards List */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2.5 scrollbar-thin">
+              <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-2 sm:space-y-2.5 scrollbar-thin">
                 {filteredConversations.length === 0 ? (
                   <div className="p-8 text-center space-y-3 text-muted-foreground my-auto">
                     <div className="h-14 w-14 rounded-3xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto">
@@ -474,14 +488,14 @@ function MessagesContent() {
                         key={c.id}
                         onClick={() => handleSelectConversation(c.id)}
                         className={cn(
-                          'w-full p-3.5 sm:p-4 rounded-3xl flex items-center gap-3.5 text-left transition-all border',
+                          'w-full p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center gap-3 sm:gap-3.5 text-left transition-all border',
                           isSelected
                             ? 'bg-white dark:bg-card border-purple-500/30 shadow-md ring-2 ring-purple-500/10'
                             : 'bg-white/70 dark:bg-card/70 border-white/60 dark:border-border/50 hover:bg-white/90 dark:hover:bg-card/90 shadow-2xs hover:scale-[1.01]'
                         )}
                       >
                         {/* Circular Avatar */}
-                        <Avatar className="h-12 w-12 sm:h-13 sm:w-13 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
+                        <Avatar className="h-11 w-11 sm:h-13 sm:w-13 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
                           <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
                           <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black">
                             {otherName.charAt(0)}
@@ -491,7 +505,7 @@ function MessagesContent() {
                         {/* Name & Subtitle Preview */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
-                            <h4 className="text-sm font-extrabold text-foreground truncate">{otherName}</h4>
+                            <h4 className="text-xs sm:text-sm font-extrabold text-foreground truncate">{otherName}</h4>
                             <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
                               {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -523,23 +537,23 @@ function MessagesContent() {
               {activeConv && otherParticipant ? (
                 <>
                   {/* Top Bar: Back Button, Title, and Settings Gear */}
-                  <div className="p-3.5 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-3 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       {/* Back Button */}
                       <button
                         type="button"
                         onClick={() => setMobileView('list')}
                         aria-label="Back to conversations list"
-                        className="h-10 w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                       >
-                        <ArrowLeft className="h-5 w-5 stroke-[2.2]" />
+                        <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[2.2]" />
                       </button>
 
                       <div className="min-w-0">
-                        <h2 className="font-display text-base sm:text-lg font-black text-foreground truncate">
+                        <h2 className="font-display text-sm sm:text-base md:text-lg font-black text-foreground truncate">
                           {otherParticipant.name}
                         </h2>
-                        <p className="text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
+                        <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           <span>Campus Peer • Verified</span>
                         </p>
@@ -550,18 +564,21 @@ function MessagesContent() {
                     <button
                       type="button"
                       aria-label="Chat Settings"
-                      className="h-10 w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                     >
-                      <Settings className="h-4.5 w-4.5" />
+                      <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </button>
                   </div>
 
-                  {/* Messages Scroll Area */}
-                  <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-thin">
+                  {/* Messages Scroll Area with independent non-jumping overflow */}
+                  <div
+                    ref={chatScrollContainerRef}
+                    className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 scrollbar-thin overscroll-contain"
+                  >
                     
                     {/* Centered Date Pill Separator */}
-                    <div className="flex justify-center my-2">
-                      <div className="rounded-full px-4 py-1 bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/60 text-xs font-bold text-muted-foreground shadow-2xs">
+                    <div className="flex justify-center my-1">
+                      <div className="rounded-full px-4 py-0.5 sm:py-1 bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/60 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-2xs">
                         Today
                       </div>
                     </div>
@@ -581,43 +598,44 @@ function MessagesContent() {
                           <div
                             key={m.id}
                             className={cn(
-                              'flex items-end gap-2.5 group',
+                              'flex items-end gap-2 sm:gap-2.5 w-full',
                               isMe ? 'justify-end' : 'justify-start'
                             )}
                           >
                             {/* Incoming Avatar on Left */}
                             {!isMe && (
-                              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                              <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
                                 <AvatarImage src={otherParticipant.avatar} alt={otherParticipant.name} />
-                                <AvatarFallback className="text-xs font-bold bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+                                <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
                                   {otherParticipant.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
                             )}
 
-                            {/* Message Bubble Block */}
-                            <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+                            {/* Message Bubble Block - Prevents collapsing & preserves natural bubble width */}
+                            <div className={cn('flex flex-col gap-1 max-w-[82%] sm:max-w-[75%] min-w-0', isMe ? 'items-end' : 'items-start')}>
                               
                               {/* Bubble */}
                               <div
                                 className={cn(
-                                  'px-4.5 py-3 text-sm leading-relaxed max-w-[85%] sm:max-w-[75%]',
+                                  'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-sm w-fit inline-block font-medium',
                                   isMe
-                                    ? 'bg-gradient-to-r from-[#9333ea] to-[#a855f7] text-white shadow-md rounded-[24px] rounded-br-[6px] font-medium'
-                                    : 'bg-white/95 dark:bg-card/95 text-foreground shadow-xs border border-white/80 dark:border-border/60 rounded-[24px] rounded-bl-[6px] font-medium'
+                                    ? 'bg-[#a855f7] dark:bg-purple-600 text-white rounded-br-[4px]'
+                                    : 'bg-white dark:bg-card text-foreground border border-slate-200/80 dark:border-border/80 rounded-bl-[4px] shadow-2xs'
                                 )}
+                                style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                               >
-                                <p className="break-words whitespace-pre-wrap">{m.text}</p>
+                                <p className="whitespace-pre-wrap">{m.text}</p>
                               </div>
 
-                              {/* Action Toolbar on Incoming Messages (Reference Image Feature) */}
+                              {/* Action Toolbar on Incoming Messages */}
                               {!isMe && (
-                                <div className="flex items-center gap-1.5 px-2 pt-0.5 text-muted-foreground">
+                                <div className="flex items-center gap-1.5 sm:gap-2 px-1 pt-0.5 text-muted-foreground">
                                   <button
                                     type="button"
                                     onClick={() => handleCopy(m.text, m.id)}
                                     title="Copy text"
-                                    className="p-1 rounded-lg hover:bg-white/80 dark:hover:bg-card hover:text-foreground transition-colors"
+                                    className="p-1 rounded-lg hover:bg-white dark:hover:bg-card hover:text-foreground transition-colors"
                                   >
                                     {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                                   </button>
@@ -626,7 +644,7 @@ function MessagesContent() {
                                     onClick={() => toggleLike(m.id)}
                                     title="Like message"
                                     className={cn(
-                                      'p-1 rounded-lg hover:bg-white/80 dark:hover:bg-card transition-colors',
+                                      'p-1 rounded-lg hover:bg-white dark:hover:bg-card transition-colors',
                                       isLiked ? 'text-purple-600 font-bold' : 'hover:text-foreground'
                                     )}
                                   >
@@ -636,7 +654,7 @@ function MessagesContent() {
                                     type="button"
                                     onClick={() => handleSpeak(m.text)}
                                     title="Listen to message"
-                                    className="p-1 rounded-lg hover:bg-white/80 dark:hover:bg-card hover:text-foreground transition-colors"
+                                    className="p-1 rounded-lg hover:bg-white dark:hover:bg-card hover:text-foreground transition-colors"
                                   >
                                     <Volume2 className="h-3.5 w-3.5" />
                                   </button>
@@ -646,9 +664,9 @@ function MessagesContent() {
 
                             {/* Outgoing Avatar on Right */}
                             {isMe && (
-                              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                              <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
                                 <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
-                                <AvatarFallback className="text-xs font-bold bg-purple-600 text-white">
+                                <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-[#9333ea] text-white">
                                   {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
@@ -657,27 +675,25 @@ function MessagesContent() {
                         );
                       })
                     )}
-
-                    <div ref={messagesEndRef} />
                   </div>
 
                   {/* =========================================================================
                       FLOATING INPUT DOCK (Reference Image 1 Bottom Bar)
                      ========================================================================= */}
-                  <div className="p-3 sm:p-4 bg-transparent shrink-0">
+                  <div className="p-2.5 sm:p-4 bg-transparent shrink-0">
                     <form onSubmit={handleSend} className="flex items-center gap-2 max-w-3xl mx-auto">
                       
                       {/* Floating Pill Input Box */}
-                      <div className="flex-1 flex items-center h-13 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md px-3.5 gap-2 backdrop-blur-md">
+                      <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
                         
                         {/* Left '+' Attachment / Options Button */}
                         <button
                           type="button"
                           onClick={() => setInputMsg((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
                           title="Add campus location"
-                          className="h-8 w-8 rounded-full bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                         >
-                          <Plus className="h-4.5 w-4.5 stroke-[2.5]" />
+                          <Plus className="h-4 w-4 stroke-[2.5]" />
                         </button>
 
                         {/* Main Text Input */}
@@ -692,12 +708,12 @@ function MessagesContent() {
                         <button
                           type="submit"
                           disabled={!inputMsg.trim() || sending}
-                          className="h-9 w-9 rounded-2xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+                          className="h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
                         >
                           {sending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <Send className="h-4 w-4 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />
+                            <Send className="h-3.5 w-3.5 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />
                           )}
                         </button>
                       </div>
@@ -709,9 +725,9 @@ function MessagesContent() {
                           toast({ title: 'Microphone Voice Notes enabled! 🎙️', description: 'Speak your message into the microphone.' });
                         }}
                         aria-label="Voice Message"
-                        className="h-13 w-13 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                        className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                       >
-                        <Mic className="h-5 w-5" />
+                        <Mic className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                       </button>
                     </form>
                   </div>

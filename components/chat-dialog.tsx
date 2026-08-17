@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -63,7 +63,16 @@ export function ChatDialog({
   const [sending, setSending] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.scrollTo({
+        top: chatScrollContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+    }
+  }, []);
 
   // Initialize or find conversation
   useEffect(() => {
@@ -95,6 +104,7 @@ export function ChatDialog({
       } else {
         setMessages([initialGreeting]);
       }
+      setTimeout(() => scrollToBottom(false), 50);
     });
 
     // Listen to real-time messages from Firestore
@@ -124,8 +134,8 @@ export function ChatDialog({
               });
             });
             setMessages(msgs);
+            setTimeout(() => scrollToBottom(true), 50);
           }
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
         },
         (err) => {
           console.warn('Firestore onSnapshot notice in ChatDialog:', err);
@@ -136,7 +146,10 @@ export function ChatDialog({
     }
 
     const handleSync = () => {
-      getMessages(computedChatId).then((msgs) => setMessages(msgs));
+      getMessages(computedChatId).then((msgs) => {
+        setMessages(msgs);
+        setTimeout(() => scrollToBottom(false), 50);
+      });
     };
 
     if (typeof window !== 'undefined') {
@@ -150,7 +163,7 @@ export function ChatDialog({
     }
 
     return () => unsubscribe();
-  }, [isOpen, user, recipientId, recipientName, recipientAvatar, product]);
+  }, [isOpen, user, recipientId, recipientName, recipientAvatar, product, scrollToBottom]);
 
   if (!isOpen) return null;
 
@@ -201,7 +214,7 @@ export function ChatDialog({
       console.warn('Error sending chat message:', err);
     } finally {
       setSending(false);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      setTimeout(() => scrollToBottom(true), 50);
     }
   }
 
@@ -233,7 +246,7 @@ export function ChatDialog({
       toast({ title: 'Error sending offer', description: err.message, variant: 'destructive' });
     } finally {
       setSending(false);
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      setTimeout(() => scrollToBottom(true), 50);
     }
   }
 
@@ -260,7 +273,7 @@ export function ChatDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/70 backdrop-blur-md animate-in fade-in-50">
       {/* Modal Card with Soft Ambient Pastel Gradient Background */}
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#F8F3FF] via-[#FAF7FF] to-[#FFF5EE] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] border border-white/80 dark:border-border/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[620px] max-h-[92vh]">
+      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#F8F3FF] via-[#FAF7FF] to-[#FFF5EE] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] border border-white/80 dark:border-border/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[580px] max-h-[88vh]">
         
         {/* Modal Header */}
         <div className="p-3.5 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/70 dark:bg-card/70 backdrop-blur-md shrink-0">
@@ -356,7 +369,7 @@ export function ChatDialog({
         )}
 
         {/* Messages Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
+        <div ref={chatScrollContainerRef} className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 scrollbar-thin overscroll-contain">
           
           {/* Centered Date Separator */}
           <div className="flex justify-center my-1">
@@ -371,7 +384,7 @@ export function ChatDialog({
             const isCopied = copiedId === m.id;
 
             return (
-              <div key={m.id} className={cn('flex items-end gap-2', isMe ? 'justify-end' : 'justify-start')}>
+              <div key={m.id} className={cn('flex items-end gap-2 w-full', isMe ? 'justify-end' : 'justify-start')}>
                 
                 {/* Peer avatar on left */}
                 {!isMe && (
@@ -383,21 +396,22 @@ export function ChatDialog({
                   </Avatar>
                 )}
 
-                <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+                <div className={cn('flex flex-col gap-1 max-w-[82%] min-w-0', isMe ? 'items-end' : 'items-start')}>
                   <div
                     className={cn(
-                      'px-4 py-2.5 text-xs sm:text-sm leading-relaxed max-w-[85%]',
+                      'px-4 py-2.5 text-xs sm:text-sm leading-relaxed rounded-[22px] shadow-sm w-fit inline-block font-medium',
                       isMe
-                        ? 'bg-gradient-to-r from-[#9333ea] to-[#a855f7] text-white shadow-sm rounded-[22px] rounded-br-[4px] font-medium'
-                        : 'bg-white/95 dark:bg-card/95 text-foreground shadow-xs border border-white/80 dark:border-border/60 rounded-[22px] rounded-bl-[4px] font-medium'
+                        ? 'bg-[#a855f7] dark:bg-purple-600 text-white rounded-br-[4px]'
+                        : 'bg-white dark:bg-card text-foreground border border-slate-200/80 dark:border-border/80 rounded-bl-[4px] shadow-2xs'
                     )}
+                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                   >
-                    <p className="break-words whitespace-pre-wrap">{m.text}</p>
+                    <p className="whitespace-pre-wrap">{m.text}</p>
                   </div>
 
                   {/* Actions on Incoming */}
                   {!isMe && (
-                    <div className="flex items-center gap-1 px-1 text-muted-foreground">
+                    <div className="flex items-center gap-1.5 px-1 pt-0.5 text-muted-foreground">
                       <button
                         type="button"
                         onClick={() => handleCopy(m.text, m.id)}
@@ -427,7 +441,7 @@ export function ChatDialog({
                 {isMe && (
                   <Avatar className="h-7 w-7 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
                     <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
-                    <AvatarFallback className="text-[10px] font-bold bg-purple-600 text-white">
+                    <AvatarFallback className="text-[10px] font-bold bg-[#9333ea] text-white">
                       {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -435,12 +449,11 @@ export function ChatDialog({
               </div>
             );
           })}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input Footer (Floating Pill Dock) */}
-        <form onSubmit={handleSendMessage} className="p-3 bg-transparent flex items-center gap-2 shrink-0">
-          <div className="flex-1 flex items-center h-12 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+        <form onSubmit={handleSendMessage} className="p-2.5 sm:p-3 bg-transparent flex items-center gap-2 shrink-0">
+          <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
             <button
               type="button"
               onClick={() => setInputText((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
@@ -469,7 +482,7 @@ export function ChatDialog({
             type="button"
             onClick={() => toast({ title: 'Microphone Voice Notes enabled! 🎙️' })}
             aria-label="Voice note"
-            className="h-12 w-12 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+            className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
           >
             <Mic className="h-4.5 w-4.5" />
           </button>
