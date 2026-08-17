@@ -6,6 +6,7 @@ import Image from 'next/image';
 import {
   MessageSquare, Send, X, Loader2, Sparkles,
   Check, Handshake, IndianRupee, ArrowRight, LogIn, ShieldCheck,
+  Plus, Mic, Copy, ThumbsUp, Volume2, Settings,
 } from 'lucide-react';
 import {
   collection,
@@ -25,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getMessages, sendChatMessage } from '@/lib/firebase-queries';
 import type { ChatMessage } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 type ChatDialogProps = {
   isOpen: boolean;
@@ -59,6 +61,8 @@ export function ChatDialog({
   const [offerMode, setOfferMode] = useState(false);
   const [offerPrice, setOfferPrice] = useState(product ? (product.price * 0.9).toFixed(0) : '');
   const [sending, setSending] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize or find conversation
@@ -79,7 +83,7 @@ export function ChatDialog({
       senderAvatar: recipientAvatar || '',
       recipientId: user.uid,
       text: product
-        ? `Hey! Thanks for your interest in "${product.name}". Feel free to ask questions or make an offer!`
+        ? `Hey! Thanks for checking out "${product.name}". Feel free to ask questions or make an offer!`
         : `Hey! How can I help you today?`,
       createdAt: new Date().toISOString(),
     };
@@ -152,26 +156,21 @@ export function ChatDialog({
 
   if (!user) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50">
-        <div className="relative w-full max-w-md bg-card border border-border rounded-3xl p-6 shadow-2xl text-center space-y-4">
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4 rounded-full" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-          <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-            <MessageSquare className="h-6 w-6" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in-50">
+        <div className="relative w-full max-w-md bg-card border border-border p-6 rounded-3xl shadow-2xl text-center space-y-4">
+          <div className="h-14 w-14 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto">
+            <MessageSquare className="h-7 w-7" />
           </div>
-          <h3 className="text-xl font-bold font-display">Sign In to Chat</h3>
-          <p className="text-sm text-muted-foreground">
-            You need to be signed in to message {recipientName} and make price offers.
+          <h3 className="font-display font-bold text-lg">Sign in to Message {recipientName}</h3>
+          <p className="text-xs text-muted-foreground">
+            Sign in with your student account to send direct messages, propose meetup spots, or negotiate offers.
           </p>
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1 rounded-xl" onClick={onClose}>
+          <div className="flex gap-2.5 pt-2">
+            <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl">
               Cancel
             </Button>
-            <Button asChild className="btn-gradient-primary flex-1 rounded-xl font-bold">
-              <Link href="/login">
-                <LogIn className="h-4 w-4 mr-2" /> Sign In
-              </Link>
+            <Button asChild className="flex-1 btn-gradient-primary rounded-xl">
+              <Link href="/login">Sign In</Link>
             </Button>
           </div>
         </div>
@@ -238,26 +237,48 @@ export function ChatDialog({
     }
   }
 
+  function handleCopy(text: string, id: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    toast({ title: 'Copied to clipboard' });
+    setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  function toggleLike(id: string) {
+    setLikedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function handleSpeak(text: string) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-50">
-      <div className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[600px] max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/70 backdrop-blur-md animate-in fade-in-50">
+      {/* Modal Card with Soft Ambient Pastel Gradient Background */}
+      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#F8F3FF] via-[#FAF7FF] to-[#FFF5EE] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] border border-white/80 dark:border-border/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[620px] max-h-[92vh]">
+        
         {/* Modal Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-card/50 shrink-0">
+        <div className="p-3.5 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/70 dark:bg-card/70 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-            <Avatar className="h-10 w-10 ring-2 ring-primary/20 shrink-0">
-              <AvatarImage src={recipientAvatar} alt={recipientName} />
-              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
-                {recipientName.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Back"
+              className="h-9 w-9 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-display font-bold text-sm text-foreground truncate">{recipientName}</h3>
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              </div>
-              <p className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Verified Student on Campus
+              <h3 className="font-display font-black text-sm sm:text-base text-foreground truncate">{recipientName}</h3>
+              <p className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Verified Student Peer
               </p>
             </div>
           </div>
@@ -267,22 +288,19 @@ export function ChatDialog({
               asChild
               variant="ghost"
               size="sm"
-              className="text-xs text-primary font-bold h-8 px-2.5 rounded-xl hover:bg-primary/10"
+              className="text-xs text-purple-600 dark:text-purple-400 font-bold h-8 px-2.5 rounded-xl hover:bg-purple-500/10"
             >
               <Link href={`/messages?user=${recipientId}&name=${encodeURIComponent(recipientName)}`}>
-                Full Inbox
+                Full View
                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Link>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={onClose}>
-              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* Product Context Banner */}
         {product && (
-          <div className="p-3 bg-secondary/40 border-b border-border/80 flex items-center justify-between gap-3 shrink-0">
+          <div className="p-2.5 sm:p-3 bg-white/80 dark:bg-card/80 border-b border-white/60 dark:border-border/60 flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               {product.image && (
                 <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0 border border-border/60">
@@ -291,7 +309,7 @@ export function ChatDialog({
               )}
               <div className="min-w-0">
                 <p className="text-xs font-bold text-foreground truncate">{product.name}</p>
-                <p className="text-xs font-black text-primary">₹{product.price}</p>
+                <p className="text-xs font-black text-purple-600 dark:text-purple-400">₹{product.price}</p>
               </div>
             </div>
 
@@ -299,7 +317,7 @@ export function ChatDialog({
               size="sm"
               variant="outline"
               onClick={() => setOfferMode(!offerMode)}
-              className="h-8 text-xs font-bold rounded-xl border-primary/40 text-primary hover:bg-primary/10 shrink-0"
+              className="h-8 text-xs font-bold rounded-xl border-purple-400/40 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 shrink-0"
             >
               <Handshake className="h-3.5 w-3.5 mr-1" />
               Make Offer
@@ -309,7 +327,7 @@ export function ChatDialog({
 
         {/* Make Offer Collapsible Drawer */}
         {offerMode && product && (
-          <div className="p-3 bg-primary/5 border-b border-primary/20 space-y-2 animate-in slide-in-from-top-2 shrink-0">
+          <div className="p-3 bg-purple-500/10 border-b border-purple-500/20 space-y-2 animate-in slide-in-from-top-2 shrink-0">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-foreground">Propose Price to {recipientName}:</span>
               <span className="text-muted-foreground line-through">Listed: ₹{product.price}</span>
@@ -322,7 +340,7 @@ export function ChatDialog({
                   value={offerPrice}
                   onChange={(e) => setOfferPrice(e.target.value)}
                   placeholder="Offer amount"
-                  className="pl-8 h-9 text-xs rounded-xl"
+                  className="pl-8 h-9 text-xs rounded-xl bg-white dark:bg-card"
                 />
               </div>
               <Button
@@ -338,45 +356,123 @@ export function ChatDialog({
         )}
 
         {/* Messages Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
+          
+          {/* Centered Date Separator */}
+          <div className="flex justify-center my-1">
+            <div className="rounded-full px-3.5 py-0.5 bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
+              Today
+            </div>
+          </div>
+
           {messages.map((m) => {
             const isMe = m.senderId === user.uid;
+            const isLiked = likedMap[m.id];
+            const isCopied = copiedId === m.id;
+
             return (
-              <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed shadow-2xs ${
-                    isMe
-                      ? 'bg-gradient-to-r from-primary to-cyan-500 text-white rounded-br-none'
-                      : 'bg-secondary text-foreground rounded-bl-none border border-border/60'
-                  }`}
-                >
-                  {m.text}
+              <div key={m.id} className={cn('flex items-end gap-2', isMe ? 'justify-end' : 'justify-start')}>
+                
+                {/* Peer avatar on left */}
+                {!isMe && (
+                  <Avatar className="h-7 w-7 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                    <AvatarImage src={recipientAvatar} alt={recipientName} />
+                    <AvatarFallback className="text-[10px] font-black bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+                      {recipientName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+
+                <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+                  <div
+                    className={cn(
+                      'px-4 py-2.5 text-xs sm:text-sm leading-relaxed max-w-[85%]',
+                      isMe
+                        ? 'bg-gradient-to-r from-[#9333ea] to-[#a855f7] text-white shadow-sm rounded-[22px] rounded-br-[4px] font-medium'
+                        : 'bg-white/95 dark:bg-card/95 text-foreground shadow-xs border border-white/80 dark:border-border/60 rounded-[22px] rounded-bl-[4px] font-medium'
+                    )}
+                  >
+                    <p className="break-words whitespace-pre-wrap">{m.text}</p>
+                  </div>
+
+                  {/* Actions on Incoming */}
+                  {!isMe && (
+                    <div className="flex items-center gap-1 px-1 text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(m.text, m.id)}
+                        className="p-0.5 rounded hover:text-foreground"
+                      >
+                        {isCopied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleLike(m.id)}
+                        className={cn('p-0.5 rounded', isLiked ? 'text-purple-600' : 'hover:text-foreground')}
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSpeak(m.text)}
+                        className="p-0.5 rounded hover:text-foreground"
+                      >
+                        <Volume2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <span className="text-[9px] text-muted-foreground mt-1 px-1">
-                  {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+
+                {/* User avatar on right */}
+                {isMe && (
+                  <Avatar className="h-7 w-7 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
+                    <AvatarFallback className="text-[10px] font-bold bg-purple-600 text-white">
+                      {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             );
           })}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Input Footer */}
-        <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-card/60 flex items-center gap-2 shrink-0">
-          <Input
-            placeholder="Type a message to arrange pickup or details..."
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            className="rounded-xl text-xs h-10 border-border/80"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!inputText.trim() || sending}
-            className="btn-gradient-primary rounded-xl h-10 w-10 shrink-0 shadow-xs"
+        {/* Message Input Footer (Floating Pill Dock) */}
+        <form onSubmit={handleSendMessage} className="p-3 bg-transparent flex items-center gap-2 shrink-0">
+          <div className="flex-1 flex items-center h-12 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => setInputText((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
+              className="h-7 w-7 rounded-full bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground shrink-0"
+            >
+              <Plus className="h-4 w-4 stroke-[2.5]" />
+            </button>
+
+            <input
+              placeholder="Type your message..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="flex-1 bg-transparent border-0 text-xs font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none px-1"
+            />
+
+            <button
+              type="submit"
+              disabled={!inputText.trim() || sending}
+              className="h-8 w-8 rounded-xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+            >
+              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 -translate-y-0.5 translate-x-0.5" />}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => toast({ title: 'Microphone Voice Notes enabled! 🎙️' })}
+            aria-label="Voice note"
+            className="h-12 w-12 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+            <Mic className="h-4.5 w-4.5" />
+          </button>
         </form>
       </div>
     </div>

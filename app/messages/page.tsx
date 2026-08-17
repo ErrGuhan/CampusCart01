@@ -6,6 +6,8 @@ import {
   MessageSquare, Send, User, Search, Store,
   Sparkles, CheckCheck, ShieldCheck, ArrowLeft,
   ChevronLeft, Loader2, Info, MapPin, Handshake, ShoppingBag,
+  Settings, Bell, Plus, Mic, Copy, ThumbsUp, Volume2, RotateCcw,
+  Check, X,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -26,13 +28,7 @@ import {
 import type { Conversation, ChatMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-const QUICK_STARTERS = [
-  '👋 Hi! Is this still available?',
-  '📍 Can we meet at the Central Library / Student Center for handover?',
-  '🤝 I saw your listing on CampusCart and would love to discuss!',
-];
-
-// Helper to merge message arrays deduplicating by ID and preventing duplicate rapid bubbles
+// Deduplicate message arrays by ID and prevent rapid duplicate bubbles
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
   const map = new Map<string, ChatMessage>();
   existing.forEach((m) => map.set(m.id, m));
@@ -73,6 +69,9 @@ function MessagesContent() {
   const [search, setSearch] = useState('');
   const [mobileView, setMobileView] = useState<'list' | 'chat'>(targetUserParam ? 'chat' : 'list');
   const [sending, setSending] = useState(false);
+  const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load and merge real conversations for the authenticated user
@@ -81,7 +80,6 @@ function MessagesContent() {
 
     const convs = await getConversations(user.uid);
 
-    // Sort newest on top
     const sorted = [...convs].sort((a, b) => {
       const timeA = new Date(a.lastMessageTimestamp).getTime() || 0;
       const timeB = new Date(b.lastMessageTimestamp).getTime() || 0;
@@ -91,7 +89,6 @@ function MessagesContent() {
     setConversations((prev) => {
       const map = new Map<string, Conversation>();
       sorted.forEach((c) => map.set(c.id, c));
-      // Preserve any active or local threads in current state
       prev.forEach((c) => {
         if (!map.has(c.id)) map.set(c.id, c);
       });
@@ -109,7 +106,7 @@ function MessagesContent() {
     loadUserConversations();
   }, [loadUserConversations]);
 
-  // Handle URL user param to open direct chat & switch mobile view to 'chat'
+  // Handle URL target user param
   useEffect(() => {
     if (!user || !targetUserParam) return;
     const sorted = [user.uid, targetUserParam].sort();
@@ -128,7 +125,7 @@ function MessagesContent() {
         [user.uid]: profile?.avatar_url || '',
         [targetUserParam]: '',
       },
-      lastMessage: 'Starting conversation...',
+      lastMessage: 'Say hi 👋',
       lastMessageTimestamp: new Date().toISOString(),
       unreadCount: {},
     };
@@ -143,7 +140,6 @@ function MessagesContent() {
   useEffect(() => {
     if (!activeConvId) return;
 
-    // Load initial messages
     getMessages(activeConvId).then((msgs) => {
       setMessages((prev) => mergeMessages(prev, msgs));
     });
@@ -233,12 +229,10 @@ function MessagesContent() {
       createdAt: exactCreatedAt,
     };
 
-    // 1. Optimistically append message immediately
     setMessages((prev) => mergeMessages(prev, [tempMsg]));
     setInputMsg('');
     setSending(true);
 
-    // 2. Update conversation list preview
     setConversations((prev) => {
       const map = new Map<string, Conversation>();
       prev.forEach((c) => map.set(c.id, c));
@@ -277,14 +271,35 @@ function MessagesContent() {
         text: textToSend,
       });
     } catch (err: any) {
-      toast({ title: 'Message delivery warning', description: err.message, variant: 'destructive' });
+      toast({ title: 'Message delivery notice', description: err.message, variant: 'destructive' });
     } finally {
       setSending(false);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     }
   }
 
-  // Filter conversations based on user search query
+  function handleCopy(text: string, id: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedMessageId(id);
+    toast({ title: 'Copied to clipboard' });
+    setTimeout(() => setCopiedMessageId(null), 2000);
+  }
+
+  function toggleLike(id: string) {
+    setLikedMessages((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function handleSpeak(text: string) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } else {
+      toast({ title: 'Text-to-speech not supported on this browser' });
+    }
+  }
+
   const filteredConversations = useMemo(() => {
     if (!search.trim()) return conversations;
     const q = search.toLowerCase().trim();
@@ -296,7 +311,6 @@ function MessagesContent() {
     });
   }, [conversations, search, user?.uid]);
 
-  // Robust active conversation resolver
   const activeConv = useMemo(() => {
     const found = conversations.find((c) => c.id === activeConvId);
     if (found) return found;
@@ -312,7 +326,7 @@ function MessagesContent() {
           [user.uid]: profile?.avatar_url || '',
           [targetUserParam]: '',
         },
-        lastMessage: 'Starting conversation...',
+        lastMessage: 'Say hi 👋',
         lastMessageTimestamp: new Date().toISOString(),
         unreadCount: {},
       };
@@ -374,208 +388,347 @@ function MessagesContent() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-6xl py-3 sm:py-6 pb-20 md:pb-8">
-        <div className="rounded-3xl border border-border/80 bg-card overflow-hidden shadow-sm grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-130px)] min-h-[520px] max-h-[780px]">
-          {/* Left Sidebar: Conversations List */}
-          <div
-            className={`md:col-span-5 lg:col-span-4 border-r border-border flex flex-col bg-secondary/15 h-full min-h-0 ${
-              mobileView === 'chat' ? 'hidden md:flex' : 'flex'
-            }`}
-          >
-            <div className="p-3.5 border-b border-border/80 shrink-0">
-              <div className="flex items-center justify-between gap-2 mb-2.5">
-                <div className="flex items-center gap-1.5">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  <h2 className="font-display text-base sm:text-lg font-bold text-foreground">Campus Messages</h2>
-                </div>
-                <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30 font-bold">
-                  Direct
-                </Badge>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                <Input
-                  placeholder="Search chats by name or text..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-8 sm:h-9 text-xs rounded-xl bg-card border-border/80 shadow-2xs"
-                />
-              </div>
-            </div>
-
-            {/* Conversation list items */}
-            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border/60">
-              {filteredConversations.length === 0 ? (
-                <div className="p-8 text-center space-y-3 text-muted-foreground">
-                  <MessageSquare className="h-8 w-8 mx-auto opacity-30" />
-                  <p className="text-xs font-semibold text-foreground">No conversations yet</p>
-                  <p className="text-[11px] leading-relaxed max-w-[200px] mx-auto text-muted-foreground">
-                    Connect with classmates from the Marketplace or Requests board to start a chat.
-                  </p>
-                  <Button asChild size="sm" variant="outline" className="rounded-xl text-xs mt-2">
-                    <Link href="/marketplace">Browse Marketplace</Link>
-                  </Button>
-                </div>
-              ) : (
-                filteredConversations.map((c) => {
-                  const otherId = c.participantIds.find((id) => id !== user.uid) || '';
-                  const otherName = c.participantNames?.[otherId] || 'Campus Student';
-                  const otherAvatar = c.participantAvatars?.[otherId];
-                  const isSelected = c.id === activeConvId;
-
-                  return (
+      {/* Ambient Pastel Gradient Wrapper matching reference UI */}
+      <main className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-[#F7F2FF] via-[#FAF7FF] to-[#FFF5ED] dark:from-[#150F22] dark:via-[#110C1B] dark:to-[#170E1B] py-3 sm:py-6 pb-24 md:pb-8">
+        <div className="container-px mx-auto max-w-5xl">
+          
+          <div className="rounded-[32px] border border-white/80 dark:border-border/60 bg-white/70 dark:bg-card/70 backdrop-blur-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-120px)] min-h-[580px] max-h-[820px]">
+            
+            {/* =========================================================================
+                LEFT PANEL: Chats List View (Reference Screen 2)
+               ========================================================================= */}
+            <div
+              className={`md:col-span-5 lg:col-span-4 border-r border-white/60 dark:border-border/60 flex flex-col h-full min-h-0 bg-transparent ${
+                mobileView === 'chat' ? 'hidden md:flex' : 'flex'
+              }`}
+            >
+              {/* Chats Header: Title + Search/Bell Icons */}
+              <div className="p-4 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                    Chats
+                  </h1>
+                  <div className="flex items-center gap-2">
                     <button
-                      key={c.id}
-                      onClick={() => handleSelectConversation(c.id)}
-                      className={cn(
-                        'w-full p-3.5 flex items-center gap-3 text-left transition-colors',
-                        isSelected ? 'bg-primary/10 border-l-4 border-primary shadow-2xs' : 'hover:bg-accent/40'
-                      )}
+                      type="button"
+                      aria-label="Search"
+                      className="h-10 w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
-                      <Avatar className="h-10 w-10 shrink-0 ring-2 ring-primary/20 shadow-2xs">
-                        <AvatarImage src={otherAvatar} alt={otherName} />
-                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-bold">
-                          {otherName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-bold text-foreground truncate">{otherName}</h4>
-                          <span className="text-[10px] text-muted-foreground shrink-0 ml-1 font-medium">
-                            {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground truncate mt-0.5 font-medium">{c.lastMessage}</p>
-                      </div>
+                      <Search className="h-4.5 w-4.5" />
                     </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Right Area: Active Chat */}
-          <div
-            className={`md:col-span-7 lg:col-span-8 flex flex-col bg-background h-full min-h-0 ${
-              mobileView === 'list' ? 'hidden md:flex' : 'flex'
-            }`}
-          >
-            {activeConv && otherParticipant ? (
-              <>
-                {/* Chat Header */}
-                <div className="p-3 sm:p-3.5 border-b border-border flex items-center justify-between bg-card/60 shrink-0">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    {/* Mobile Back Button */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="md:hidden h-8 w-8 rounded-lg shrink-0"
-                      onClick={() => setMobileView('list')}
+                    <button
+                      type="button"
+                      aria-label="Notifications"
+                      className="h-10 w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
+                      <Bell className="h-4.5 w-4.5" />
+                    </button>
+                  </div>
+                </div>
 
-                    <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-primary/20 shrink-0">
-                      <AvatarImage src={otherParticipant.avatar} alt={otherParticipant.name} />
-                      <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
-                        {otherParticipant.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="font-bold text-xs sm:text-sm text-foreground truncate">{otherParticipant.name}</h3>
-                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      </div>
-                      <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Active Student
-                      </p>
+                {/* Translucent Frosted Search Pill */}
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="Search Chats"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-11 h-11 text-xs sm:text-sm rounded-2xl bg-white/70 dark:bg-card/70 border border-white/70 dark:border-border/70 shadow-2xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-purple-500/20"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Chat Thread Cards List */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2.5 scrollbar-thin">
+                {filteredConversations.length === 0 ? (
+                  <div className="p-8 text-center space-y-3 text-muted-foreground my-auto">
+                    <div className="h-14 w-14 rounded-3xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto">
+                      <MessageSquare className="h-7 w-7" />
                     </div>
+                    <p className="text-sm font-bold text-foreground">No conversations yet</p>
+                    <p className="text-xs leading-relaxed max-w-[200px] mx-auto text-muted-foreground">
+                      Connect with students from the Marketplace or Requests board.
+                    </p>
+                    <Button asChild size="sm" className="btn-gradient-primary rounded-xl text-xs mt-2">
+                      <Link href="/marketplace">Explore Marketplace</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  filteredConversations.map((c) => {
+                    const otherId = c.participantIds.find((id) => id !== user.uid) || '';
+                    const otherName = c.participantNames?.[otherId] || 'Campus Student';
+                    const otherAvatar = c.participantAvatars?.[otherId];
+                    const isSelected = c.id === activeConvId;
+
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => handleSelectConversation(c.id)}
+                        className={cn(
+                          'w-full p-3.5 sm:p-4 rounded-3xl flex items-center gap-3.5 text-left transition-all border',
+                          isSelected
+                            ? 'bg-white dark:bg-card border-purple-500/30 shadow-md ring-2 ring-purple-500/10'
+                            : 'bg-white/70 dark:bg-card/70 border-white/60 dark:border-border/50 hover:bg-white/90 dark:hover:bg-card/90 shadow-2xs hover:scale-[1.01]'
+                        )}
+                      >
+                        {/* Circular Avatar */}
+                        <Avatar className="h-12 w-12 sm:h-13 sm:w-13 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
+                          <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
+                          <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black">
+                            {otherName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {/* Name & Subtitle Preview */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <h4 className="text-sm font-extrabold text-foreground truncate">{otherName}</h4>
+                            <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
+                              {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium flex items-center gap-1">
+                            <span>{c.lastMessage || 'Say hi'}</span>
+                          </p>
+                        </div>
+
+                        {/* Status / Badge on Right */}
+                        <div className="shrink-0">
+                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 block" />
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* =========================================================================
+                RIGHT PANEL: Active Chat Thread View (Reference Screen 1)
+               ========================================================================= */}
+            <div
+              className={`md:col-span-7 lg:col-span-8 flex flex-col h-full min-h-0 bg-white/40 dark:bg-card/40 backdrop-blur-xl ${
+                mobileView === 'list' ? 'hidden md:flex' : 'flex'
+              }`}
+            >
+              {activeConv && otherParticipant ? (
+                <>
+                  {/* Top Bar: Back Button, Title, and Settings Gear */}
+                  <div className="p-3.5 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Back Button */}
+                      <button
+                        type="button"
+                        onClick={() => setMobileView('list')}
+                        aria-label="Back to conversations list"
+                        className="h-10 w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                      >
+                        <ArrowLeft className="h-5 w-5 stroke-[2.2]" />
+                      </button>
+
+                      <div className="min-w-0">
+                        <h2 className="font-display text-base sm:text-lg font-black text-foreground truncate">
+                          {otherParticipant.name}
+                        </h2>
+                        <p className="text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          <span>Campus Peer • Verified</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Settings Button */}
+                    <button
+                      type="button"
+                      aria-label="Chat Settings"
+                      className="h-10 w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                    >
+                      <Settings className="h-4.5 w-4.5" />
+                    </button>
                   </div>
 
-                  <Button variant="outline" size="sm" asChild className="rounded-xl text-xs h-7 sm:h-8 px-2.5 shrink-0">
-                    <Link href="/marketplace">Explore Market</Link>
-                  </Button>
-                </div>
-
-                {/* Messages Feed */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5 space-y-3">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground text-xs font-medium space-y-3">
-                      <p>Start a conversation with {otherParticipant.name}!</p>
-                      <div className="flex flex-col gap-2 max-w-sm mx-auto">
-                        {QUICK_STARTERS.map((starter) => (
-                          <button
-                            key={starter}
-                            type="button"
-                            onClick={() => handleSend(undefined, starter)}
-                            className="p-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-semibold text-left transition-all"
-                          >
-                            {starter}
-                          </button>
-                        ))}
+                  {/* Messages Scroll Area */}
+                  <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-thin">
+                    
+                    {/* Centered Date Pill Separator */}
+                    <div className="flex justify-center my-2">
+                      <div className="rounded-full px-4 py-1 bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/60 text-xs font-bold text-muted-foreground shadow-2xs">
+                        Today
                       </div>
                     </div>
-                  ) : (
-                    messages.map((m) => {
-                      const isMe = m.senderId === user.uid;
-                      return (
-                        <div
-                          key={m.id}
-                          className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-                        >
+
+                    {messages.length === 0 ? (
+                      <div className="text-center py-10 space-y-2 text-muted-foreground">
+                        <p className="text-sm font-bold text-foreground">Say hello to {otherParticipant.name} 👋</p>
+                        <p className="text-xs">Ask questions, agree on meetup points, or discuss deals.</p>
+                      </div>
+                    ) : (
+                      messages.map((m) => {
+                        const isMe = m.senderId === user.uid;
+                        const isLiked = likedMessages[m.id];
+                        const isCopied = copiedMessageId === m.id;
+
+                        return (
                           <div
+                            key={m.id}
                             className={cn(
-                              'max-w-[85%] sm:max-w-[75%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm leading-relaxed shadow-2xs',
-                              isMe
-                                ? 'bg-gradient-to-r from-primary to-cyan-500 text-white rounded-br-none'
-                                : 'bg-secondary text-foreground rounded-bl-none border border-border/70'
+                              'flex items-end gap-2.5 group',
+                              isMe ? 'justify-end' : 'justify-start'
                             )}
                           >
-                            {m.text}
-                          </div>
-                          <span className="text-[9px] text-muted-foreground mt-0.5 px-1 font-medium">
-                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
+                            {/* Incoming Avatar on Left */}
+                            {!isMe && (
+                              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                                <AvatarImage src={otherParticipant.avatar} alt={otherParticipant.name} />
+                                <AvatarFallback className="text-xs font-bold bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+                                  {otherParticipant.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
 
-                {/* Chat Input Bar - Fixed neatly to bottom of panel */}
-                <form
-                  onSubmit={handleSend}
-                  className="p-2.5 sm:p-3 border-t border-border bg-card flex items-center gap-2 shrink-0 z-10"
-                >
-                  <Input
-                    placeholder="Type a message to arrange pickup or details..."
-                    value={inputMsg}
-                    onChange={(e) => setInputMsg(e.target.value)}
-                    className="rounded-xl text-xs h-9 sm:h-10 bg-background border-border/80 shadow-2xs"
-                  />
-                  <Button
-                    type="submit"
-                    size="icon"
-                    className="btn-gradient-primary rounded-xl h-9 w-9 sm:h-10 sm:w-10 shrink-0 shadow-xs touch-target"
-                    disabled={!inputMsg.trim() || sending}
-                  >
-                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </Button>
-                </form>
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                <MessageSquare className="h-10 w-10 mb-2 opacity-30" />
-                <p className="text-sm font-semibold text-foreground">Select a conversation to start chatting</p>
-                <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                  Your chat threads with other students will appear here in real time.
-                </p>
-              </div>
-            )}
+                            {/* Message Bubble Block */}
+                            <div className={cn('flex flex-col gap-1', isMe ? 'items-end' : 'items-start')}>
+                              
+                              {/* Bubble */}
+                              <div
+                                className={cn(
+                                  'px-4.5 py-3 text-sm leading-relaxed max-w-[85%] sm:max-w-[75%]',
+                                  isMe
+                                    ? 'bg-gradient-to-r from-[#9333ea] to-[#a855f7] text-white shadow-md rounded-[24px] rounded-br-[6px] font-medium'
+                                    : 'bg-white/95 dark:bg-card/95 text-foreground shadow-xs border border-white/80 dark:border-border/60 rounded-[24px] rounded-bl-[6px] font-medium'
+                                )}
+                              >
+                                <p className="break-words whitespace-pre-wrap">{m.text}</p>
+                              </div>
+
+                              {/* Action Toolbar on Incoming Messages (Reference Image Feature) */}
+                              {!isMe && (
+                                <div className="flex items-center gap-1.5 px-2 pt-0.5 text-muted-foreground">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopy(m.text, m.id)}
+                                    title="Copy text"
+                                    className="p-1 rounded-lg hover:bg-white/80 dark:hover:bg-card hover:text-foreground transition-colors"
+                                  >
+                                    {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleLike(m.id)}
+                                    title="Like message"
+                                    className={cn(
+                                      'p-1 rounded-lg hover:bg-white/80 dark:hover:bg-card transition-colors',
+                                      isLiked ? 'text-purple-600 font-bold' : 'hover:text-foreground'
+                                    )}
+                                  >
+                                    <ThumbsUp className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSpeak(m.text)}
+                                    title="Listen to message"
+                                    className="p-1 rounded-lg hover:bg-white/80 dark:hover:bg-card hover:text-foreground transition-colors"
+                                  >
+                                    <Volume2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Outgoing Avatar on Right */}
+                            {isMe && (
+                              <Avatar className="h-8 w-8 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
+                                <AvatarFallback className="text-xs font-bold bg-purple-600 text-white">
+                                  {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* =========================================================================
+                      FLOATING INPUT DOCK (Reference Image 1 Bottom Bar)
+                     ========================================================================= */}
+                  <div className="p-3 sm:p-4 bg-transparent shrink-0">
+                    <form onSubmit={handleSend} className="flex items-center gap-2 max-w-3xl mx-auto">
+                      
+                      {/* Floating Pill Input Box */}
+                      <div className="flex-1 flex items-center h-13 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md px-3.5 gap-2 backdrop-blur-md">
+                        
+                        {/* Left '+' Attachment / Options Button */}
+                        <button
+                          type="button"
+                          onClick={() => setInputMsg((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
+                          title="Add campus location"
+                          className="h-8 w-8 rounded-full bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                        >
+                          <Plus className="h-4.5 w-4.5 stroke-[2.5]" />
+                        </button>
+
+                        {/* Main Text Input */}
+                        <input
+                          value={inputMsg}
+                          onChange={(e) => setInputMsg(e.target.value)}
+                          placeholder="Type your message..."
+                          className="flex-1 bg-transparent border-0 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none px-1"
+                        />
+
+                        {/* Black Squircle Send Button */}
+                        <button
+                          type="submit"
+                          disabled={!inputMsg.trim() || sending}
+                          className="h-9 w-9 rounded-2xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+                        >
+                          {sending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Right Round Voice / Mic Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toast({ title: 'Microphone Voice Notes enabled! 🎙️', description: 'Speak your message into the microphone.' });
+                        }}
+                        aria-label="Voice Message"
+                        className="h-13 w-13 rounded-full bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                      >
+                        <Mic className="h-5 w-5" />
+                      </button>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3 my-auto">
+                  <div className="h-16 w-16 rounded-3xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto shadow-xs">
+                    <MessageSquare className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Select a chat to begin</h3>
+                  <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
+                    Choose a conversation from the list to message campus buyers and sellers.
+                  </p>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </main>
@@ -588,8 +741,8 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="container-px mx-auto max-w-6xl py-12">
+          <div className="h-96 animate-pulse rounded-3xl bg-secondary/50" />
         </div>
       }
     >
