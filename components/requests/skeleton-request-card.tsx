@@ -6,7 +6,7 @@ export function SkeletonRequestCard({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'p-5 sm:p-6 rounded-3xl border border-[#E2E4F6] dark:border-white/10 bg-[#FFFDD0]/70 dark:bg-slate-900/30 backdrop-blur-lg shadow-[0_4px_30px_rgba(29,91,241,0.04)] animate-pulse flex flex-col gap-4 select-none',
+        'p-5 sm:p-6 rounded-3xl border border-[#E2E4F6]/80 dark:border-white/10 bg-[#F5FFFA]/70 dark:bg-slate-900/30 backdrop-blur-xl shadow-[0_4px_30px_rgba(29,91,241,0.04)] animate-pulse flex flex-col gap-4 select-none',
         className
       )}
     >

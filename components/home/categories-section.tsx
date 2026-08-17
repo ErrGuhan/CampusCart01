@@ -47,7 +47,7 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
               key={category.id}
               href={`/categories/${category.slug}`}
               className={cn(
-                'group flex flex-col items-center gap-3 rounded-3xl border border-border/80 bg-card p-4 sm:p-5 text-center transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-2xs',
+                'group flex flex-col items-center gap-3 rounded-3xl border border-[#E2E4F6]/80 dark:border-border/80 bg-card/85 backdrop-blur-md p-4 sm:p-5 text-center transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-2xs',
                 isEmpty && 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100 border-dashed bg-card/60'
               )}
             >

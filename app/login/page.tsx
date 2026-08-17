@@ -104,8 +104,8 @@ function LoginForm() {
 
   return (
     <div className="relative z-10 w-full max-w-[390px] mx-auto flex flex-col items-center">
-      {/* Main Clean Classic Cream Card */}
-      <div className="w-full rounded-[28px] sm:rounded-3xl bg-[#FFFDD0] border border-[#E2E4F6] shadow-[0_12px_45px_rgba(29,91,241,0.08)] p-6 sm:p-7">
+      {/* Main Glassmorphism Mint Cream Card */}
+      <div className="w-full rounded-[28px] sm:rounded-3xl bg-[#F5FFFA]/90 backdrop-blur-xl border border-white/80 dark:border-white/10 shadow-[0_16px_50px_rgba(29,91,241,0.08)] p-6 sm:p-7">
         
         {/* CampusConnect Title & Header */}
         <div className="text-center mt-2 mb-6 space-y-1">
@@ -136,7 +136,7 @@ function LoginForm() {
               placeholder="you@svcet.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-12 px-4 rounded-xl bg-[#FAF8E6] hover:bg-[#FFFDD0] focus:bg-[#FFFDD0] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+              className="w-full h-12 px-4 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
               required
               autoComplete="email"
             />
@@ -157,7 +157,7 @@ function LoginForm() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-12 pl-4 pr-11 rounded-xl bg-[#FAF8E6] hover:bg-[#FFFDD0] focus:bg-[#FFFDD0] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+                className="w-full h-12 pl-4 pr-11 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
                 required
                 autoComplete="current-password"
               />
@@ -192,11 +192,11 @@ function LoginForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-2xl bg-[#1D5BF1] hover:bg-[#184ECC] active:scale-[0.98] text-[#FFFDD0] font-semibold text-sm shadow-md shadow-[#1D5BF1]/25 transition-all flex items-center justify-center gap-1.5"
+              className="w-full h-12 rounded-2xl bg-[#1D5BF1] hover:bg-[#184ECC] active:scale-[0.98] text-[#F5FFFA] font-semibold text-sm shadow-md shadow-[#1D5BF1]/25 transition-all flex items-center justify-center gap-1.5"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-[#FFFDD0]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#F5FFFA]" />
                   <span>Signing in...</span>
                 </>
               ) : (
@@ -238,7 +238,7 @@ function LoginForm() {
 
       {/* Interactive Forgot Password Modal */}
       <Dialog open={forgotModalOpen} onOpenChange={setForgotModalOpen}>
-        <DialogContent className="sm:max-w-[400px] rounded-3xl p-6 bg-[#FFFDD0] border border-[#E2E4F6] shadow-2xl">
+        <DialogContent className="sm:max-w-[400px] rounded-3xl p-6 bg-[#F5FFFA]/95 backdrop-blur-2xl border border-white/80 dark:border-border shadow-2xl">
           <DialogHeader className="space-y-1.5 text-center sm:text-left">
             <DialogTitle className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
               <Mail className="h-5 w-5 text-[#1D5BF1]" />
@@ -263,7 +263,7 @@ function LoginForm() {
               <Button
                 type="button"
                 onClick={() => setForgotModalOpen(false)}
-                className="w-full h-11 rounded-xl bg-[#1D5BF1] hover:bg-[#184ECC] text-[#FFFDD0] font-semibold text-xs mt-2"
+                className="w-full h-11 rounded-xl bg-[#1D5BF1] hover:bg-[#184ECC] text-[#F5FFFA] font-semibold text-xs mt-2"
               >
                 Back to Sign In
               </Button>
@@ -283,7 +283,7 @@ function LoginForm() {
                   placeholder="you@svcet.edu"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl bg-[#FAF8E6] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm focus-visible:ring-2 focus-visible:ring-[#1D5BF1]"
+                  className="w-full h-11 px-4 rounded-xl bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm focus-visible:ring-2 focus-visible:ring-[#1D5BF1]"
                   required
                   autoFocus
                 />
@@ -294,18 +294,18 @@ function LoginForm() {
                   type="button"
                   variant="outline"
                   onClick={() => setForgotModalOpen(false)}
-                  className="flex-1 h-11 rounded-xl border-[#D2D6EE] text-xs font-semibold text-[#0F172A] hover:bg-[#FAF8E6]"
+                  className="flex-1 h-11 rounded-xl border-[#D2D6EE] text-xs font-semibold text-[#0F172A] hover:bg-[#F5FFFA]"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={resetLoading}
-                  className="flex-1 h-11 rounded-xl bg-[#1D5BF1] hover:bg-[#184ECC] text-[#FFFDD0] font-semibold text-xs shadow-sm"
+                  className="flex-1 h-11 rounded-xl bg-[#1D5BF1] hover:bg-[#184ECC] text-[#F5FFFA] font-semibold text-xs shadow-sm"
                 >
                   {resetLoading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin text-[#FFFDD0] mr-1.5" />
+                      <Loader2 className="h-4 w-4 animate-spin text-[#F5FFFA] mr-1.5" />
                       <span>Sending...</span>
                     </>
                   ) : (
@@ -323,10 +323,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#FFFDD0] flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#F5FFFA] flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       <Suspense
         fallback={
-          <div className="h-[480px] w-full max-w-[390px] rounded-3xl animate-pulse bg-[#FFFDD0]/70 shadow-lg" />
+          <div className="h-[480px] w-full max-w-[390px] rounded-3xl animate-pulse bg-[#F5FFFA]/70 shadow-lg" />
         }
       >
         <LoginForm />

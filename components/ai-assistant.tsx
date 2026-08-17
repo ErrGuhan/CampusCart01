@@ -159,19 +159,19 @@ export function CampusCartAIAssistant() {
       <button
         onClick={() => setOpen(!open)}
         aria-label="Open AI shopping assistant"
-        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] shadow-[0_4px_25px_rgba(29,91,241,0.4)] hover:shadow-[0_6px_35px_rgba(29,91,241,0.55)] hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-[#1D5BF1]/25 border border-white/30"
+        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] shadow-[0_4px_25px_rgba(29,91,241,0.4)] hover:shadow-[0_6px_35px_rgba(29,91,241,0.55)] hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-[#1D5BF1]/25 border border-white/30"
       >
         {open ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" />}
       </button>
 
       {/* Chat Window with Soft Ambient Gradient Background */}
       {open && (
-        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-[#E2E4F6] dark:border-white/15 bg-[#FFFDD0]/95 dark:bg-slate-900/80 backdrop-blur-2xl shadow-[0_16px_50px_rgba(29,91,241,0.14)] flex flex-col overflow-hidden animate-fade-in-up">
+        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-white/80 dark:border-white/15 bg-[#F5FFFA]/95 dark:bg-slate-900/80 backdrop-blur-2xl shadow-[0_16px_50px_rgba(29,91,241,0.14)] flex flex-col overflow-hidden animate-fade-in-up">
           
           {/* Header */}
-          <div className="p-3.5 sm:p-4 border-b border-[#E2E4F6] dark:border-white/10 bg-[#FFFDD0] dark:bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 border-b border-[#E2E4F6]/80 dark:border-white/10 bg-[#F5FFFA]/90 dark:bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-2xl bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] flex items-center justify-center font-bold shadow-xs">
+              <div className="h-8 w-8 rounded-2xl bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] flex items-center justify-center font-bold shadow-xs">
                 <Bot className="h-4.5 w-4.5" />
               </div>
               <div>
@@ -187,7 +187,7 @@ export function CampusCartAIAssistant() {
 
             <button
               onClick={() => setOpen(false)}
-              className="h-8 w-8 rounded-2xl bg-[#FAF8E6] dark:bg-card/80 border border-[#E2E4F6] dark:border-border shadow-2xs flex items-center justify-center text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 rounded-2xl bg-[#F5FFFA] dark:bg-card/80 border border-[#E2E4F6] dark:border-border shadow-2xs flex items-center justify-center text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -198,7 +198,7 @@ export function CampusCartAIAssistant() {
             
             {/* Centered Date Separator */}
             <div className="flex justify-center my-1">
-              <div className="rounded-full px-3.5 py-0.5 bg-[#FAF8E6] dark:bg-card/80 border border-[#E2E4F6] dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
+              <div className="rounded-full px-3.5 py-0.5 bg-[#F5FFFA] dark:bg-card/80 border border-[#E2E4F6] dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
                 Today
               </div>
             </div>
@@ -214,7 +214,7 @@ export function CampusCartAIAssistant() {
                   
                   {/* AI iridescent gradient orb / avatar */}
                   {isAi && (
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#1D5BF1] via-[#3B42C4] to-[#6366F1] shadow-2xs flex items-center justify-center text-[#FFFDD0] shrink-0 mb-1 ring-2 ring-[#1D5BF1]/30">
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#1D5BF1] via-[#3B42C4] to-[#6366F1] shadow-2xs flex items-center justify-center text-[#F5FFFA] shrink-0 mb-1 ring-2 ring-[#1D5BF1]/30">
                       <Sparkles className="h-3.5 w-3.5" />
                     </div>
                   )}
@@ -224,8 +224,8 @@ export function CampusCartAIAssistant() {
                       className={cn(
                         'px-4 py-2.5 leading-relaxed max-w-[85%]',
                         isAi
-                          ? 'bg-[#FAF8E6] dark:bg-card/95 text-[#0F172A] shadow-xs border border-[#E2E4F6] dark:border-border/60 rounded-[22px] rounded-bl-[4px] font-medium'
-                          : 'bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] shadow-sm rounded-[22px] rounded-br-[4px] font-medium'
+                          ? 'bg-[#F5FFFA] dark:bg-card/95 text-[#0F172A] shadow-xs border border-[#E2E4F6] dark:border-border/60 rounded-[22px] rounded-bl-[4px] font-medium'
+                          : 'bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] shadow-sm rounded-[22px] rounded-br-[4px] font-medium'
                       )}
                     >
                       <p className="break-words whitespace-pre-wrap">{m.text}</p>
@@ -269,7 +269,7 @@ export function CampusCartAIAssistant() {
                             key={p.id}
                             href={`/products/${p.slug}`}
                             onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#FAF8E6] dark:bg-card/90 shadow-2xs hover:border-[#1D5BF1]/50 transition-all"
+                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#F5FFFA] dark:bg-card/90 shadow-2xs hover:border-[#1D5BF1]/50 transition-all"
                           >
                             <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0">
                               <Image
@@ -300,7 +300,7 @@ export function CampusCartAIAssistant() {
                             key={g.id}
                             href={`/services/${g.slug}`}
                             onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#FAF8E6] dark:bg-card/90 shadow-2xs hover:border-[#1D5BF1]/50 transition-all"
+                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#F5FFFA] dark:bg-card/90 shadow-2xs hover:border-[#1D5BF1]/50 transition-all"
                           >
                             <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0">
                               <Image
@@ -338,7 +338,7 @@ export function CampusCartAIAssistant() {
             })}
 
             {loading && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-[#FAF8E6] dark:bg-card/80 p-2.5 rounded-2xl w-fit border border-[#E2E4F6] shadow-2xs">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-[#F5FFFA] dark:bg-card/80 p-2.5 rounded-2xl w-fit border border-[#E2E4F6] shadow-2xs">
                 <Sparkles className="h-3.5 w-3.5 animate-spin text-[#1D5BF1]" />
                 <span>Searching campus catalog...</span>
               </div>
@@ -347,12 +347,12 @@ export function CampusCartAIAssistant() {
           </div>
 
           {/* Quick Prompt Chips */}
-          <div className="p-2 border-t border-[#E2E4F6] dark:border-border/60 flex items-center gap-1.5 overflow-x-auto bg-[#FFFDD0] dark:bg-card/50 scrollbar-none">
+          <div className="p-2 border-t border-[#E2E4F6]/80 dark:border-border/60 flex items-center gap-1.5 overflow-x-auto bg-[#F5FFFA]/90 dark:bg-card/50 scrollbar-none backdrop-blur-md">
             {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 onClick={() => handleSend(prompt)}
-                className="rounded-xl border border-[#E2E4F6] dark:border-border bg-[#FAF8E6] dark:bg-card/80 px-2.5 py-1 text-[10px] font-semibold text-[#0F172A] hover:text-[#1D5BF1] hover:border-[#1D5BF1]/40 whitespace-nowrap transition-colors shadow-2xs"
+                className="rounded-xl border border-[#E2E4F6] dark:border-border bg-[#F5FFFA] dark:bg-card/80 px-2.5 py-1 text-[10px] font-semibold text-[#0F172A] hover:text-[#1D5BF1] hover:border-[#1D5BF1]/40 whitespace-nowrap transition-colors shadow-2xs"
               >
                 {prompt}
               </button>
@@ -367,7 +367,7 @@ export function CampusCartAIAssistant() {
             }}
             className="p-3 bg-transparent flex items-center gap-2 shrink-0"
           >
-            <div className="flex-1 flex items-center h-12 rounded-full bg-[#FAF8E6] dark:bg-card/90 border border-[#E2E4F6] dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+            <div className="flex-1 flex items-center h-12 rounded-full bg-[#F5FFFA] dark:bg-card/90 border border-[#E2E4F6] dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
               <input
                 placeholder="Type your message..."
                 value={input}
@@ -378,7 +378,7 @@ export function CampusCartAIAssistant() {
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="h-8 w-8 rounded-xl bg-[#1D5BF1] text-[#FFFDD0] flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+                className="h-8 w-8 rounded-xl bg-[#1D5BF1] text-[#F5FFFA] flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
               >
                 <Send className="h-3.5 w-3.5 -translate-y-0.5 translate-x-0.5" />
               </button>
@@ -388,7 +388,7 @@ export function CampusCartAIAssistant() {
               type="button"
               onClick={() => handleSend('Show me top budget student essentials')}
               aria-label="Voice note"
-              className="h-12 w-12 rounded-full bg-[#FAF8E6] dark:bg-card/90 border border-[#E2E4F6] dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+              className="h-12 w-12 rounded-full bg-[#F5FFFA] dark:bg-card/90 border border-[#E2E4F6] dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
             >
               <Mic className="h-4.5 w-4.5" />
             </button>

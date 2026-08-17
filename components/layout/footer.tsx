@@ -47,12 +47,12 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-[#E2E4F6] dark:border-border/60 bg-[#FFFDD0]/80 dark:bg-card/60 backdrop-blur-xl mt-16 sm:mt-24 pb-24 md:pb-12 w-full">
+    <footer className="border-t border-[#E2E4F6]/80 bg-[#F5FFFA]/85 dark:bg-card/60 backdrop-blur-xl mt-16 sm:mt-24 pb-24 md:pb-12 w-full">
       <div className="container-px mx-auto max-w-7xl py-12 sm:py-16 w-full">
         
         {/* Top Trust Banner with Frosted Micro-Cards */}
-        <div className="mb-12 pb-10 border-b border-[#E2E4F6] dark:border-border/60 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-left">
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
+        <div className="mb-12 pb-10 border-b border-[#E2E4F6]/80 dark:border-border/60 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-left">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#F5FFFA]/80 dark:bg-card/70 border border-[#E2E4F6]/80 dark:border-border/60 backdrop-blur-md shadow-2xs flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-[#1D5BF1]/10 text-[#1D5BF1] flex items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5" />
             </div>
@@ -62,7 +62,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#F5FFFA]/80 dark:bg-card/70 border border-[#E2E4F6]/80 dark:border-border/60 backdrop-blur-md shadow-2xs flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <MapPin className="h-5 w-5" />
             </div>
@@ -72,7 +72,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#F5FFFA]/80 dark:bg-card/70 border border-[#E2E4F6]/80 dark:border-border/60 backdrop-blur-md shadow-2xs flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
               <Store className="h-5 w-5" />
             </div>
@@ -82,7 +82,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#F5FFFA]/80 dark:bg-card/70 border border-[#E2E4F6]/80 dark:border-border/60 backdrop-blur-md shadow-2xs flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-[#3B42C4]/10 text-[#3B42C4] flex items-center justify-center shrink-0">
               <Heart className="h-5 w-5" />
             </div>
@@ -97,7 +97,7 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           <div className="col-span-2 md:col-span-2">
             <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] font-bold shadow-xs">
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] font-bold shadow-xs">
                 <Store className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-[#0F172A]">
@@ -109,7 +109,7 @@ export function Footer() {
             </p>
 
             {/* Official Feedback Contact Badge */}
-            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#FFFDD0] dark:bg-card/80 border border-[#E2E4F6] dark:border-border/80 px-3.5 py-2 text-xs text-[#64748B] shadow-2xs">
+            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#F5FFFA]/90 dark:bg-card/80 border border-[#E2E4F6] dark:border-border/80 px-3.5 py-2 text-xs text-[#64748B] shadow-2xs backdrop-blur-md">
               <Mail className="h-4 w-4 text-[#1D5BF1] shrink-0" />
               <span>Feedback: </span>
               <a
@@ -133,7 +133,7 @@ export function Footer() {
                   target={href.startsWith('http') ? '_blank' : undefined}
                   rel={href.startsWith('http') ? 'noreferrer' : undefined}
                   aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#FFFDD0] dark:bg-card/80 text-[#64748B] hover:text-[#1D5BF1] hover:border-[#1D5BF1]/40 hover:scale-105 active:scale-95 transition-all shadow-2xs"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#F5FFFA]/90 dark:bg-card/80 text-[#64748B] hover:text-[#1D5BF1] hover:border-[#1D5BF1]/40 hover:scale-105 active:scale-95 transition-all shadow-2xs backdrop-blur-md"
                 >
                   <Icon className="h-4.5 w-4.5" />
                 </a>

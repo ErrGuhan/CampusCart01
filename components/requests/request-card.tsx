@@ -106,7 +106,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
   return (
     <article
       className={cn(
-        'group relative p-5 sm:p-6 rounded-3xl border border-[#E2E4F6] dark:border-white/10 bg-[#FFFDD0]/90 dark:bg-slate-900/40 backdrop-blur-lg shadow-[0_4px_30px_rgba(29,91,241,0.06)] hover:shadow-[0_12px_40px_rgba(29,91,241,0.15)] hover:border-[#1D5BF1]/50 transition-all duration-300 flex flex-col justify-between gap-4',
+        'group relative p-5 sm:p-6 rounded-3xl border border-[#E2E4F6]/80 dark:border-white/10 bg-[#F5FFFA]/85 dark:bg-slate-900/40 backdrop-blur-xl shadow-[0_4px_30px_rgba(29,91,241,0.06)] hover:shadow-[0_12px_40px_rgba(29,91,241,0.15)] hover:border-[#1D5BF1]/50 transition-all duration-300 flex flex-col justify-between gap-4',
         className
       )}
     >
@@ -192,7 +192,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
           <Button
             size="sm"
             onClick={() => onConnect(data)}
-            className="bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] hover:from-[#184ECC] hover:to-[#3238A8] text-[#FFFDD0] rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(29,91,241,0.25)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-[#1D5BF1]/30"
+            className="bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] hover:from-[#184ECC] hover:to-[#3238A8] text-[#F5FFFA] rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(29,91,241,0.25)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-[#1D5BF1]/30"
           >
             <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
             Connect & Message

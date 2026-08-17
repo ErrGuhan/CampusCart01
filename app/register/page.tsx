@@ -139,8 +139,8 @@ function RegisterForm() {
 
   return (
     <div className="relative z-10 w-full max-w-[440px] mx-auto flex flex-col items-center">
-      {/* Main Clean Classic Cream Card */}
-      <div className="w-full rounded-[28px] sm:rounded-3xl bg-[#FFFDD0] border border-[#E2E4F6] shadow-[0_12px_45px_rgba(29,91,241,0.08)] p-6 sm:p-7">
+      {/* Main Glassmorphism Mint Cream Card */}
+      <div className="w-full rounded-[28px] sm:rounded-3xl bg-[#F5FFFA]/90 backdrop-blur-xl border border-white/80 dark:border-white/10 shadow-[0_16px_50px_rgba(29,91,241,0.08)] p-6 sm:p-7">
         
         {/* CampusConnect Title & Header */}
         <div className="text-center mt-2 mb-5 space-y-1">
@@ -171,7 +171,7 @@ function RegisterForm() {
               placeholder="Rahul Sharma"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl bg-[#FAF8E6] hover:bg-[#FFFDD0] focus:bg-[#FFFDD0] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+              className="w-full h-11 px-4 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
               required
               autoComplete="name"
             />
@@ -191,7 +191,7 @@ function RegisterForm() {
               placeholder={`you@${COLLEGE_EMAIL_DOMAIN}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl bg-[#FAF8E6] hover:bg-[#FFFDD0] focus:bg-[#FFFDD0] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+              className="w-full h-11 px-4 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
               required
               autoComplete="email"
             />
@@ -207,18 +207,18 @@ function RegisterForm() {
                 Department
               </label>
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-[#FAF8E6] border-[#D2D6EE] text-[#0F172A] text-xs font-medium focus:ring-2 focus:ring-[#1D5BF1]">
+                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-[#F5FFFA]/70 border-[#D2D6EE] text-[#0F172A] text-xs font-medium focus:ring-2 focus:ring-[#1D5BF1]">
                   <div className="flex items-center gap-1.5 truncate">
                     <Building2 className="h-3.5 w-3.5 text-[#64748B] shrink-0" />
                     <SelectValue placeholder="Department" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="rounded-xl max-h-56 bg-[#FFFDD0] border-[#E2E4F6] shadow-xl">
+                <SelectContent className="rounded-xl max-h-56 bg-[#F5FFFA]/95 backdrop-blur-xl border border-white/80 dark:border-border shadow-xl">
                   {COLLEGE_DEPARTMENTS.map((dept) => (
                     <SelectItem
                       key={dept}
                       value={dept}
-                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-[#FAF8E6] focus:text-[#1D5BF1] cursor-pointer text-[#0F172A]"
+                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-[#E2E4F6]/50 focus:text-[#1D5BF1] cursor-pointer text-[#0F172A]"
                     >
                       {dept}
                     </SelectItem>
@@ -235,18 +235,18 @@ function RegisterForm() {
                 Year of Study
               </label>
               <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-[#FAF8E6] border-[#D2D6EE] text-[#0F172A] text-xs font-medium focus:ring-2 focus:ring-[#1D5BF1]">
+                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-[#F5FFFA]/70 border-[#D2D6EE] text-[#0F172A] text-xs font-medium focus:ring-2 focus:ring-[#1D5BF1]">
                   <div className="flex items-center gap-1.5 truncate">
                     <GraduationCap className="h-3.5 w-3.5 text-[#64748B] shrink-0" />
                     <SelectValue placeholder="Year" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="rounded-xl bg-[#FFFDD0] border-[#E2E4F6] shadow-xl">
+                <SelectContent className="rounded-xl bg-[#F5FFFA]/95 backdrop-blur-xl border border-white/80 dark:border-border shadow-xl">
                   {COLLEGE_YEARS.map((y) => (
                     <SelectItem
                       key={y}
                       value={y}
-                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-[#FAF8E6] focus:text-[#1D5BF1] cursor-pointer text-[#0F172A]"
+                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-[#E2E4F6]/50 focus:text-[#1D5BF1] cursor-pointer text-[#0F172A]"
                     >
                       {y}
                     </SelectItem>
@@ -272,7 +272,7 @@ function RegisterForm() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-[#FAF8E6] hover:bg-[#FFFDD0] focus:bg-[#FFFDD0] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
                   required
                   autoComplete="new-password"
                 />
@@ -305,7 +305,7 @@ function RegisterForm() {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-[#FAF8E6] hover:bg-[#FFFDD0] focus:bg-[#FFFDD0] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
                   required
                   autoComplete="new-password"
                 />
@@ -330,11 +330,11 @@ function RegisterForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-2xl bg-[#1D5BF1] hover:bg-[#184ECC] active:scale-[0.98] text-[#FFFDD0] font-semibold text-sm shadow-md shadow-[#1D5BF1]/25 transition-all flex items-center justify-center gap-1.5"
+              className="w-full h-12 rounded-2xl bg-[#1D5BF1] hover:bg-[#184ECC] active:scale-[0.98] text-[#F5FFFA] font-semibold text-sm shadow-md shadow-[#1D5BF1]/25 transition-all flex items-center justify-center gap-1.5"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-[#FFFDD0]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#F5FFFA]" />
                   <span>Creating account...</span>
                 </>
               ) : (
@@ -379,10 +379,10 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#FFFDD0] flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#F5FFFA] flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       <Suspense
         fallback={
-          <div className="h-[520px] w-full max-w-[440px] rounded-3xl animate-pulse bg-[#FFFDD0]/70 shadow-lg" />
+          <div className="h-[520px] w-full max-w-[440px] rounded-3xl animate-pulse bg-[#F5FFFA]/70 shadow-lg" />
         }
       >
         <RegisterForm />

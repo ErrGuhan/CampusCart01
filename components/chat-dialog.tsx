@@ -273,16 +273,16 @@ export function ChatDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/70 backdrop-blur-md animate-in fade-in-50">
       {/* Modal Card with Soft Ambient Gradient Background */}
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#E2E4F6] via-[#FAF8E6] to-[#FFFDD0] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] border border-[#E2E4F6] dark:border-border/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[580px] max-h-[88vh]">
+      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#F5FFFA] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] border border-white/80 dark:border-border/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[580px] max-h-[88vh]">
         
         {/* Modal Header */}
-        <div className="p-3.5 sm:p-4 border-b border-[#E2E4F6] dark:border-border/60 flex items-center justify-between bg-[#FFFDD0]/90 dark:bg-card/70 backdrop-blur-md shrink-0">
+        <div className="p-3.5 sm:p-4 border-b border-[#E2E4F6]/80 dark:border-border/60 flex items-center justify-between bg-[#F5FFFA]/90 dark:bg-card/70 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={onClose}
               aria-label="Back"
-              className="h-9 w-9 rounded-2xl bg-[#FFFDD0] dark:bg-card/90 border border-[#E2E4F6] dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+              className="h-9 w-9 rounded-2xl bg-[#F5FFFA] dark:bg-card/90 border border-[#E2E4F6] dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
             >
               <X className="h-4 w-4" />
             </button>
@@ -313,7 +313,7 @@ export function ChatDialog({
 
         {/* Product Context Banner */}
         {product && (
-          <div className="p-2.5 sm:p-3 bg-[#FFFDD0]/80 dark:bg-card/80 border-b border-[#E2E4F6] dark:border-border/60 flex items-center justify-between gap-3 shrink-0">
+          <div className="p-2.5 sm:p-3 bg-[#F5FFFA]/80 dark:bg-card/80 border-b border-[#E2E4F6]/80 dark:border-border/60 flex items-center justify-between gap-3 shrink-0 backdrop-blur-md">
             <div className="flex items-center gap-2.5 min-w-0">
               {product.image && (
                 <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0 border border-border/60">
@@ -353,14 +353,14 @@ export function ChatDialog({
                   value={offerPrice}
                   onChange={(e) => setOfferPrice(e.target.value)}
                   placeholder="Offer amount"
-                  className="pl-8 h-9 text-xs rounded-xl bg-[#FFFDD0] dark:bg-card"
+                  className="pl-8 h-9 text-xs rounded-xl bg-[#F5FFFA] dark:bg-card"
                 />
               </div>
               <Button
                 size="sm"
                 onClick={handleSendOffer}
                 disabled={sending}
-                className="btn-gradient-primary rounded-xl text-xs font-bold h-9 px-3"
+                className="btn-gradient-primary rounded-xl text-xs font-bold h-9 px-3 text-[#F5FFFA]"
               >
                 Send Offer
               </Button>
@@ -373,7 +373,7 @@ export function ChatDialog({
           
           {/* Centered Date Separator */}
           <div className="flex justify-center my-1">
-            <div className="rounded-full px-3.5 py-0.5 bg-[#FFFDD0]/90 dark:bg-card/80 border border-[#E2E4F6] dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
+            <div className="rounded-full px-3.5 py-0.5 bg-[#F5FFFA]/90 dark:bg-card/80 border border-[#E2E4F6] dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
               Today
             </div>
           </div>
@@ -401,8 +401,8 @@ export function ChatDialog({
                     className={cn(
                       'px-4 py-2.5 text-xs sm:text-sm leading-relaxed rounded-[22px] shadow-sm w-fit inline-block font-medium',
                       isMe
-                        ? 'bg-[#1D5BF1] dark:bg-purple-600 text-[#FFFDD0] rounded-br-[4px]'
-                        : 'bg-[#FFFDD0] dark:bg-card text-[#0F172A] border border-[#E2E4F6] dark:border-border/80 rounded-bl-[4px] shadow-2xs'
+                        ? 'bg-[#1D5BF1] dark:bg-purple-600 text-[#F5FFFA] rounded-br-[4px]'
+                        : 'bg-[#F5FFFA] dark:bg-card text-[#0F172A] border border-[#E2E4F6] dark:border-border/80 rounded-bl-[4px] shadow-2xs'
                     )}
                     style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                   >
@@ -453,7 +453,7 @@ export function ChatDialog({
 
         {/* Message Input Footer (Floating Pill Dock) */}
         <form onSubmit={handleSendMessage} className="p-2.5 sm:p-3 bg-transparent flex items-center gap-2 shrink-0">
-          <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-[#FFFDD0] dark:bg-card/95 border border-[#E2E4F6] dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+          <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-[#F5FFFA] dark:bg-card/95 border border-[#E2E4F6] dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
             <button
               type="button"
               onClick={() => setInputText((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
@@ -472,7 +472,7 @@ export function ChatDialog({
             <button
               type="submit"
               disabled={!inputText.trim() || sending}
-              className="h-8 w-8 rounded-xl bg-[#1D5BF1] text-[#FFFDD0] flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+              className="h-8 w-8 rounded-xl bg-[#1D5BF1] text-[#F5FFFA] flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
             >
               {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 -translate-y-0.5 translate-x-0.5" />}
             </button>
@@ -482,7 +482,7 @@ export function ChatDialog({
             type="button"
             onClick={() => toast({ title: 'Microphone Voice Notes enabled! 🎙️' })}
             aria-label="Voice note"
-            className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-[#FFFDD0] dark:bg-card/95 border border-[#E2E4F6] dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+            className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-[#F5FFFA] dark:bg-card/95 border border-[#E2E4F6] dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
           >
             <Mic className="h-4.5 w-4.5" />
           </button>
