@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Heart, ArrowRight, Trash2, ShoppingBag, ChevronRight } from 'lucide-react';
+import { Heart, ArrowRight, ShoppingBag, ChevronRight } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/product-card';
@@ -19,16 +19,34 @@ export default function WishlistPage() {
   const [loaded, setLoaded] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+  const loadWishlist = useCallback(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         setWishlistIds(JSON.parse(stored));
+      } else {
+        setWishlistIds([]);
       }
     } catch {
-      // ignore
+      setWishlistIds([]);
     }
   }, []);
+
+  useEffect(() => {
+    loadWishlist();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('campuscart_wishlist_updated', loadWishlist);
+      window.addEventListener('storage', loadWishlist);
+      window.addEventListener('focus', loadWishlist);
+
+      return () => {
+        window.removeEventListener('campuscart_wishlist_updated', loadWishlist);
+        window.removeEventListener('storage', loadWishlist);
+        window.removeEventListener('focus', loadWishlist);
+      };
+    }
+  }, [loadWishlist]);
 
   useEffect(() => {
     getProductsByIds(wishlistIds)
@@ -36,23 +54,12 @@ export default function WishlistPage() {
       .finally(() => setLoaded(true));
   }, [wishlistIds]);
 
-  useEffect(() => {
-    if (loaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(wishlistIds));
-    }
-  }, [wishlistIds, loaded]);
-
-  function removeItem(id: string) {
-    setWishlistIds((prev) => prev.filter((wId) => wId !== id));
-    toast({ title: 'Removed from wishlist' });
-  }
-
   if (!loaded) {
     return (
       <>
         <Navbar />
         <main className="container-px mx-auto max-w-7xl py-16">
-          <div className="h-64 animate-pulse rounded-xl bg-secondary" />
+          <div className="h-64 animate-pulse rounded-3xl bg-secondary/50" />
         </main>
         <Footer />
       </>
@@ -63,17 +70,17 @@ export default function WishlistPage() {
     return (
       <>
         <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-16">
-          <div className="flex flex-col items-center justify-center text-center py-16">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary text-muted-foreground mb-6">
-              <Heart className="h-10 w-10" />
+        <main className="container-px mx-auto max-w-7xl py-16 sm:py-24">
+          <div className="flex flex-col items-center justify-center text-center py-12 px-4 max-w-md mx-auto rounded-3xl border border-dashed border-border bg-card/40">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4 shadow-xs">
+              <Heart className="h-8 w-8" />
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight">Your wishlist is empty</h1>
-            <p className="mt-2 text-muted-foreground max-w-sm">
-              Save products you love by tapping the heart icon. They'll show up here for easy access.
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Save products you love by tapping the heart icon on any card. They will show up here for easy access.
             </p>
-            <Button className="mt-6" asChild>
-              <Link href="/products">
+            <Button className="mt-6 rounded-xl font-bold text-xs" asChild>
+              <Link href="/marketplace">
                 Discover Products
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -88,40 +95,31 @@ export default function WishlistPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-8">
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
+      <main className="container-px mx-auto max-w-7xl py-6 sm:py-10 min-h-screen">
+        <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">Wishlist</span>
+          <ChevronRight className="h-3.5 w-3.5" />
+          <span className="text-foreground font-semibold">Wishlist</span>
         </nav>
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight">My Wishlist</h1>
-            <p className="mt-1.5 text-muted-foreground">
-              {wishlistProducts.length} {wishlistProducts.length === 1 ? 'item' : 'items'} saved
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">My Wishlist</h1>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+              {wishlistProducts.length} {wishlistProducts.length === 1 ? 'item' : 'items'} saved for later
             </p>
           </div>
-          <Button variant="outline" asChild>
-            <Link href="/products">
+          <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold self-start sm:self-auto" asChild>
+            <Link href="/marketplace">
               <ShoppingBag className="h-4 w-4 mr-2" />
               Continue Shopping
             </Link>
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {wishlistProducts.map((product) => (
-            <div key={product.id} className="relative">
-              <ProductCard product={product} />
-              <button
-                onClick={() => removeItem(product.id)}
-                className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm backdrop-blur transition-all hover:text-destructive"
-                aria-label="Remove from wishlist"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </main>
