@@ -58,27 +58,27 @@ const TAG_META: Record<
   LOOKING_FOR_COFOUNDER: {
     label: '🚀 Looking for Co-Founder',
     icon: Rocket,
-    badgeClass: 'bg-blue-500/10 text-blue-600 border-blue-500/30 dark:text-blue-400',
+    badgeClass: 'bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400 dark:bg-blue-500/20 backdrop-blur-sm shadow-[0_2px_10px_rgba(59,130,246,0.12)]',
   },
   NEED_FEEDBACK: {
     label: '💡 Need Feedback',
     icon: Lightbulb,
-    badgeClass: 'bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400',
+    badgeClass: 'bg-amber-500/15 text-amber-600 border-amber-500/30 dark:text-amber-400 dark:bg-amber-500/20 backdrop-blur-sm shadow-[0_2px_10px_rgba(245,158,11,0.12)]',
   },
   HARDWARE_HELP: {
     label: '🛠️ Hardware Help',
     icon: Wrench,
-    badgeClass: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30 dark:text-cyan-400',
+    badgeClass: 'bg-cyan-500/15 text-cyan-600 border-cyan-500/30 dark:text-cyan-400 dark:bg-cyan-500/20 backdrop-blur-sm shadow-[0_2px_10px_rgba(6,182,212,0.12)]',
   },
   BETA_TESTERS: {
     label: '🧪 Beta Testers',
     icon: TestTube2,
-    badgeClass: 'bg-purple-500/10 text-purple-600 border-purple-500/30 dark:text-purple-400',
+    badgeClass: 'bg-purple-500/15 text-purple-600 border-purple-500/30 dark:text-purple-400 dark:bg-purple-500/20 backdrop-blur-sm shadow-[0_2px_10px_rgba(168,85,247,0.12)]',
   },
   GENERAL: {
     label: '🤝 Teammates & General',
     icon: Users,
-    badgeClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400',
+    badgeClass: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400 dark:bg-emerald-500/20 backdrop-blur-sm shadow-[0_2px_10px_rgba(16,185,129,0.12)]',
   },
 };
 
@@ -104,7 +104,7 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
   return (
     <article
       className={cn(
-        'group relative p-5 sm:p-6 rounded-3xl border border-border/80 bg-card hover:border-primary/40 hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-4',
+        'group relative p-5 sm:p-6 rounded-3xl border border-white/40 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg shadow-[0_4px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.18)] hover:border-cyan-400/50 transition-all duration-300 flex flex-col justify-between gap-4',
         className
       )}
     >
@@ -112,9 +112,9 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
       <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
         {/* Author details */}
         <div className="flex items-center gap-3 min-w-0">
-          <Avatar className="h-10 w-10 sm:h-11 sm:w-11 ring-2 ring-primary/20 shrink-0 shadow-2xs">
+          <Avatar className="h-10 w-10 sm:h-11 sm:w-11 ring-2 ring-white/60 dark:ring-white/20 shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
             {data.authorAvatar && <AvatarImage src={data.authorAvatar} alt={data.authorName} />}
-            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+            <AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-600 dark:text-cyan-400 font-bold text-xs">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -125,7 +125,7 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
                 {data.authorName}
               </span>
               <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs font-semibold text-primary truncate max-w-[200px] sm:max-w-none">
+              <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 truncate max-w-[200px] sm:max-w-none">
                 {data.authorMajor || 'Computer Science & Engineering'}
               </span>
             </div>
@@ -143,7 +143,7 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
         <Badge
           variant="outline"
           className={cn(
-            'text-[11px] font-bold px-3 py-1 rounded-xl shrink-0 border shadow-2xs whitespace-nowrap',
+            'text-[11px] font-bold px-3 py-1 rounded-xl shrink-0 border whitespace-nowrap',
             tagInfo.badgeClass
           )}
         >
@@ -153,7 +153,7 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
 
       {/* 2. Content: Title and Description */}
       <div className="space-y-1.5">
-        <h2 className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
+        <h2 className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:via-indigo-600 group-hover:to-cyan-600 dark:group-hover:from-blue-400 dark:group-hover:via-indigo-300 dark:group-hover:to-cyan-300 group-hover:bg-clip-text transition-all leading-snug">
           {data.title}
         </h2>
         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium line-clamp-3">
@@ -162,14 +162,14 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
       </div>
 
       {/* 3. Footer: Interaction Metrics and Action Button */}
-      <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-3">
+      <div className="pt-3 border-t border-white/30 dark:border-white/10 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3.5 text-xs text-muted-foreground font-semibold">
           <span className="flex items-center gap-1">
             <Eye className="h-3.5 w-3.5 text-muted-foreground/70" />
             <span>{data.viewsCount || 0} views</span>
           </span>
           <span className="flex items-center gap-1">
-            <MessageSquare className="h-3.5 w-3.5 text-primary/80" />
+            <MessageSquare className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
             <span>{data.responsesCount || 0} responses</span>
           </span>
         </div>
@@ -177,7 +177,7 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
         <Button
           size="sm"
           onClick={() => onConnect(data)}
-          className="btn-gradient-primary rounded-xl text-xs font-bold shadow-xs px-4 touch-target min-h-[38px] transition-transform active:scale-95"
+          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(6,182,212,0.3)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-white/20"
         >
           <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
           Connect & Message

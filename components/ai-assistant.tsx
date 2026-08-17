@@ -159,19 +159,19 @@ export function CampusCartAIAssistant() {
       <button
         onClick={() => setOpen(!open)}
         aria-label="Open AI shopping assistant"
-        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#9333ea] to-[#a855f7] text-white shadow-xl hover:shadow-purple-500/30 hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-purple-400/20"
+        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_4px_25px_rgba(6,182,212,0.4)] hover:shadow-[0_6px_35px_rgba(6,182,212,0.55)] hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-cyan-400/25 border border-white/30"
       >
         {open ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" />}
       </button>
 
       {/* Chat Window with Soft Ambient Pastel Gradient Background */}
       {open && (
-        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-white/80 dark:border-border/60 bg-gradient-to-b from-[#F8F3FF] via-[#FAF7FF] to-[#FFF5EE] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up">
+        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-white/60 dark:border-white/15 bg-white/75 dark:bg-slate-900/80 backdrop-blur-2xl shadow-[0_16px_50px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden animate-fade-in-up">
           
           {/* Header */}
-          <div className="p-3.5 sm:p-4 border-b border-white/60 dark:border-border/60 bg-white/70 dark:bg-card/70 backdrop-blur-md flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 border-b border-white/60 dark:border-white/10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-2xl bg-gradient-to-br from-[#9333ea] to-[#a855f7] text-white flex items-center justify-center font-bold shadow-xs">
+              <div className="h-8 w-8 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white flex items-center justify-center font-bold shadow-xs">
                 <Bot className="h-4.5 w-4.5" />
               </div>
               <div>

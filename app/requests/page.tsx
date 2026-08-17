@@ -207,15 +207,15 @@ export default function RequestsForumPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-5xl py-6 sm:py-10 min-h-screen pb-28 sm:pb-32 bg-radial-wash">
+      <main className="container-px mx-auto max-w-5xl py-6 sm:py-10 min-h-screen pb-28 sm:pb-32 bg-gradient-to-br from-blue-50/70 via-purple-50/50 to-cyan-50/70 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900">
         {/* Forum Top Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primary mb-1">
-              <Rocket className="h-4 w-4" />
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-400 mb-1 px-3 py-1 rounded-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/30 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] w-fit">
+              <Rocket className="h-4 w-4 text-cyan-500 animate-pulse" />
               <span>Campus Incubator & Collaboration Forum</span>
             </div>
-            <h1 className="font-display text-2xl sm:text-4xl font-black tracking-tight text-foreground">
+            <h1 className="font-display text-2xl sm:text-4xl font-black tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 dark:from-blue-400 dark:via-indigo-300 dark:to-cyan-300 bg-clip-text text-transparent">
               Pitch Ideas, Find Co-Founders
             </h1>
             <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground font-medium max-w-2xl">
@@ -231,7 +231,7 @@ export default function RequestsForumPage() {
               }
               setCreateModalOpen(true);
             }}
-            className="btn-gradient-primary rounded-2xl h-11 px-5 font-bold text-xs sm:text-sm shadow-md touch-target min-h-[44px]"
+            className="bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-600 hover:via-blue-700 hover:to-indigo-700 text-white rounded-2xl h-11 px-5 font-bold text-xs sm:text-sm shadow-[0_4px_20px_rgba(6,182,212,0.35)] hover:shadow-[0_6px_25px_rgba(6,182,212,0.45)] touch-target min-h-[44px] transition-all duration-200 active:scale-95 border border-white/20"
           >
             <Plus className="h-4 w-4 mr-1.5" />
             Pitch an Idea / Need
@@ -246,7 +246,7 @@ export default function RequestsForumPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search pitches by topic, major, problem statement..."
-              className="pl-10 pr-8 h-11 rounded-2xl bg-card text-xs border-border/80 shadow-2xs"
+              className="pl-10 pr-8 h-11 rounded-2xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-xs border-white/30 dark:border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.06)] focus-visible:bg-white/60 dark:focus-visible:bg-slate-900/60 focus-visible:border-cyan-500/50 transition-all placeholder:text-muted-foreground/70"
             />
             {search && (
               <button
@@ -269,10 +269,10 @@ export default function RequestsForumPage() {
                   type="button"
                   onClick={() => setSelectedTag(tag.id)}
                   className={cn(
-                    'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none shadow-2xs border flex items-center gap-1.5',
+                    'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none border flex items-center gap-1.5',
                     active
-                      ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
-                      : 'bg-card border-border/80 text-foreground/80 hover:text-foreground'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white border-white/20 shadow-[0_4px_20px_rgba(6,182,212,0.35)]'
+                      : 'bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border-white/30 dark:border-white/10 text-foreground/80 hover:text-foreground hover:bg-white/60 dark:hover:bg-slate-800/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)]'
                   )}
                 >
                   <span>{tag.label}</span>
@@ -288,8 +288,8 @@ export default function RequestsForumPage() {
           <SkeletonRequestFeed count={4} />
         ) : error && !requests ? (
           /* 2. Connection Error State */
-          <div className="rounded-3xl border border-destructive/30 bg-destructive/5 p-8 sm:p-12 text-center my-6 shadow-xs">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-3">
+          <div className="rounded-3xl border border-white/30 dark:border-destructive/30 bg-white/40 dark:bg-destructive/10 backdrop-blur-lg p-8 sm:p-12 text-center my-6 shadow-[0_4px_30px_rgba(0,0,0,0.08)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-3 shadow-[0_4px_20px_rgba(239,68,68,0.15)] border border-destructive/20">
               <WifiOff className="h-7 w-7" />
             </div>
             <h2 className="font-display text-lg font-bold text-foreground">
@@ -300,7 +300,7 @@ export default function RequestsForumPage() {
             </p>
             <Button
               onClick={() => mutate()}
-              className="btn-gradient-primary mt-5 rounded-xl text-xs font-bold px-5 h-10 shadow-xs"
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white mt-5 rounded-xl text-xs font-bold px-5 h-10 shadow-[0_4px_16px_rgba(6,182,212,0.3)] border border-white/20"
             >
               <RefreshCw className="h-3.5 w-3.5 mr-2" />
               Tap to Retry
@@ -352,9 +352,9 @@ export default function RequestsForumPage() {
 
       {/* Pitch Idea Dialog */}
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className="sm:max-w-lg rounded-3xl p-6">
+        <DialogContent className="sm:max-w-lg rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.15)]">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl font-bold">
+            <DialogTitle className="font-display text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent">
               Pitch an Idea or Request Co-Founder
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -366,10 +366,10 @@ export default function RequestsForumPage() {
             <div>
               <label className="text-xs font-bold text-foreground block mb-1.5">Topic / Tag</label>
               <Select value={reqTag} onValueChange={(v) => setReqTag(v as CollaborationTag)}>
-                <SelectTrigger className="rounded-xl h-10 text-xs">
+                <SelectTrigger className="rounded-xl h-10 text-xs bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-white/30 dark:border-white/10 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl text-xs">
+                <SelectContent className="rounded-2xl text-xs bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-white/30 dark:border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
                   <SelectItem value="LOOKING_FOR_COFOUNDER">🚀 Looking for Co-Founder</SelectItem>
                   <SelectItem value="NEED_FEEDBACK">💡 Need Feedback / User Testing</SelectItem>
                   <SelectItem value="HARDWARE_HELP">🛠️ Hardware & Maker Assistance</SelectItem>
@@ -385,7 +385,7 @@ export default function RequestsForumPage() {
                 value={reqTitle}
                 onChange={(e) => setReqTitle(e.target.value)}
                 placeholder="e.g. Need an IoT co-founder for smart irrigation prototype..."
-                className="rounded-xl h-10 text-xs"
+                className="rounded-xl h-10 text-xs bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-white/30 dark:border-white/10 shadow-[0_2px_10px_rgba(0,0,0,0.03)] focus-visible:border-cyan-500/50"
                 maxLength={150}
               />
             </div>
@@ -396,7 +396,7 @@ export default function RequestsForumPage() {
                 value={reqDesc}
                 onChange={(e) => setReqDesc(e.target.value)}
                 placeholder="Describe your tech stack, hardware parts needed, and what you are looking for in a collaborator..."
-                className="rounded-xl text-xs min-h-[120px]"
+                className="rounded-xl text-xs min-h-[120px] bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-white/30 dark:border-white/10 shadow-[0_2px_10px_rgba(0,0,0,0.03)] focus-visible:border-cyan-500/50"
                 maxLength={3000}
               />
             </div>
@@ -406,14 +406,14 @@ export default function RequestsForumPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setCreateModalOpen(false)}
-                className="rounded-xl text-xs"
+                className="rounded-xl text-xs bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border-white/30 dark:border-white/10 hover:bg-white/60 dark:hover:bg-slate-700/60"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={submitting}
-                className="btn-gradient-primary rounded-xl text-xs font-bold px-5"
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-bold px-5 shadow-[0_4px_20px_rgba(6,182,212,0.3)] border border-white/20"
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Publish Pitch'}
               </Button>
@@ -424,9 +424,9 @@ export default function RequestsForumPage() {
 
       {/* Connect & Message Dialog */}
       <Dialog open={connectModalOpen} onOpenChange={setConnectModalOpen}>
-        <DialogContent className="sm:max-w-md rounded-3xl p-6">
+        <DialogContent className="sm:max-w-md rounded-3xl p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.15)]">
           <DialogHeader>
-            <DialogTitle className="font-display text-lg font-bold">
+            <DialogTitle className="font-display text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent">
               Respond to {selectedReqForConnect?.authorName}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -439,7 +439,7 @@ export default function RequestsForumPage() {
               value={connectMessage}
               onChange={(e) => setConnectMessage(e.target.value)}
               placeholder="Hi, I saw your pitch! I have experience with ESP32 and React. Let's meet at the library to discuss..."
-              className="rounded-xl text-xs min-h-[110px]"
+              className="rounded-xl text-xs min-h-[110px] bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-white/30 dark:border-white/10 shadow-[0_2px_10px_rgba(0,0,0,0.03)] focus-visible:border-cyan-500/50"
             />
           </div>
 
@@ -448,13 +448,13 @@ export default function RequestsForumPage() {
               type="button"
               variant="outline"
               onClick={() => setConnectModalOpen(false)}
-              className="rounded-xl text-xs"
+              className="rounded-xl text-xs bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border-white/30 dark:border-white/10 hover:bg-white/60 dark:hover:bg-slate-700/60"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSendConnect}
-              className="btn-gradient-primary rounded-xl text-xs font-bold px-5"
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-bold px-5 shadow-[0_4px_20px_rgba(6,182,212,0.3)] border border-white/20"
             >
               <Send className="h-3.5 w-3.5 mr-1.5" />
               Send Message
