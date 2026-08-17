@@ -41,14 +41,6 @@ const navItems = [
   { href: '/community', label: 'Community', icon: MessageSquare },
 ];
 
-const mobileQuickChips = [
-  { href: '/marketplace', label: 'Marketplace', icon: '🛍️' },
-  { href: '/used', label: 'Used & Pre-Owned', icon: '♻️' },
-  { href: '/services', label: 'Freelance Gigs', icon: '⚡' },
-  { href: '/requests', label: 'Need / Requests', icon: '🙋' },
-  { href: '/deals', label: 'Deals < ₹199', icon: '🔥' },
-  { href: '/categories', label: 'All Categories', icon: '📂' },
-];
 
 export function Navbar() {
   const pathname = usePathname();
@@ -94,43 +86,40 @@ export function Navbar() {
     <header
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-200',
-        scrolled
-          ? 'border-b border-border/80 bg-background/95 backdrop-blur-2xl shadow-xs'
-          : 'border-b border-border/50 bg-background/95 backdrop-blur-md'
+        'border-b border-border/60 bg-background/95 backdrop-blur-md'
       )}
     >
-      <div className="container-px mx-auto max-w-7xl w-full min-w-0">
-        {/* Main Desktop & Mobile Header Bar - Slightly taller & more spacious */}
-        <div className="flex h-16 sm:h-18 items-center justify-between gap-3 sm:gap-5">
-          {/* Left: Mobile Sheet Trigger + Logo */}
-          <div className="flex items-center gap-2.5">
+      <div className="px-3.5 xs:px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full min-w-0">
+        {/* Auto-Adjusting Responsive Header Bar for Every Screen */}
+        <div className="flex h-15 xs:h-16 sm:h-18 items-center justify-between w-full">
+          {/* Left: Mobile Menu + Blue Squircle Logo + Bold CampusCart text */}
+          <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 shrink-0 min-w-0">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden h-10 w-10 rounded-2xl hover:bg-secondary active:scale-95 transition-transform"
+                <button
+                  type="button"
+                  className="md:hidden flex items-center justify-center h-9 w-9 xs:h-10 xs:w-10 rounded-xl text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
                   aria-label="Open navigation menu"
                 >
-                  <Menu className="h-5 w-5" />
-                </Button>
+                  <Menu className="h-5.5 w-5.5 xs:h-6 xs:w-6 stroke-[2.2]" />
+                </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] max-w-xs p-0 flex flex-col bg-background">
-                <div className="p-5 border-b border-border bg-gradient-to-br from-primary/10 via-background to-secondary/30">
+              <SheetContent side="left" className="w-[88vw] max-w-sm p-0 flex flex-col bg-background">
+                <div className="p-5 border-b border-border bg-card">
                   <div className="flex items-center justify-between">
                     <Link
                       href="/"
                       onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold shadow-xs">
-                        <Store className="h-5 w-5" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#0ea5e9] text-white font-bold shadow-2xs">
+                        <Store className="h-5.5 w-5.5" />
                       </div>
                       <div>
-                        <span className="font-display text-xl font-extrabold tracking-tight block leading-tight">
+                        <span className="font-display text-xl font-black tracking-tight text-foreground block leading-tight">
                           CampusCart
                         </span>
-                        <span className="text-[11px] font-semibold text-primary block leading-none mt-0.5">
+                        <span className="text-xs font-semibold text-muted-foreground block leading-none mt-0.5">
                           SVCET Student Hub
                         </span>
                       </div>
@@ -138,16 +127,27 @@ export function Navbar() {
                   </div>
 
                   {user && profile ? (
-                    <div className="mt-4 flex items-center gap-3 pt-3 border-t border-border/60">
-                      <Avatar className="h-11 w-11 ring-2 ring-primary/20">
+                    <div className="mt-4 flex items-center gap-3.5 pt-3.5 border-t border-border/60">
+                      <Avatar className="h-11 w-11 ring-2 ring-primary/20 shrink-0">
                         <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                        <AvatarFallback className="bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 font-bold text-sm">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <p className="font-bold text-xs truncate text-foreground">{profile.display_name}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{profile.email}</p>
+                        <div className="flex items-center justify-between gap-1.5">
+                          <p className="font-extrabold text-sm truncate text-foreground leading-tight">{profile.display_name}</p>
+                          {isAdmin ? (
+                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-primary/15 text-primary shrink-0">
+                              Admin
+                            </span>
+                          ) : profile?.is_seller ? (
+                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0">
+                              Seller
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
                       </div>
                     </div>
                   ) : null}
@@ -162,18 +162,18 @@ export function Navbar() {
                     }}
                     className="relative"
                   >
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
                     <Input
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search books, kits, skills..."
-                      className="pl-9 pr-3 h-10 rounded-xl bg-secondary/60 text-xs border-border/60"
+                      className="pl-10 pr-3 h-11 rounded-xl bg-secondary/60 text-sm border-border/60"
                     />
                   </form>
 
                   {/* Core Navigation */}
                   <div className="space-y-1">
-                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1">
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-3 py-1.5">
                       Campus Marketplace
                     </div>
                     {navItems.map((item) => {
@@ -185,20 +185,20 @@ export function Navbar() {
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
                           className={cn(
-                            'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all touch-target',
+                            'flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold transition-all touch-target',
                             active
                               ? 'bg-primary text-primary-foreground shadow-xs'
                               : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                           )}
                         >
-                          <div className="flex items-center gap-3">
-                            <Icon className="h-4 w-4 shrink-0" />
+                          <div className="flex items-center gap-3.5">
+                            <Icon className="h-4.5 w-4.5 shrink-0" />
                             <span>{item.label}</span>
                           </div>
                           {item.badge && (
                             <span
                               className={cn(
-                                'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+                                'text-[11px] font-bold px-2 py-0.5 rounded-full',
                                 active
                                   ? 'bg-primary-foreground/20 text-primary-foreground'
                                   : 'bg-primary/10 text-primary'
@@ -216,7 +216,7 @@ export function Navbar() {
 
                   {/* Account / User Section */}
                   <div className="space-y-1">
-                    <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 py-1">
+                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-3 py-1.5">
                       Student Account
                     </div>
                     {user ? (
@@ -224,54 +224,66 @@ export function Navbar() {
                         <Link
                           href="/dashboard"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                          className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
                         >
-                          <LayoutDashboard className="h-4 w-4 text-primary" />
-                          Student Dashboard
+                          <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0">
+                            <LayoutDashboard className="h-4.5 w-4.5" />
+                          </div>
+                          <span>Student Dashboard</span>
                         </Link>
                         <Link
                           href="/account/orders"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                          className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
                         >
-                          <Package className="h-4 w-4 text-emerald-500" />
-                          My Orders & Pickups
+                          <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                            <Package className="h-4.5 w-4.5" />
+                          </div>
+                          <span>My Orders & Pickups</span>
                         </Link>
                         <Link
                           href="/messages"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                          className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
                         >
-                          <MessageSquare className="h-4 w-4 text-indigo-500" />
-                          Campus Messages
+                          <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+                            <MessageSquare className="h-4.5 w-4.5" />
+                          </div>
+                          <span>Campus Messages</span>
                         </Link>
                         {isAdmin && (
                           <Link
                             href="/admin"
                             onClick={() => setMobileOpen(false)}
-                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-primary bg-primary/10 transition-all"
+                            className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-bold text-primary bg-primary/10 transition-all"
                           >
-                            <ShieldCheck className="h-4 w-4" />
-                            Admin Control Center
+                            <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0">
+                              <ShieldCheck className="h-4.5 w-4.5" />
+                            </div>
+                            <span>Admin Control Center</span>
                           </Link>
                         )}
                         {profile?.is_seller ? (
                           <Link
                             href="/seller/dashboard"
                             onClick={() => setMobileOpen(false)}
-                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-amber-600 bg-amber-500/10 transition-all"
+                            className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 transition-all"
                           >
-                            <Store className="h-4 w-4" />
-                            Seller Studio Dashboard
+                            <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 shrink-0">
+                              <Store className="h-4.5 w-4.5" />
+                            </div>
+                            <span>Seller Studio Dashboard</span>
                           </Link>
                         ) : (
                           <Link
                             href="/account/settings"
                             onClick={() => setMobileOpen(false)}
-                            className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-primary bg-primary/10 transition-all"
+                            className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-bold text-primary bg-primary/10 transition-all"
                           >
-                            <Sparkles className="h-4 w-4" />
-                            Become a Student Seller
+                            <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0">
+                              <Sparkles className="h-4.5 w-4.5" />
+                            </div>
+                            <span>Become a Student Seller</span>
                           </Link>
                         )}
                         <button
@@ -279,25 +291,27 @@ export function Navbar() {
                             setMobileOpen(false);
                             handleSignOut();
                           }}
-                          className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all text-left"
+                          className="w-full flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-bold text-destructive hover:bg-destructive/10 transition-all text-left"
                         >
-                          <LogOut className="h-4 w-4" />
-                          Sign Out
+                          <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-destructive/10 text-destructive shrink-0">
+                            <LogOut className="h-4.5 w-4.5" />
+                          </div>
+                          <span>Sign Out</span>
                         </button>
                       </>
                     ) : (
-                      <div className="pt-1 space-y-2">
+                      <div className="pt-1 space-y-2.5">
                         <Link
                           href="/login"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-bold border border-border bg-card hover:bg-secondary transition-all"
+                          className="flex items-center justify-center rounded-xl px-4 py-3 text-sm font-bold border border-border bg-card hover:bg-secondary transition-all"
                         >
                           Sign In
                         </Link>
                         <Link
                           href="/register"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center justify-center rounded-xl px-4 py-2.5 text-xs font-bold bg-primary text-primary-foreground shadow-xs transition-all"
+                          className="flex items-center justify-center rounded-xl px-4 py-3 text-sm font-bold bg-primary text-primary-foreground shadow-xs transition-all"
                         >
                           Join CampusCart
                         </Link>
@@ -308,19 +322,14 @@ export function Navbar() {
               </SheetContent>
             </Sheet>
 
-            {/* Brand Logo & College Tag */}
-            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold shadow-sm group-hover:scale-105 transition-transform">
-                <Store className="h-5 w-5 sm:h-6 sm:w-6" />
+            {/* Brand Logo */}
+            <Link href="/" className="flex items-center gap-2 xs:gap-2.5 shrink-0 group">
+              <div className="flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] xs:rounded-[14px] bg-[#0ea5e9] text-white font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+                <Store className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-6 sm:w-6" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-foreground leading-none">
-                  CampusCart
-                </span>
-                <span className="text-[11px] font-bold text-primary leading-none mt-0.5 hidden xs:block">
-                  SVCET Marketplace
-                </span>
-              </div>
+              <span className="font-display text-lg xs:text-xl sm:text-2xl font-black tracking-tight text-foreground leading-none">
+                CampusCart
+              </span>
             </Link>
           </div>
 
@@ -336,7 +345,7 @@ export function Navbar() {
                     'px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5',
                     active
                       ? 'bg-primary/10 text-primary font-bold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/70'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
                   )}
                 >
                   <span>{item.label}</span>
@@ -353,7 +362,7 @@ export function Navbar() {
           {/* Desktop Search Bar */}
           <form
             onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-2"
+            className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-3"
           >
             <div className="relative w-full">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -361,7 +370,7 @@ export function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products, gigs, notes..."
-                className="pl-9 pr-8 h-10 rounded-2xl bg-secondary/50 border-transparent hover:bg-secondary/70 focus-visible:bg-background focus-visible:border-input text-xs transition-all"
+                className="pl-9 pr-8 h-10 rounded-xl bg-secondary/50 border-transparent hover:bg-secondary/70 focus-visible:bg-background focus-visible:border-input text-xs transition-all"
               />
               {searchQuery && (
                 <button
@@ -375,26 +384,25 @@ export function Navbar() {
             </div>
           </form>
 
-          {/* Right Action Icons */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Right Action Icons - Fluid auto-adjusting targets for every phone screen size */}
+          <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0">
             {/* Mobile Search Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-10 w-10 rounded-2xl active:scale-95"
+            <button
+              type="button"
+              className="md:hidden flex items-center justify-center h-9 w-9 xs:h-10 xs:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
               onClick={() => setMobileSearchOpen((prev) => !prev)}
               aria-label="Toggle mobile search"
             >
-              <Search className="h-5 w-5" />
-            </Button>
+              <Search className="h-5 w-5 xs:h-5.5 xs:w-5.5 stroke-[2.2]" />
+            </button>
 
-            {/* Quick Access: Admin Approval Center & Sell Item */}
+            {/* Quick Access: Admin Approval Center & Sell Item (Desktop) */}
             {isAdmin && (
               <Button
                 variant="outline"
                 size="sm"
                 asChild
-                className="hidden lg:inline-flex rounded-xl text-xs font-bold border-primary/40 bg-primary/5 text-primary hover:bg-primary/15 h-9 px-3 gap-1.5 shadow-2xs"
+                className="hidden lg:inline-flex rounded-xl text-xs font-bold border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 h-9 px-3.5 gap-1.5"
               >
                 <Link href="/admin">
                   <ShieldCheck className="h-4 w-4" />
@@ -407,114 +415,175 @@ export function Navbar() {
               <Button
                 size="sm"
                 asChild
-                className="hidden sm:inline-flex rounded-xl text-xs font-bold shadow-xs h-9 px-3.5 gap-1.5"
+                className="hidden sm:inline-flex rounded-xl text-xs font-bold h-9 px-3.5 gap-1.5 shadow-2xs"
               >
                 <Link href="/seller/dashboard/products">
                   <Plus className="h-4 w-4" />
-                  <span>Sell Item</span>
+                  <span>Sell</span>
                 </Link>
               </Button>
             )}
 
             {/* Desktop Messages shortcut */}
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-2xl">
+            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
               <Link href="/messages" aria-label="Campus Messages">
                 <MessageSquare className="h-5 w-5" />
               </Link>
             </Button>
 
             {/* Wishlist */}
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-2xl">
+            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
               <Link href="/wishlist" aria-label="Wishlist">
                 <Heart className="h-5 w-5" />
               </Link>
             </Button>
 
             {/* Cart Button with Counter */}
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className="relative h-10 w-10 rounded-2xl hover:bg-secondary active:scale-95"
+            <Link
+              href="/cart"
+              aria-label="Shopping Cart"
+              className="relative flex items-center justify-center h-9 w-9 xs:h-10 xs:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
             >
-              <Link href="/cart" aria-label="Shopping Cart">
-                <ShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-xs animate-scale-in">
-                    {totalItems > 99 ? '99+' : totalItems}
-                  </span>
-                )}
-              </Link>
-            </Button>
+              <ShoppingCart className="h-5 w-5 xs:h-5.5 xs:w-5.5 stroke-[1.8]" />
+              {totalItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
+            </Link>
 
             {/* User Account / Profile dropdown or Login buttons */}
             {loading ? (
-              <div className="h-9 w-9 rounded-full bg-muted animate-pulse ml-1" />
+              <div className="h-8.5 w-8.5 xs:h-9.5 xs:w-9.5 rounded-full bg-muted animate-pulse shrink-0" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="ml-1 flex items-center gap-1.5 rounded-full p-0.5 ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-ring"
+                    type="button"
+                    className="flex items-center justify-center h-8.5 w-8.5 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0"
                     aria-label="Account menu"
                   >
-                    <Avatar className="h-9 w-9 sm:h-9.5 sm:w-9.5">
+                    <Avatar className="h-8.5 w-8.5 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 ring-2 ring-primary/20">
                       {profile?.avatar_url && (
                         <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
                       )}
-                      <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                      <AvatarFallback className="text-xs font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-60 rounded-2xl p-1.5 shadow-xl">
-                  <DropdownMenuLabel className="p-2">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-foreground">{profile?.display_name}</span>
-                      <span className="text-[10px] font-medium text-muted-foreground truncate">
-                        {profile?.email}
-                      </span>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                    <Link href="/dashboard" className="flex items-center text-xs">
-                      <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
-                      Student Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                    <Link href="/account" className="flex items-center text-xs">
-                      <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                      My Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                    <Link href="/account/orders" className="flex items-center text-xs">
-                      <Package className="mr-2 h-4 w-4 text-emerald-500" />
-                      My Orders
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                    <Link href="/messages" className="flex items-center text-xs">
-                      <MessageSquare className="mr-2 h-4 w-4 text-indigo-500" />
-                      Campus Messages
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
-                    <Link href="/requests" className="flex items-center text-xs">
-                      <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
-                      Product Requests Board
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  className="w-[280px] xs:w-[305px] sm:w-[325px] rounded-2xl sm:rounded-3xl p-2.5 shadow-2xl border border-border/80 bg-popover/98 backdrop-blur-xl animate-in fade-in-50 zoom-in-95"
+                >
+                  {/* User Profile Header Card - Clicking opens Profile & Settings */}
+                  <DropdownMenuItem asChild className="p-0 rounded-2xl mb-1.5 focus:bg-transparent cursor-pointer">
+                    <Link
+                      href="/account/settings"
+                      className="p-3 rounded-2xl bg-secondary/50 hover:bg-secondary/80 border border-border/40 flex items-center gap-3 transition-colors w-full"
+                    >
+                      <Avatar className="h-10 w-10 ring-2 ring-primary/25 shrink-0">
+                        {profile?.avatar_url && (
+                          <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+                        )}
+                        <AvatarFallback className="text-sm font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-sm font-extrabold text-foreground truncate leading-tight">
+                            {profile?.display_name || 'Student'}
+                          </p>
+                          {isAdmin ? (
+                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-primary/15 text-primary shrink-0">
+                              Admin
+                            </span>
+                          ) : profile?.is_seller ? (
+                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0">
+                              Seller
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground shrink-0">
+                              Student
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate font-medium mt-0.5">
+                          {profile?.email}
+                        </p>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
 
+                  <div className="space-y-0.5">
+                    {/* Student Dashboard */}
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-secondary active:scale-[0.98] transition-all"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0">
+                          <LayoutDashboard className="h-4.5 w-4.5" />
+                        </div>
+                        <span>Student Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+
+                    {/* My Orders */}
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                      <Link
+                        href="/account/orders"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-secondary active:scale-[0.98] transition-all"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                          <Package className="h-4.5 w-4.5" />
+                        </div>
+                        <span>My Orders</span>
+                      </Link>
+                    </DropdownMenuItem>
+
+                    {/* Campus Messages */}
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                      <Link
+                        href="/messages"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-secondary active:scale-[0.98] transition-all"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+                          <MessageSquare className="h-4.5 w-4.5" />
+                        </div>
+                        <span>Campus Messages</span>
+                      </Link>
+                    </DropdownMenuItem>
+
+                    {/* Product Requests */}
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                      <Link
+                        href="/requests"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-secondary active:scale-[0.98] transition-all"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+                          <Sparkles className="h-4.5 w-4.5" />
+                        </div>
+                        <span>Product Requests</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </div>
+
                   {isAdmin && (
                     <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer bg-primary/5 text-primary font-semibold">
-                        <Link href="/admin" className="flex items-center text-xs">
-                          <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
-                          Admin Control Center
+                      <DropdownMenuSeparator className="my-1.5" />
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                        <Link
+                          href="/admin"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-primary/10 text-primary hover:bg-primary/15 active:scale-[0.98] transition-all"
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0">
+                            <ShieldCheck className="h-4.5 w-4.5" />
+                          </div>
+                          <span>Admin Control Center</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -522,33 +591,45 @@ export function Navbar() {
 
                   {profile?.is_seller ? (
                     <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer bg-amber-500/10 text-amber-600 font-semibold">
-                        <Link href="/seller/dashboard" className="flex items-center text-xs">
-                          <Store className="mr-2 h-4 w-4" />
-                          Seller Studio
+                      <DropdownMenuSeparator className="my-1.5" />
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                        <Link
+                          href="/seller/dashboard"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 active:scale-[0.98] transition-all"
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-400 shrink-0">
+                            <Store className="h-4.5 w-4.5" />
+                          </div>
+                          <span>Seller Studio</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
                   ) : (
                     <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer text-primary font-semibold">
-                        <Link href="/account/settings" className="flex items-center text-xs">
-                          <Store className="mr-2 h-4 w-4" />
-                          Become a Seller
+                      <DropdownMenuSeparator className="my-1.5" />
+                      <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-0 focus:bg-transparent">
+                        <Link
+                          href="/account/settings"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-primary/10 text-primary hover:bg-primary/15 active:scale-[0.98] transition-all"
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0">
+                            <Store className="h-4.5 w-4.5" />
+                          </div>
+                          <span>Become a Seller</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
                   )}
 
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-1.5" />
                   <DropdownMenuItem
                     onClick={handleSignOut}
-                    className="rounded-xl cursor-pointer text-xs text-destructive focus:text-destructive focus:bg-destructive/10"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-destructive hover:bg-destructive/10 active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive shrink-0">
+                      <LogOut className="h-4.5 w-4.5" />
+                    </div>
+                    <span>Sign Out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -572,49 +653,28 @@ export function Navbar() {
               setMobileSearchOpen(false);
               handleSearchSubmit(e);
             }}
-            className="pb-3.5 pt-1 md:hidden animate-fade-in"
+            className="pb-3 pt-1 md:hidden animate-fade-in"
           >
             <div className="relative w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search textbooks, drawing boards, projects, gigs..."
-                className="pl-10 pr-20 h-11 rounded-2xl bg-secondary/80 text-xs border-border/80 shadow-xs"
+                placeholder="Search products, notes, gigs..."
+                className="pl-9 pr-16 h-9 rounded-xl bg-secondary/60 text-xs border-border/60"
               />
               <Button
                 type="submit"
                 size="sm"
-                className="btn-gradient-primary absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-3 rounded-xl text-xs font-bold shadow-2xs"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 px-2.5 rounded-lg text-xs font-semibold"
               >
-                Go
+                Search
               </Button>
             </div>
           </form>
         )}
 
-        {/* Mobile Quick Category Horizontal Carousel Strip - 44px min touch target */}
-        <div className="w-full min-w-0 flex sm:hidden items-center gap-2 overflow-x-auto pb-2.5 pt-1 scrollbar-none">
-          {mobileQuickChips.map((chip) => {
-            const active = pathname === chip.href;
-            return (
-              <Link
-                key={chip.href}
-                href={chip.href}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none active:scale-95 shadow-2xs border',
-                  active
-                    ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
-                    : 'bg-card text-foreground/80 hover:text-foreground border-border/70 hover:border-primary/40'
-                )}
-              >
-                <span className="text-sm">{chip.icon}</span>
-                <span>{chip.label}</span>
-              </Link>
-            );
-          })}
-        </div>
       </div>
     </header>
   );

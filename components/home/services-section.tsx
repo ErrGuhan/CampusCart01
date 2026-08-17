@@ -44,67 +44,67 @@ const popularSkills = [
 
 export function ServicesSection() {
   return (
-    <section className="border-y border-border/80 bg-secondary/30 py-12 sm:py-16">
+    <section className="border-y border-border/80 bg-secondary/30 py-10 sm:py-16">
       <div className="container-px mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-0.5 text-xs font-bold text-indigo-600 mb-2">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Campus Freelance & Services Hub</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3.5 py-1 text-xs sm:text-sm font-bold text-indigo-600 mb-1.5">
+              <Sparkles className="h-4 w-4" />
+              <span>Campus Freelance Hub</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
               Hire Talented Classmates for Your Needs
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-2xl">
+            <p className="mt-1.5 text-sm sm:text-base text-muted-foreground max-w-2xl font-medium">
               Need a symposium banner, a quick website, or help with your lab project? Connect with verified student freelancers on campus.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" className="rounded-xl text-xs" asChild>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Button variant="outline" size="sm" className="rounded-2xl text-xs sm:text-sm h-11 px-4 font-bold" asChild>
               <Link href="/services/bounties">
-                <Zap className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                <Zap className="h-4 w-4 mr-1.5 text-primary" />
                 Campus Bounties
               </Link>
             </Button>
-            <Button size="sm" className="rounded-xl text-xs font-bold shadow-xs" asChild>
+            <Button size="sm" className="rounded-2xl text-xs sm:text-sm h-11 px-5 font-extrabold shadow-xs" asChild>
               <Link href="/services">
                 Explore All Gigs
-                <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                <ArrowRight className="h-4 w-4 ml-1.5" />
               </Link>
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {popularSkills.map((skill) => {
             const Icon = skill.icon;
             return (
               <Link
                 key={skill.slug}
                 href={`/services?category=${skill.slug}`}
-                className="group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl border border-border/80 bg-card p-5 hover:border-indigo-500/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-95"
+                className="group relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-5 sm:p-6 hover:border-indigo-500/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-95 shadow-2xs"
               >
                 <div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-3 shadow-xs">
-                    <Icon className="h-5 w-5" />
+                  <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4 shadow-2xs">
+                    <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="font-display text-sm sm:text-base font-bold text-foreground group-hover:text-indigo-600 transition-colors leading-snug">
+                  <h3 className="font-display text-base sm:text-lg font-extrabold text-foreground group-hover:text-indigo-600 transition-colors leading-snug">
                     {skill.title}
                   </h3>
-                  <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
                     {skill.desc}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-border/70 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Clock className="h-3 w-3" />
+                <div className="mt-6 pt-3.5 border-t border-border/70 flex items-center justify-between text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                    <Clock className="h-3.5 w-3.5" />
                     <span>{skill.turnaround}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-muted-foreground block leading-none">Starting from</span>
-                    <span className="font-bold text-foreground group-hover:text-indigo-600 transition-colors text-xs sm:text-sm">
+                    <span className="text-[11px] text-muted-foreground block leading-none font-medium">Starting from</span>
+                    <span className="font-extrabold text-foreground group-hover:text-indigo-600 transition-colors text-sm sm:text-base">
                       {skill.price}
                     </span>
                   </div>

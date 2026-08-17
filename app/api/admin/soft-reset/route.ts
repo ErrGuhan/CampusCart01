@@ -32,7 +32,7 @@ async function deleteFirestoreCollection(collectionName: string, preserveConditi
           for (const msgDoc of subSnap.docs) {
             await deleteDoc(doc(db, 'chats', docSnap.id, 'messages', msgDoc.id));
           }
-        } catch {}
+        } catch { }
       }
 
       await deleteDoc(doc(db, collectionName, docSnap.id));

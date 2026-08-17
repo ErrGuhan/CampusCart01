@@ -274,12 +274,14 @@ export async function getAllSellers(): Promise<Seller[]> {
     bySeller.set(p.seller_id, list);
   }
 
-  return profiles.map((profile) => {
-    const ratings = bySeller.get(profile.id) ?? [];
-    const productCount = ratings.length;
-    const rating = productCount ? ratings.reduce((a, b) => a + b, 0) / productCount : 0;
-    return mapSeller(profile, { rating, productCount });
-  });
+  return profiles
+    .filter((profile) => profile.role !== 'admin' && !profile.email?.toLowerCase().includes('guhan24td0781'))
+    .map((profile) => {
+      const ratings = bySeller.get(profile.id) ?? [];
+      const productCount = ratings.length;
+      const rating = productCount ? ratings.reduce((a, b) => a + b, 0) / productCount : 0;
+      return mapSeller(profile, { rating, productCount });
+    });
 }
 
 // For the seller's own dashboard — returns every status (draft/paused/etc),

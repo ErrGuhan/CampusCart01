@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const connectCards = [
   {
     title: 'Need a Co-Founder?',
-    subtitle: 'Find coders, designers & makers',
+    subtitle: 'Find coders, designers & makers across campus',
     icon: Rocket,
     tag: 'LOOKING_FOR_COFOUNDER',
     color: 'from-blue-600 to-indigo-600',
@@ -16,7 +16,7 @@ const connectCards = [
   },
   {
     title: 'Looking for Beta Testers?',
-    subtitle: 'Get feedback from campus peers',
+    subtitle: 'Get feedback & reviews from campus peers',
     icon: TestTube2,
     tag: 'BETA_TESTERS',
     color: 'from-amber-500 to-orange-500',
@@ -25,7 +25,7 @@ const connectCards = [
   },
   {
     title: 'Need Hardware Tools?',
-    subtitle: 'Borrow boards, meters & kits',
+    subtitle: 'Borrow boards, meters, sensors & kits',
     icon: Wrench,
     tag: 'HARDWARE_HELP',
     color: 'from-cyan-500 to-teal-500',
@@ -34,7 +34,7 @@ const connectCards = [
   },
   {
     title: 'Find a Teammate',
-    subtitle: 'Hackathons & Symposiums',
+    subtitle: 'Partner for Hackathons & Symposiums',
     icon: Users,
     tag: 'GENERAL',
     color: 'from-emerald-500 to-green-600',
@@ -45,28 +45,28 @@ const connectCards = [
 
 export function QuickConnectSection() {
   return (
-    <section className="container-px mx-auto max-w-7xl py-6 sm:py-10">
-      <div className="flex items-end justify-between gap-4 mb-4 sm:mb-6">
+    <section className="container-px mx-auto max-w-7xl py-8 sm:py-12">
+      <div className="flex items-end justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primary mb-1">
-            <Sparkles className="h-3.5 w-3.5" />
+          <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-primary mb-1">
+            <Sparkles className="h-4 w-4" />
             <span>Campus Collaboration Hub</span>
           </div>
-          <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-tight">
             Connect & Build with Students
           </h2>
         </div>
         <Link
           href="/requests"
-          className="hidden sm:flex items-center gap-1 text-xs sm:text-sm font-bold text-primary hover:gap-2 transition-all"
+          className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all"
         >
           Open Request Board
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 
-      {/* Horizontal Scrollable Row on mobile, 4-col grid on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* Grid with larger padding and scaled typography */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
         {connectCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -74,25 +74,25 @@ export function QuickConnectSection() {
               key={card.title}
               href={`/requests?tag=${card.tag}`}
               className={cn(
-                'group flex flex-col justify-between p-4 sm:p-5 rounded-2xl sm:rounded-3xl border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]',
+                'group flex flex-col justify-between p-5 sm:p-6 rounded-3xl border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]',
                 card.borderColor
               )}
             >
               <div>
-                <div className={cn('flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl mb-3 shadow-2xs group-hover:scale-105 transition-transform', card.bgColor)}>
-                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                <div className={cn('flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl mb-4 shadow-2xs group-hover:scale-105 transition-transform', card.bgColor)}>
+                  <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="font-display font-extrabold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors leading-snug">
+                <h3 className="font-display font-extrabold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors leading-snug">
                   {card.title}
                 </h3>
-                <p className="mt-1 text-xs text-muted-foreground font-medium line-clamp-2">
+                <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground font-medium line-clamp-2 leading-relaxed">
                   {card.subtitle}
                 </p>
               </div>
 
-              <div className="mt-4 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] sm:text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform">
+              <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between text-xs sm:text-sm font-bold text-primary group-hover:translate-x-0.5 transition-transform">
                 <span>Connect</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                <ArrowRight className="h-4 w-4" />
               </div>
             </Link>
           );

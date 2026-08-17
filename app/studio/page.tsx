@@ -1,14 +1,24 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { PublicCreatorDirectory } from '@/components/public-creator-directory';
-import SellerDashboardPage from '@/app/seller/dashboard/page';
+import { SellerDashboardContent } from '@/components/seller-dashboard-content';
 import { Loader2 } from 'lucide-react';
 
 export default function StudioPage() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+
+  // Automatically redirect authenticated creators/students to their dedicated Seller Studio
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/seller/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   // 1. Loading State Check (prevents flashing public directory to a logged-in user while verifying session token)
   if (authLoading) {
@@ -22,7 +32,7 @@ export default function StudioPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">Loading Studio...</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Verifying your campus creator credentials</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Redirecting to your Seller Studio</p>
             </div>
           </div>
         </main>
@@ -36,6 +46,6 @@ export default function StudioPage() {
     return <PublicCreatorDirectory />;
   }
 
-  // 3. Conditional Rendering: Authenticated creator/student -> Redesigned Seller Dashboard
-  return <SellerDashboardPage />;
+  // 3. Fallback for authenticated creator/student while router redirects
+  return <SellerDashboardContent />;
 }

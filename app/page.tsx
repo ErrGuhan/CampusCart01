@@ -12,8 +12,8 @@ import { DealsBannerSection } from '@/components/home/deals-banner-section';
 import { RequestsPreviewSection } from '@/components/home/requests-preview-section';
 import { HowItWorksSection } from '@/components/home/how-it-works-section';
 import { CtaSection } from '@/components/home/cta-section';
-import { CreatorSpotlight } from '@/components/home/creator-spotlight';
 import { QuickConnectSection } from '@/components/home/quick-connect-section';
+import { StudioSwipePanel } from '@/components/home/studio-swipe-panel';
 import {
   getCategories,
   getFeaturedProducts,
@@ -86,29 +86,18 @@ export default async function Home() {
       label: 'Home Feed',
       isHome: true,
       content: (
-        <div className="pb-28 sm:pb-32 md:pb-0 space-y-2 sm:space-y-4">
+        <div className="pb-28 sm:pb-32 md:pb-0 space-y-4 sm:space-y-6">
           <HeroSection />
-          <QuickConnectSection />
-          <CreatorSpotlight />
           <CategoriesSection categories={categories} />
-          <DealsBannerSection />
           <ProductSection
-            title="Trending Campus Favorites"
-            subtitle="Top-rated textbooks, project kits & essentials loved by students"
+            title="Featured Campus Listings"
+            subtitle="Top-rated textbooks, project kits & student essentials"
             products={featured.slice(0, 4)}
             viewAllHref="/marketplace"
           />
           <ServicesSection />
           <RequestsPreviewSection />
           <CreatorsSection sellers={sellers.slice(0, 3)} />
-          <ProductSection
-            title="Fresh Campus Arrivals"
-            subtitle="Latest listings and semester resources published this week"
-            products={newArrivals.slice(0, 4)}
-            viewAllHref="/marketplace"
-          />
-          <HowItWorksSection />
-          <CtaSection />
           <Footer />
         </div>
       ),
@@ -138,32 +127,7 @@ export default async function Home() {
     {
       id: 'studio',
       label: 'Creator Studio',
-      content: (
-        <div className="pt-3 pb-28 sm:pb-32 px-3.5 sm:px-6 max-w-7xl mx-auto space-y-8">
-          <div className="flex items-center justify-between pt-1">
-            <div>
-              <h2 className="text-xl font-bold font-display tracking-tight">Creator & Seller Studio</h2>
-              <p className="text-xs text-muted-foreground font-medium">Discover campus creators and manage your store</p>
-            </div>
-            <Button asChild size="sm" variant="outline" className="rounded-xl text-xs touch-target min-h-[44px] sm:min-h-auto">
-              <Link href="/studio">Open Studio</Link>
-            </Button>
-          </div>
-          <CreatorsSection sellers={sellers} />
-          <div className="p-6 rounded-3xl bg-card border border-border text-center space-y-3 shadow-xs">
-            <h3 className="font-bold text-sm text-foreground">Want to start earning on campus?</h3>
-            <p className="text-xs text-muted-foreground font-medium">List your notes, project components, or offer your skills as a freelancer.</p>
-            <div className="flex justify-center gap-2.5 pt-1">
-              <Button asChild size="sm" className="btn-gradient-primary rounded-xl text-xs touch-target min-h-[44px] sm:min-h-auto">
-                <Link href="/studio">Go to Studio</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline" className="rounded-xl text-xs touch-target min-h-[44px] sm:min-h-auto">
-                <Link href="/dashboard">My Account</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      ),
+      content: <StudioSwipePanel sellers={sellers} />,
     },
   ];
 

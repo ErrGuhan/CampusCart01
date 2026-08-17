@@ -308,30 +308,50 @@ export async function getGigsBySeller(username: string): Promise<ServiceGig[]> {
 
 // ---------- Products & Mappers ----------
 
-export function mapDocToSeller(data: any, id: string, stats?: { rating?: number; productCount?: number }): Seller {
-  const isGuhan =
-    data.email?.toLowerCase().includes('guhan') ||
-    data.username?.toLowerCase().includes('guhan') ||
-    data.display_name?.toLowerCase().includes('guhan') ||
-    data.displayName?.toLowerCase().includes('guhan');
+export function isUserAdmin(d: any): boolean {
+  if (!d) return false;
+  const email = (d.email || '').toLowerCase().trim();
+  const role = (d.role || '').toLowerCase().trim();
+  const username = (d.username || '').toLowerCase().trim();
+  const displayName = (d.display_name || d.displayName || '').toLowerCase().trim();
+  const id = (d.id || '').toLowerCase().trim();
+  const bio = (d.bio || '').toLowerCase().trim();
 
-  const cleanUsername = (data.username || (isGuhan ? 'guhan' : data.email?.split('@')[0] || 'student'))
+  return (
+    role === 'admin' ||
+    d.isAdmin === true ||
+    d.is_admin === true ||
+    email === 'guhan24td0781@svcet.ac.in' ||
+    email.includes('guhan24td0781') ||
+    username === 'guhan' ||
+    username === 'guhan24td0781' ||
+    id === 'seller-guhan' ||
+    displayName.includes('guhan murugaiyan') ||
+    bio.includes('platform administrator') ||
+    bio.includes('founder & platform administrator')
+  );
+}
+
+export function mapDocToSeller(data: any, id: string, stats?: { rating?: number; productCount?: number }): Seller {
+  const isAdmin = isUserAdmin(data);
+
+  const cleanUsername = (data.username || (isAdmin ? 'guhan' : data.email?.split('@')[0] || 'student'))
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, '');
 
   return {
     id: id || data.id || 'seller-' + cleanUsername,
     username: cleanUsername,
-    displayName: data.display_name || data.displayName || (isGuhan ? 'Guhan M' : 'Student Creator'),
+    displayName: data.display_name || data.displayName || (isAdmin ? 'Guhan Murugaiyan' : 'Student Creator'),
     avatar:
       data.avatar_url ||
       data.avatarUrl ||
       data.avatar ||
       `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanUsername)}&backgroundColor=b6e3f4,c0aede`,
-    department: data.department || (isGuhan ? 'Computer Science & Engineering (CSE)' : 'Engineering'),
-    year: data.year || (isGuhan ? '4th Year (Final Year)' : 'Student'),
-    bio: data.bio || (isGuhan ? 'Founder & Platform Administrator of CampusCart SVCET.' : 'Student creator building on CampusCart.'),
-    skills: Array.isArray(data.skills) && data.skills.length > 0 ? data.skills : (isGuhan ? ['Next.js', 'React', 'Python', 'IoT', 'Platform Admin'] : ['Campus Seller']),
+    department: data.department || (isAdmin ? 'Computer Science & Engineering (CSE)' : 'Engineering'),
+    year: data.year || (isAdmin ? '4th Year (Final Year)' : 'Student'),
+    bio: data.bio || (isAdmin ? 'Founder & Platform Administrator of CampusCart SVCET.' : 'Student creator building on CampusCart.'),
+    skills: Array.isArray(data.skills) && data.skills.length > 0 ? data.skills : (isAdmin ? ['Next.js', 'React', 'Python', 'Platform Admin'] : ['Campus Seller']),
     rating: typeof stats?.rating === 'number' ? stats.rating : typeof data.rating === 'number' ? data.rating : 0,
     productCount: typeof stats?.productCount === 'number' ? stats.productCount : typeof data.productCount === 'number' ? data.productCount : 0,
     joinedAt: data.created_at || data.createdAt || data.joinedAt || new Date().toISOString(),
@@ -697,6 +717,10 @@ export async function getAllSellers(): Promise<Seller[]> {
     if (!snap.empty) {
       snap.forEach((docSnap) => {
         const d = docSnap.data();
+        // Exclude admin from public student creators list
+        if (isUserAdmin(d) || isUserAdmin({ ...d, id: docSnap.id })) {
+          return;
+        }
         if (d.display_name || d.displayName || d.email || d.username) {
           const s = mapDocToSeller(d, docSnap.id);
           // Canonical key by email or username to ensure 0 duplicates
@@ -709,14 +733,14 @@ export async function getAllSellers(): Promise<Seller[]> {
     console.warn('Notice in getAllSellers Firestore query:', err);
   }
 
-  // 2. Include any active logged-in user from client session if not already present
+  // 2. Include any active logged-in user from client session if not already present and not admin
   if (typeof window !== 'undefined') {
     try {
       const storedFallback = localStorage.getItem('campuscart_fallback_user');
       if (storedFallback) {
         const parsed = JSON.parse(storedFallback);
         const p = parsed?.profile;
-        if (p && (p.display_name || p.email || p.username)) {
+        if (p && !isUserAdmin(p) && !isUserAdmin(parsed?.user) && (p.display_name || p.email || p.username)) {
           const s = mapDocToSeller(p, p.id || parsed?.user?.uid || 'seller-user');
           const canonicalKey = (p.email || s.username || s.id).toLowerCase();
           if (!sellersMap.has(canonicalKey)) {
@@ -727,7 +751,7 @@ export async function getAllSellers(): Promise<Seller[]> {
     } catch {}
   }
 
-  const allSellers = Array.from(sellersMap.values());
+  const allSellers = Array.from(sellersMap.values()).filter((s) => !isUserAdmin(s));
 
   // Dynamically compute real productCount and average rating for each seller
   try {
@@ -767,8 +791,23 @@ export async function getAllSellers(): Promise<Seller[]> {
 }
 
 export async function getSellerByUsername(username: string): Promise<Seller | undefined> {
+  const cleanU = (username || '').toLowerCase().trim();
   const all = await getAllSellers();
-  return all.find((s) => s.username.toLowerCase() === username.toLowerCase());
+  const found = all.find((s) => s.username.toLowerCase() === cleanU);
+  if (found) return found;
+
+  // Direct lookup for specific user profile in Firestore
+  try {
+    const snap = await getDocs(collection(db, 'profiles'));
+    for (const docSnap of snap.docs) {
+      const d = docSnap.data();
+      const u = (d.username || d.email?.split('@')[0] || '').toLowerCase().trim();
+      if (u === cleanU || docSnap.id.toLowerCase() === cleanU) {
+        return mapDocToSeller(d, docSnap.id);
+      }
+    }
+  } catch {}
+  return undefined;
 }
 
 export async function getMyProducts(sellerId: string, username?: string): Promise<Product[]> {

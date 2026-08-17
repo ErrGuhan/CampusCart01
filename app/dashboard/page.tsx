@@ -140,7 +140,7 @@ export default function StudentDashboardPage() {
 
             <div className="flex items-center gap-2.5">
               <Button asChild variant="outline" className="rounded-xl text-xs gap-1.5">
-                <Link href="/account">My Profile</Link>
+                <Link href="/account/settings">My Profile</Link>
               </Button>
               <Button asChild className="rounded-xl text-xs gap-1.5 shadow-sm">
                 <Link href="/seller/dashboard">

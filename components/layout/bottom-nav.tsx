@@ -16,6 +16,9 @@ export function BottomNav() {
   const { totalItems } = useCart();
   const swipe = useSwipe();
 
+  // Dynamic route: Authenticated users -> Seller Studio Dashboard; Visitors -> Public Creator Directory
+  const studioHref = user ? '/seller/dashboard' : '/studio';
+
   // Strict order: [Market, Freelance, Home, Requests, Studio]
   const items = [
     {
@@ -43,7 +46,7 @@ export function BottomNav() {
       panelIndex: 3,
     },
     {
-      href: '/studio',
+      href: studioHref,
       label: 'Studio',
       icon: profile?.is_seller ? Store : User,
       panelIndex: 4,
@@ -52,7 +55,7 @@ export function BottomNav() {
 
   const isSwipeActive = swipe?.isSwipeActive && pathname === '/';
 
-  const handleNavClick = (e: React.MouseEvent, panelIndex: number, href: string) => {
+  const handleNavClick = (e: React.MouseEvent, panelIndex: number) => {
     if (isSwipeActive && window.innerWidth <= 768) {
       e.preventDefault();
       swipe?.scrollToPanel(panelIndex, true);
@@ -66,11 +69,12 @@ export function BottomNav() {
     >
       <div className="grid grid-cols-5 h-16 max-w-md mx-auto items-center px-1.5">
         {items.map((item) => {
+          const isStudioActive = item.label === 'Studio' && (pathname.startsWith('/seller') || pathname === '/studio');
           const isActive = isSwipeActive
             ? swipe?.activeIndex === item.panelIndex
             : item.href === '/'
             ? pathname === '/'
-            : pathname === item.href || pathname.startsWith(item.href);
+            : isStudioActive || pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
 
           const Icon = item.icon;
 
@@ -78,7 +82,7 @@ export function BottomNav() {
             <Link
               key={item.label}
               href={item.href}
-              onClick={(e) => handleNavClick(e, item.panelIndex, item.href)}
+              onClick={(e) => handleNavClick(e, item.panelIndex)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all relative select-none active:scale-90',
                 isActive

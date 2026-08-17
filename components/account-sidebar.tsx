@@ -12,9 +12,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/account', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Student Hub', icon: LayoutDashboard },
+  { href: '/account', label: 'Overview', icon: LayoutDashboard },
   { href: '/account/orders', label: 'My Orders', icon: Package },
-  { href: '/account/settings', label: 'Settings', icon: Settings },
+  { href: '/account/settings', label: 'Profile & Settings', icon: Settings },
   { href: '/wishlist', label: 'Wishlist', icon: Heart },
   { href: '/cart', label: 'Cart', icon: ShoppingBag },
 ];
