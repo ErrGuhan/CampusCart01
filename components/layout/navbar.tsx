@@ -112,7 +112,7 @@ export function Navbar() {
                       onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#0ea5e9] text-white font-bold shadow-2xs">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] font-bold shadow-2xs">
                         <Store className="h-5 w-5" />
                       </div>
                       <div>
@@ -324,7 +324,7 @@ export function Navbar() {
 
             {/* Brand Logo */}
             <Link href="/" className="flex items-center gap-2 xs:gap-2.5 shrink-0 group">
-              <div className="flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] xs:rounded-[14px] bg-[#0ea5e9] text-white font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+              <div className="flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] xs:rounded-[14px] bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
                 <Store className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-6 sm:w-6" />
               </div>
               <span className="font-display text-lg xs:text-xl sm:text-2xl font-black tracking-tight text-foreground leading-none">

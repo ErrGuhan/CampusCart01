@@ -106,7 +106,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
   return (
     <article
       className={cn(
-        'group relative p-5 sm:p-6 rounded-3xl border border-white/40 dark:border-white/10 bg-white/40 dark:bg-slate-900/40 backdrop-blur-lg shadow-[0_4px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.18)] hover:border-cyan-400/50 transition-all duration-300 flex flex-col justify-between gap-4',
+        'group relative p-5 sm:p-6 rounded-3xl border border-[#E2E4F6] dark:border-white/10 bg-[#FFFDD0]/90 dark:bg-slate-900/40 backdrop-blur-lg shadow-[0_4px_30px_rgba(29,91,241,0.06)] hover:shadow-[0_12px_40px_rgba(29,91,241,0.15)] hover:border-[#1D5BF1]/50 transition-all duration-300 flex flex-col justify-between gap-4',
         className
       )}
     >
@@ -114,9 +114,9 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
       <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
         {/* Author details */}
         <div className="flex items-center gap-3 min-w-0">
-          <Avatar className="h-10 w-10 sm:h-11 sm:w-11 ring-2 ring-white/60 dark:ring-white/20 shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.08)]">
+          <Avatar className="h-10 w-10 sm:h-11 sm:w-11 ring-2 ring-[#E2E4F6] dark:ring-white/20 shrink-0 shadow-2xs">
             {data.authorAvatar && <AvatarImage src={data.authorAvatar} alt={data.authorName} />}
-            <AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-600 dark:text-cyan-400 font-bold text-xs">
+            <AvatarFallback className="bg-gradient-to-br from-[#1D5BF1]/20 to-[#3B42C4]/20 text-[#1D5BF1] dark:text-cyan-400 font-bold text-xs">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -132,7 +132,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
                 </Badge>
               )}
               <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 truncate max-w-[200px] sm:max-w-none">
+              <span className="text-xs font-semibold text-[#1D5BF1] dark:text-cyan-400 truncate max-w-[200px] sm:max-w-none">
                 {data.authorMajor || 'Computer Science & Engineering'}
               </span>
             </div>
@@ -160,7 +160,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
 
       {/* 2. Content: Title and Description */}
       <div className="space-y-1.5">
-        <h2 className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:via-indigo-600 group-hover:to-cyan-600 dark:group-hover:from-blue-400 dark:group-hover:via-indigo-300 dark:group-hover:to-cyan-300 group-hover:bg-clip-text transition-all leading-snug">
+        <h2 className="font-display text-base sm:text-lg font-bold text-foreground group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-[#1D5BF1] group-hover:via-[#3B42C4] group-hover:to-[#1D5BF1] group-hover:bg-clip-text transition-all leading-snug">
           {data.title}
         </h2>
         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium line-clamp-3">
@@ -169,14 +169,14 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
       </div>
 
       {/* 3. Footer: Interaction Metrics and Action Button */}
-      <div className="pt-3 border-t border-white/30 dark:border-white/10 flex items-center justify-between gap-3">
+      <div className="pt-3 border-t border-[#E2E4F6]/80 dark:border-white/10 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3.5 text-xs text-muted-foreground font-semibold">
           <span className="flex items-center gap-1">
             <Eye className="h-3.5 w-3.5 text-muted-foreground/70" />
             <span>{data.viewsCount || 0} views</span>
           </span>
           <span className="flex items-center gap-1">
-            <MessageSquare className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+            <MessageSquare className="h-3.5 w-3.5 text-[#1D5BF1] dark:text-cyan-400" />
             <span>{data.responsesCount || 0} responses</span>
           </span>
         </div>
@@ -184,7 +184,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
         {isOwner ? (
           <Badge
             variant="outline"
-            className="rounded-xl text-xs font-semibold px-3 py-1.5 bg-secondary/60 text-muted-foreground border-white/20"
+            className="rounded-xl text-xs font-semibold px-3 py-1.5 bg-secondary/60 text-muted-foreground border-[#E2E4F6]"
           >
             Your Active Pitch
           </Badge>
@@ -192,7 +192,7 @@ export function RequestCard({ data, onConnect, currentUserId, className }: Reque
           <Button
             size="sm"
             onClick={() => onConnect(data)}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(6,182,212,0.3)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-white/20"
+            className="bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] hover:from-[#184ECC] hover:to-[#3238A8] text-[#FFFDD0] rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(29,91,241,0.25)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-[#1D5BF1]/30"
           >
             <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
             Connect & Message

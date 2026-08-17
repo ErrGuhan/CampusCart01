@@ -47,48 +47,48 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-white/80 dark:border-border/60 bg-white/60 dark:bg-card/60 backdrop-blur-xl mt-16 sm:mt-24 pb-24 md:pb-12 w-full">
+    <footer className="border-t border-[#E2E4F6] dark:border-border/60 bg-[#FFFDD0]/80 dark:bg-card/60 backdrop-blur-xl mt-16 sm:mt-24 pb-24 md:pb-12 w-full">
       <div className="container-px mx-auto max-w-7xl py-12 sm:py-16 w-full">
         
         {/* Top Trust Banner with Frosted Micro-Cards */}
-        <div className="mb-12 pb-10 border-b border-border/60 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-left">
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/70 dark:bg-card/70 border border-white/80 dark:border-border/60 shadow-2xs flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+        <div className="mb-12 pb-10 border-b border-[#E2E4F6] dark:border-border/60 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-left">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-[#1D5BF1]/10 text-[#1D5BF1] flex items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-extrabold text-foreground leading-tight">Student Verified</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Exclusive to college peers</p>
+              <h4 className="text-xs sm:text-sm font-extrabold text-[#0F172A] leading-tight">Student Verified</h4>
+              <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">Exclusive to college peers</p>
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/70 dark:bg-card/70 border border-white/80 dark:border-border/60 shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <MapPin className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-extrabold text-foreground leading-tight">Campus Handover</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Safe college pickup points</p>
+              <h4 className="text-xs sm:text-sm font-extrabold text-[#0F172A] leading-tight">Campus Handover</h4>
+              <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">Safe college pickup points</p>
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/70 dark:bg-card/70 border border-white/80 dark:border-border/60 shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
               <Store className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-extrabold text-foreground leading-tight">Zero Platform Fees</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Keep 100% of earnings</p>
+              <h4 className="text-xs sm:text-sm font-extrabold text-[#0F172A] leading-tight">Zero Platform Fees</h4>
+              <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">Keep 100% of earnings</p>
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/70 dark:bg-card/70 border border-white/80 dark:border-border/60 shadow-2xs flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FFFDD0] dark:bg-card/70 border border-[#E2E4F6] dark:border-border/60 shadow-2xs flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-[#3B42C4]/10 text-[#3B42C4] flex items-center justify-center shrink-0">
               <Heart className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-extrabold text-foreground leading-tight">Circular Campus</h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">Pass down books & kits</p>
+              <h4 className="text-xs sm:text-sm font-extrabold text-[#0F172A] leading-tight">Circular Campus</h4>
+              <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">Pass down books & kits</p>
             </div>
           </div>
         </div>
@@ -97,24 +97,24 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           <div className="col-span-2 md:col-span-2">
             <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold shadow-xs">
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#FFFDD0] font-bold shadow-xs">
                 <Store className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-foreground">
+              <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-[#0F172A]">
                 CampusCart
               </span>
             </Link>
-            <p className="mt-3.5 text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed font-medium">
+            <p className="mt-3.5 text-xs sm:text-sm text-[#64748B] max-w-sm leading-relaxed font-medium">
               The official student marketplace, freelance hub, and request board for Sri Venkateswara College of Engineering and Technology.
             </p>
 
             {/* Official Feedback Contact Badge */}
-            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 px-3.5 py-2 text-xs text-muted-foreground shadow-2xs">
-              <Mail className="h-4 w-4 text-primary shrink-0" />
+            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#FFFDD0] dark:bg-card/80 border border-[#E2E4F6] dark:border-border/80 px-3.5 py-2 text-xs text-[#64748B] shadow-2xs">
+              <Mail className="h-4 w-4 text-[#1D5BF1] shrink-0" />
               <span>Feedback: </span>
               <a
                 href="mailto:campuscartsvcet@gmail.com"
-                className="font-bold text-foreground hover:text-primary transition-colors underline decoration-primary/40 underline-offset-2"
+                className="font-bold text-[#0F172A] hover:text-[#1D5BF1] transition-colors underline decoration-[#1D5BF1]/40 underline-offset-2"
               >
                 campuscartsvcet@gmail.com
               </a>
@@ -133,7 +133,7 @@ export function Footer() {
                   target={href.startsWith('http') ? '_blank' : undefined}
                   rel={href.startsWith('http') ? 'noreferrer' : undefined}
                   aria-label={label}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/80 dark:border-border/80 bg-white/80 dark:bg-card/80 text-muted-foreground hover:text-primary hover:border-primary/40 hover:scale-105 active:scale-95 transition-all shadow-2xs"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#FFFDD0] dark:bg-card/80 text-[#64748B] hover:text-[#1D5BF1] hover:border-[#1D5BF1]/40 hover:scale-105 active:scale-95 transition-all shadow-2xs"
                 >
                   <Icon className="h-4.5 w-4.5" />
                 </a>

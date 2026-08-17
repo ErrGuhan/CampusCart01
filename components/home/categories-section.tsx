@@ -52,7 +52,7 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
               )}
             >
               <div className={cn(
-                'flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-accent/70 text-accent-foreground transition-all group-hover:bg-gradient-to-br group-hover:from-primary group-hover:to-cyan-500 group-hover:text-white group-hover:scale-105 shadow-2xs',
+                'flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-accent/70 text-accent-foreground transition-all group-hover:bg-gradient-to-br group-hover:from-[#1D5BF1] group-hover:to-[#3B42C4] group-hover:text-white group-hover:scale-105 shadow-2xs',
                 isEmpty && 'bg-secondary text-muted-foreground'
               )}>
                 <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
