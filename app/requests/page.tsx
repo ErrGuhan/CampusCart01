@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import useSWR from 'swr';
+import useSWR, { useSWRConfig } from 'swr';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import {
   Sparkles, Plus, Search, Send, X, Rocket, Lightbulb,
   TestTube2, Wrench, Users, WifiOff, RefreshCw, Loader2,
@@ -26,17 +28,26 @@ import { RequestCard } from '@/components/requests/request-card';
 import { SkeletonRequestFeed } from '@/components/requests/skeleton-request-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { sendChatMessage } from '@/lib/firebase-queries';
+import { incrementRequestResponses } from '@/lib/collaboration-hub';
 import type { CollaborationRequest, CollaborationTag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-// Standard API fetcher for SWR
+// Standard resilient API fetcher with timeout
 const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error('Unable to connect to campus network.');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      throw new Error('Unable to connect to campus network.');
+    }
+    const json = await res.json();
+    return (json.data || []) as CollaborationRequest[];
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    throw new Error(err.message || 'Unable to connect to campus network.');
   }
-  const json = await res.json();
-  return json.data as CollaborationRequest[];
 };
 
 const FORUM_TAGS: { id: CollaborationTag | 'ALL'; label: string }[] = [
@@ -51,13 +62,21 @@ const FORUM_TAGS: { id: CollaborationTag | 'ALL'; label: string }[] = [
 export default function RequestsForumPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTag = (searchParams?.get('tag') as CollaborationTag) || 'ALL';
+  const tagFromUrl = (searchParams?.get('tag') as CollaborationTag) || 'ALL';
 
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { mutate: globalMutate } = useSWRConfig();
 
   const [search, setSearch] = useState('');
-  const [selectedTag, setSelectedTag] = useState<CollaborationTag | 'ALL'>(initialTag);
+  const [selectedTag, setSelectedTag] = useState<CollaborationTag | 'ALL'>(tagFromUrl);
+
+  // Sync state if URL searchParam changes (e.g. browser back/forward or navigation from links)
+  useEffect(() => {
+    if (tagFromUrl !== selectedTag) {
+      setSelectedTag(tagFromUrl);
+    }
+  }, [tagFromUrl]);
 
   // SWR Data Fetching & Caching Hook
   const {
@@ -72,9 +91,34 @@ export default function RequestsForumPage() {
     {
       revalidateOnFocus: true,
       keepPreviousData: true,
-      dedupingInterval: 4000,
+      dedupingInterval: 3000,
     }
   );
+
+  // Real-time synchronization (Storage, Custom Events & Firestore onSnapshot)
+  useEffect(() => {
+    const handleUpdate = () => {
+      mutate();
+    };
+
+    window.addEventListener('campuscart_collaboration_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onSnapshot(collection(db, 'collaboration_requests'), () => {
+        mutate();
+      }, (err) => {
+        console.warn('Realtime requests snapshot note:', err);
+      });
+    } catch {}
+
+    return () => {
+      window.removeEventListener('campuscart_collaboration_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      unsubscribe();
+    };
+  }, [mutate]);
 
   // Modal States
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -89,6 +133,23 @@ export default function RequestsForumPage() {
   const [reqDesc, setReqDesc] = useState('');
   const [reqTag, setReqTag] = useState<CollaborationTag>('LOOKING_FOR_COFOUNDER');
 
+  // Handle Tag Change with smooth URL sync
+  const handleTagSelect = useCallback((tagId: CollaborationTag | 'ALL') => {
+    setSelectedTag(tagId);
+    const newUrl = tagId === 'ALL' ? '/requests' : `/requests?tag=${tagId}`;
+    router.replace(newUrl, { scroll: false });
+  }, [router]);
+
+  // Open Create Pitch modal with contextual tag
+  const handleOpenCreateModal = useCallback(() => {
+    if (!user) {
+      setAuthPromptOpen(true);
+      return;
+    }
+    setReqTag(selectedTag !== 'ALL' ? selectedTag : 'LOOKING_FOR_COFOUNDER');
+    setCreateModalOpen(true);
+  }, [user, selectedTag]);
+
   // Handle Form Submission (Create Request)
   async function handleCreateRequestSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,8 +157,25 @@ export default function RequestsForumPage() {
       setAuthPromptOpen(true);
       return;
     }
-    if (!reqTitle.trim() || !reqDesc.trim()) {
-      toast({ title: 'Please fill in all fields', variant: 'destructive' });
+
+    const cleanTitle = reqTitle.trim();
+    const cleanDesc = reqDesc.trim();
+
+    if (cleanTitle.length < 5) {
+      toast({
+        title: 'Title is too short',
+        description: 'Please provide at least 5 characters for your pitch title.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (cleanDesc.length < 10) {
+      toast({
+        title: 'Description is too short',
+        description: 'Please describe your project or needs with at least 10 characters.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -113,26 +191,32 @@ export default function RequestsForumPage() {
           authorAvatar: profile?.avatar_url || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
           authorMajor: profile?.department || 'Computer Science & Engineering',
           authorYear: profile?.year || '4th Year',
-          title: reqTitle,
-          description: reqDesc,
+          title: cleanTitle,
+          description: cleanDesc,
           tags: reqTag,
         }),
       });
 
       if (!res.ok) {
-        throw new Error('Failed to post discussion. Please try again.');
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'Failed to post discussion. Please try again.');
       }
 
       toast({
         title: 'Pitch Published! 🚀',
-        description: 'Your discussion is now visible on the campus collaboration forum.',
+        description: 'Your discussion is now live on the campus collaboration forum.',
       });
 
       setReqTitle('');
       setReqDesc('');
       setCreateModalOpen(false);
-      // Revalidate cached requests
-      mutate();
+
+      // Invalidate all SWR collaboration tag queries globally
+      globalMutate(
+        (key) => typeof key === 'string' && key.startsWith('/api/collaboration/requests'),
+        undefined,
+        { revalidate: true }
+      );
     } catch (err: any) {
       toast({
         title: 'Error posting pitch',
@@ -149,7 +233,18 @@ export default function RequestsForumPage() {
       setAuthPromptOpen(true);
       return;
     }
+
+    // Prevent self-messaging loop
+    if (user.uid === req.authorId) {
+      toast({
+        title: 'Your Active Pitch 📌',
+        description: 'You are the author of this pitch. Responses from collaborators will arrive in your Messages.',
+      });
+      return;
+    }
+
     setSelectedReqForConnect(req);
+    setConnectMessage(`Hi ${req.authorName}, I saw your pitch on "${req.title}". Let's connect!`);
     setConnectModalOpen(true);
   }
 
@@ -162,6 +257,9 @@ export default function RequestsForumPage() {
 
     const sorted = [user.uid, selectedReqForConnect.authorId].sort();
     const convId = `chat_${sorted[0]}_${sorted[1]}`;
+    const targetAuthorId = selectedReqForConnect.authorId;
+    const targetAuthorName = selectedReqForConnect.authorName;
+    const targetAuthorAvatar = selectedReqForConnect.authorAvatar || '';
 
     try {
       await sendChatMessage({
@@ -169,20 +267,25 @@ export default function RequestsForumPage() {
         senderId: user.uid,
         senderName: profile?.display_name || user.email?.split('@')[0] || 'Student',
         senderAvatar: profile?.avatar_url || '',
-        recipientId: selectedReqForConnect.authorId,
+        recipientId: targetAuthorId,
+        recipientName: targetAuthorName,
+        recipientAvatar: targetAuthorAvatar,
         text: `[Re: "${selectedReqForConnect.title}"] ${connectMessage.trim()}`,
       });
 
+      // Increment responses count for the pitch
+      incrementRequestResponses(selectedReqForConnect.id).catch(() => {});
+
       toast({
         title: 'Message Sent! ✉️',
-        description: `Your response has been sent to ${selectedReqForConnect.authorName}. Opening chat...`,
+        description: `Your message has been delivered to ${targetAuthorName}. Opening chat...`,
       });
 
-      const targetAuthorId = selectedReqForConnect.authorId;
-      const targetAuthorName = selectedReqForConnect.authorName;
       setConnectMessage('');
       setConnectModalOpen(false);
-      router.push(`/messages?user=${targetAuthorId}&name=${encodeURIComponent(targetAuthorName)}`);
+      router.push(
+        `/messages?user=${targetAuthorId}&name=${encodeURIComponent(targetAuthorName)}&avatar=${encodeURIComponent(targetAuthorAvatar)}`
+      );
     } catch (err: any) {
       toast({ title: 'Error sending message', description: err.message, variant: 'destructive' });
     }
@@ -224,13 +327,7 @@ export default function RequestsForumPage() {
           </div>
 
           <Button
-            onClick={() => {
-              if (!user) {
-                setAuthPromptOpen(true);
-                return;
-              }
-              setCreateModalOpen(true);
-            }}
+            onClick={handleOpenCreateModal}
             className="bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-600 hover:via-blue-700 hover:to-indigo-700 text-white rounded-2xl h-11 px-5 font-bold text-xs sm:text-sm shadow-[0_4px_20px_rgba(6,182,212,0.35)] hover:shadow-[0_6px_25px_rgba(6,182,212,0.45)] touch-target min-h-[44px] transition-all duration-200 active:scale-95 border border-white/20"
           >
             <Plus className="h-4 w-4 mr-1.5" />
@@ -246,28 +343,29 @@ export default function RequestsForumPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search pitches by topic, major, problem statement..."
-              className="pl-10 pr-8 h-11 rounded-2xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-xs border-white/30 dark:border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.06)] focus-visible:bg-white/60 dark:focus-visible:bg-slate-900/60 focus-visible:border-cyan-500/50 transition-all placeholder:text-muted-foreground/70"
+              className="pl-10 pr-10 h-11 rounded-2xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-xs border-white/30 dark:border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.06)] focus-visible:bg-white/60 dark:focus-visible:bg-slate-900/60 focus-visible:border-cyan-500/50 transition-all placeholder:text-muted-foreground/70"
             />
             {search && (
               <button
                 type="button"
+                aria-label="Clear search"
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/40 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {/* Horizontal Tag Filters - 44px Touch Target */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+          {/* Horizontal Tag Filters - 44px Touch Target with responsive right padding */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pr-4 scrollbar-none">
             {FORUM_TAGS.map((tag) => {
               const active = selectedTag === tag.id;
               return (
                 <button
                   key={tag.id}
                   type="button"
-                  onClick={() => setSelectedTag(tag.id)}
+                  onClick={() => handleTagSelect(tag.id)}
                   className={cn(
                     'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none border flex items-center gap-1.5',
                     active
@@ -284,7 +382,7 @@ export default function RequestsForumPage() {
 
         {/* Feed State Routing: Skeletons vs Error vs Empty vs Real Data */}
         {isLoading && !requests ? (
-          /* 1. Skeleton Loading Feed (Zero Layout Jumps) */
+          /* 1. Skeleton Loading Feed */
           <SkeletonRequestFeed count={4} />
         ) : error && !requests ? (
           /* 2. Connection Error State */
@@ -317,18 +415,12 @@ export default function RequestsForumPage() {
                 : 'The collaboration board is clean and open. Pitch your startup, find a hardware co-founder, or look for study teammates!'
             }
             actionLabel="+ Pitch an Idea"
-            onAction={() => {
-              if (!user) {
-                setAuthPromptOpen(true);
-              } else {
-                setCreateModalOpen(true);
-              }
-            }}
+            onAction={handleOpenCreateModal}
             secondaryActionLabel={selectedTag !== 'ALL' || search ? 'Show All Discussions' : 'Explore Marketplace'}
             onSecondaryAction={
               selectedTag !== 'ALL' || search
                 ? () => {
-                    setSelectedTag('ALL');
+                    handleTagSelect('ALL');
                     setSearch('');
                   }
                 : undefined
@@ -342,6 +434,7 @@ export default function RequestsForumPage() {
               <RequestCard
                 key={req.id}
                 data={req}
+                currentUserId={user?.uid}
                 onConnect={handleOpenConnect}
               />
             ))}
@@ -380,7 +473,10 @@ export default function RequestsForumPage() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-foreground block mb-1.5">Discussion Title</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-foreground block">Discussion Title</label>
+                <span className="text-[10px] text-muted-foreground">{reqTitle.length}/150</span>
+              </div>
               <Input
                 value={reqTitle}
                 onChange={(e) => setReqTitle(e.target.value)}
@@ -391,7 +487,10 @@ export default function RequestsForumPage() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-foreground block mb-1.5">Project Details & Requirements</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-foreground block">Project Details & Requirements</label>
+                <span className="text-[10px] text-muted-foreground">{reqDesc.length}/3000</span>
+              </div>
               <Textarea
                 value={reqDesc}
                 onChange={(e) => setReqDesc(e.target.value)}
@@ -401,7 +500,7 @@ export default function RequestsForumPage() {
               />
             </div>
 
-            <DialogFooter className="pt-3">
+            <DialogFooter className="pt-3 flex-col-reverse sm:flex-row gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -443,7 +542,7 @@ export default function RequestsForumPage() {
             />
           </div>
 
-          <DialogFooter className="pt-3">
+          <DialogFooter className="pt-3 flex-col-reverse sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"

@@ -61,20 +61,19 @@ export async function getRequests(tagFilter?: string): Promise<CollaborationRequ
       return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
-    // Server-side fallback / Firestore
-    const q = query(
-      collection(db, 'collaboration_requests'),
-      where('status', '==', 'OPEN'),
-      orderBy('createdAt', 'desc')
-    );
-    const snap = await getDocs(q);
+    // Server-side fallback / Firestore with in-memory resilient sorting (no composite index failure)
+    const snap = await getDocs(collection(db, 'collaboration_requests'));
     if (snap.empty) return SEEDED_REQUESTS;
     const list: CollaborationRequest[] = [];
-    snap.forEach((d) => list.push({ id: d.id, ...d.data() } as CollaborationRequest));
-    if (tagFilter && tagFilter !== 'ALL') {
-      return list.filter((r) => r.tags === tagFilter);
-    }
-    return list;
+    snap.forEach((d) => {
+      const item = { id: d.id, ...d.data() } as CollaborationRequest;
+      if (item.status === 'OPEN') {
+        if (!tagFilter || tagFilter === 'ALL' || item.tags === tagFilter) {
+          list.push(item);
+        }
+      }
+    });
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } catch {
     return getStoredRequests().filter((r) => !tagFilter || tagFilter === 'ALL' || r.tags === tagFilter);
   }
@@ -131,6 +130,27 @@ export async function createRequest(data: {
   } catch {}
 
   return newReq;
+}
+
+/**
+ * Increment responses count when peers connect to a pitch
+ */
+export async function incrementRequestResponses(requestId: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    const list = getStoredRequests();
+    const idx = list.findIndex((r) => r.id === requestId);
+    if (idx >= 0) {
+      list[idx].responsesCount = (list[idx].responsesCount || 0) + 1;
+      localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(list));
+      window.dispatchEvent(new Event('campuscart_collaboration_updated'));
+    }
+  }
+
+  try {
+    await updateDoc(doc(db, 'collaboration_requests', requestId), {
+      responsesCount: increment(1),
+    });
+  } catch {}
 }
 
 /* ----------------------------------------------------

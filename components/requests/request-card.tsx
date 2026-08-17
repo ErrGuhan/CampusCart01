@@ -85,12 +85,14 @@ const TAG_META: Record<
 type RequestCardProps = {
   data: CollaborationRequest;
   onConnect: (request: CollaborationRequest) => void;
+  currentUserId?: string;
   className?: string;
 };
 
-export function RequestCard({ data, onConnect, className }: RequestCardProps) {
+export function RequestCard({ data, onConnect, currentUserId, className }: RequestCardProps) {
   const timeAgo = useMemo(() => formatTimeAgo(data.createdAt), [data.createdAt]);
   const tagInfo = TAG_META[data.tags] || TAG_META.GENERAL;
+  const isOwner = Boolean(currentUserId && currentUserId === data.authorId);
 
   const initials = data.authorName
     ? data.authorName
@@ -124,6 +126,11 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
               <span className="font-display font-bold text-sm text-foreground truncate">
                 {data.authorName}
               </span>
+              {isOwner && (
+                <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
+                  You
+                </Badge>
+              )}
               <span className="text-xs text-muted-foreground">•</span>
               <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 truncate max-w-[200px] sm:max-w-none">
                 {data.authorMajor || 'Computer Science & Engineering'}
@@ -174,14 +181,23 @@ export function RequestCard({ data, onConnect, className }: RequestCardProps) {
           </span>
         </div>
 
-        <Button
-          size="sm"
-          onClick={() => onConnect(data)}
-          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(6,182,212,0.3)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-white/20"
-        >
-          <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-          Connect & Message
-        </Button>
+        {isOwner ? (
+          <Badge
+            variant="outline"
+            className="rounded-xl text-xs font-semibold px-3 py-1.5 bg-secondary/60 text-muted-foreground border-white/20"
+          >
+            Your Active Pitch
+          </Badge>
+        ) : (
+          <Button
+            size="sm"
+            onClick={() => onConnect(data)}
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl text-xs font-bold shadow-[0_4px_16px_rgba(6,182,212,0.3)] px-4 touch-target min-h-[38px] transition-all active:scale-95 border border-white/20"
+          >
+            <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+            Connect & Message
+          </Button>
+        )}
       </div>
     </article>
   );
