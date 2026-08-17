@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   getConversations,
@@ -111,9 +111,32 @@ function MessagesContent() {
     }
   }, [user, activeConvId, targetUserParam]);
 
+  // Real-time listener for ALL user conversations in Firestore
   useEffect(() => {
+    if (!user) return;
     loadUserConversations();
-  }, [loadUserConversations]);
+
+    let unsubscribeChats = () => {};
+    try {
+      const q = query(
+        collection(db, 'chats'),
+        where('participants', 'array-contains', user.uid)
+      );
+      unsubscribeChats = onSnapshot(
+        q,
+        () => {
+          loadUserConversations();
+        },
+        (err) => {
+          console.warn('Firestore chats snapshot notice:', err);
+        }
+      );
+    } catch (err) {
+      console.warn('Firestore chats query notice:', err);
+    }
+
+    return () => unsubscribeChats();
+  }, [user, loadUserConversations]);
 
   // Handle URL target user param
   useEffect(() => {

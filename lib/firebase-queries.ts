@@ -1254,21 +1254,53 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
     } catch {}
   }
 
-  // 2. Fetch all matching chats from Firestore
+  // 2. Fetch profiles map from Firestore to ensure real-time name & avatar sync
+  const profilesMap = new Map<string, any>();
+  try {
+    const profSnap = await getDocs(collection(db, 'profiles'));
+    profSnap.forEach((d) => {
+      profilesMap.set(d.id, d.data());
+    });
+  } catch {}
+
+  // 3. Fetch all matching chats from Firestore
   try {
     const snap = await getDocs(collection(db, 'chats'));
     if (!snap.empty) {
       snap.forEach((d) => {
         const data = d.data();
-        const participants = Array.isArray(data.participants) ? data.participants : [];
+        const participants: string[] = Array.isArray(data.participants) ? data.participants : [];
         if (participants.includes(userId)) {
           const cId = d.id;
           const existing = convMap.get(cId);
+
+          const mergedNames: Record<string, string> = {
+            ...(existing?.participantNames || {}),
+            ...(data.participantNames || {}),
+          };
+          const mergedAvatars: Record<string, string> = {
+            ...(existing?.participantAvatars || {}),
+            ...(data.participantAvatars || {}),
+          };
+
+          // Enrich missing participant names/avatars with live profile data
+          participants.forEach((pId) => {
+            const pData = profilesMap.get(pId);
+            if (pData) {
+              if (!mergedNames[pId] || mergedNames[pId] === 'Campus Peer' || mergedNames[pId] === 'Campus Student') {
+                mergedNames[pId] = pData.display_name || pData.username || pData.email?.split('@')[0] || 'Campus Student';
+              }
+              if (!mergedAvatars[pId] && pData.avatar_url) {
+                mergedAvatars[pId] = pData.avatar_url;
+              }
+            }
+          });
+
           convMap.set(cId, {
             id: cId,
             participantIds: participants,
-            participantNames: data.participantNames || existing?.participantNames || {},
-            participantAvatars: data.participantAvatars || existing?.participantAvatars || {},
+            participantNames: mergedNames,
+            participantAvatars: mergedAvatars,
             lastMessage: data.lastMessage || existing?.lastMessage || 'Conversation active',
             lastMessageTimestamp: data.updatedAt || data.lastMessageTimestamp || existing?.lastMessageTimestamp || new Date().toISOString(),
             unreadCount: data.unreadCount || existing?.unreadCount || {},
@@ -1349,7 +1381,10 @@ export async function sendChatMessage(msg: Partial<ChatMessage> & {
   conversationId: string;
   senderId: string;
   senderName: string;
+  senderAvatar?: string;
   recipientId: string;
+  recipientName?: string;
+  recipientAvatar?: string;
   text: string;
 }): Promise<ChatMessage> {
   const newMsg: ChatMessage = {
@@ -1399,6 +1434,7 @@ export async function sendChatMessage(msg: Partial<ChatMessage> & {
           convList[convIndex].participantNames = {
             ...(convList[convIndex].participantNames || {}),
             [msg.senderId]: msg.senderName,
+            ...(msg.recipientId && msg.recipientName ? { [msg.recipientId]: msg.recipientName } : {}),
           };
         }
       } else {
@@ -1407,11 +1443,11 @@ export async function sendChatMessage(msg: Partial<ChatMessage> & {
           participantIds: [msg.senderId, msg.recipientId].filter(Boolean),
           participantNames: {
             [msg.senderId]: msg.senderName,
-            ...(msg.recipientId ? { [msg.recipientId]: 'Campus Peer' } : {}),
+            ...(msg.recipientId ? { [msg.recipientId]: msg.recipientName || 'Campus Student' } : {}),
           },
           participantAvatars: {
             [msg.senderId]: msg.senderAvatar || '',
-            ...(msg.recipientId ? { [msg.recipientId]: '' } : {}),
+            ...(msg.recipientId ? { [msg.recipientId]: msg.recipientAvatar || '' } : {}),
           },
           lastMessage: msg.text,
           lastMessageTimestamp: newMsg.createdAt,
@@ -1447,8 +1483,14 @@ export async function sendChatMessage(msg: Partial<ChatMessage> & {
         participants: [msg.senderId, msg.recipientId].filter(Boolean),
         lastMessage: msg.text,
         updatedAt: newMsg.createdAt,
+        lastMessageTimestamp: newMsg.createdAt,
         participantNames: {
           [msg.senderId]: msg.senderName,
+          ...(msg.recipientId && msg.recipientName ? { [msg.recipientId]: msg.recipientName } : {}),
+        },
+        participantAvatars: {
+          [msg.senderId]: msg.senderAvatar || '',
+          ...(msg.recipientId && msg.recipientAvatar ? { [msg.recipientId]: msg.recipientAvatar } : {}),
         },
       },
       { merge: true }
