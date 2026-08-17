@@ -72,12 +72,12 @@ export function ProductCard({ product, className, priority = false }: ProductCar
     <Link
       href={`/products/${product.slug}`}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card transition-all duration-300 hover:shadow-lg hover:border-primary/40 active:scale-[0.98]',
+        'group relative flex flex-col overflow-hidden rounded-[22px] sm:rounded-3xl border border-white/80 dark:border-border/80 bg-white/80 dark:bg-card/80 backdrop-blur-md shadow-xs transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 active:scale-[0.98]',
         className
       )}
     >
       {/* Optimized Product Image Container with zero CLS layout reservation */}
-      <div className="relative aspect-square w-full overflow-hidden bg-secondary/50 select-none">
+      <div className="relative aspect-square w-full overflow-hidden bg-secondary/40 select-none">
         <Image
           src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
           alt={product.name}
@@ -88,19 +88,19 @@ export function ProductCard({ product, className, priority = false }: ProductCar
         />
 
         {/* Condition & Discount Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1 items-start z-10">
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start z-10">
           {product.isUsed && (
-            <span className="rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-white shadow-xs capitalize">
+            <span className="rounded-xl bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs capitalize border border-white/20">
               {product.condition ? product.condition.replace('_', ' ') : 'Used'}
             </span>
           )}
           {product.isDigital && (
-            <span className="rounded-md bg-indigo-600 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-white shadow-xs">
+            <span className="rounded-xl bg-indigo-600/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs border border-white/20">
               Digital
             </span>
           )}
           {hasDiscount && !product.isDigital && (
-            <span className="rounded-md bg-destructive px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold text-destructive-foreground shadow-xs">
+            <span className="rounded-xl bg-rose-500/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs border border-white/20">
               {discountPercent}% OFF
             </span>
           )}
@@ -111,13 +111,13 @@ export function ProductCard({ product, className, priority = false }: ProductCar
           type="button"
           aria-label="Add to wishlist"
           onClick={toggleWishlist}
-          className="absolute top-2.5 right-2.5 flex h-9 w-9 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-background/90 text-foreground/80 shadow-xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10 border border-border/40"
+          className="absolute top-2.5 right-2.5 flex h-9 w-9 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white/90 dark:bg-card/90 text-foreground/80 shadow-2xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10 border border-white/80 dark:border-border/60"
         >
           <Heart className={cn('h-4 w-4', isWishlisted && 'fill-destructive text-destructive')} />
         </button>
 
         {product.status === 'out_of_stock' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/75 backdrop-blur-[2px] z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-xs z-10">
             <span className="rounded-full bg-foreground/90 px-3 py-1 text-[11px] font-bold text-background shadow-xs">
               Out of Stock
             </span>
@@ -128,12 +128,12 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       {/* Card Content - Increased padding for airy, de-cluttered feel */}
       <div className="flex flex-1 flex-col p-3.5 sm:p-4.5 gap-1.5">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/75">
-          <span className="truncate max-w-[80px] sm:max-w-[110px] text-primary">{product.category}</span>
-          <span className="text-muted-foreground">•</span>
-          <span className="truncate max-w-[80px] sm:max-w-[110px] text-muted-foreground">{product.seller?.displayName || 'Campus Creator'}</span>
+          <span className="truncate max-w-[80px] sm:max-w-[110px] text-primary font-bold">{product.category}</span>
+          <span className="text-muted-foreground/60">•</span>
+          <span className="truncate max-w-[80px] sm:max-w-[110px] text-muted-foreground font-medium">{product.seller?.displayName || 'Campus Creator'}</span>
         </div>
 
-        <h3 className="line-clamp-2 text-xs sm:text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors min-h-[2.25rem] sm:min-h-[2.5rem]">
+        <h3 className="line-clamp-2 text-xs sm:text-sm font-extrabold leading-snug text-foreground group-hover:text-primary transition-colors min-h-[2.25rem] sm:min-h-[2.5rem]">
           {product.name}
         </h3>
 
@@ -143,23 +143,23 @@ export function ProductCard({ product, className, priority = false }: ProductCar
             {product.reviewCount > 0 ? (
               <>
                 <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                <span className="font-extrabold text-foreground">{product.rating.toFixed(1)}</span>
-                <span className="text-muted-foreground font-medium">({product.reviewCount})</span>
+                <span className="font-black text-foreground">{product.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground font-medium text-[11px]">({product.reviewCount})</span>
               </>
             ) : (
-              <span className="text-muted-foreground font-medium text-[11px]">New item</span>
+              <span className="text-muted-foreground font-medium text-[11px]">New listing</span>
             )}
           </div>
 
           {product.pickupAvailable && (
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
               📍 Pickup
             </span>
           )}
         </div>
 
-        {/* Price & Quick Add Button - Sized for touch */}
-        <div className="mt-auto pt-2.5 sm:pt-3.5 flex items-end justify-between gap-1.5 border-t border-border/60">
+        {/* Price & Quick Add Button */}
+        <div className="mt-auto pt-2.5 sm:pt-3.5 flex items-end justify-between gap-1.5 border-t border-border/50">
           <div className="flex flex-col min-w-0">
             {hasDiscount ? (
               <div className="flex items-baseline gap-1.5 flex-wrap">
@@ -181,7 +181,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
             type="button"
             aria-label="Quick add to cart"
             onClick={handleQuickAdd}
-            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all hover:bg-gradient-to-r hover:from-primary hover:to-cyan-500 hover:text-white active:scale-90 shadow-2xs border border-primary/20"
+            className="flex h-9 w-9 sm:h-9.5 sm:w-9.5 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all hover:bg-primary hover:text-white active:scale-90 shadow-2xs border border-primary/20"
           >
             <ShoppingBag className="h-4 w-4" />
           </button>

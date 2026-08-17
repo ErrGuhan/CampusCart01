@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag, Sparkles, Search, Store,
-  Lightbulb,
+  Lightbulb, ArrowRight,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -30,12 +30,12 @@ export function HeroSection() {
     : user?.email?.split('@')[0] || 'Student';
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background pt-5 pb-7 sm:pt-10 sm:pb-12 border-b border-border/60">
+    <section className="relative overflow-hidden bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pt-6 pb-8 sm:pt-12 sm:pb-14 border-b border-border/50">
       <div className="container-px mx-auto max-w-7xl relative z-10">
         
         {/* Top Greeting Badge */}
-        <div className="flex justify-center mb-3.5 sm:mb-5">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-primary shadow-2xs">
+        <div className="flex justify-center mb-3 sm:mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/80 dark:border-border/80 bg-white/80 dark:bg-card/80 backdrop-blur-md px-4 py-1.5 text-xs sm:text-sm font-extrabold text-primary shadow-2xs">
             <Sparkles className="h-4 w-4 text-primary shrink-0" />
             {user ? (
               <span>Welcome back, {firstName}! 🎓</span>
@@ -47,7 +47,7 @@ export function HeroSection() {
 
         {/* Hero Headline */}
         <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3">
-          <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.15]">
+          <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.12]">
             {user ? (
               <span>What are you looking for today?</span>
             ) : (
@@ -63,31 +63,31 @@ export function HeroSection() {
           </p>
         </div>
 
-        {/* Clean, Large Floating Search Bar */}
+        {/* Clean, Frosted Floating Search Dock */}
         <form onSubmit={handleSearch} className="mt-5 sm:mt-8 max-w-xl mx-auto">
-          <div className="relative flex items-center h-14 sm:h-16 rounded-2xl sm:rounded-3xl border-2 border-border/80 bg-card p-1.5 shadow-sm hover:border-primary/40 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+          <div className="relative flex items-center h-14 sm:h-16 rounded-[24px] sm:rounded-3xl border border-white/90 dark:border-border/80 bg-white/85 dark:bg-card/85 backdrop-blur-2xl p-1.5 shadow-md hover:border-primary/50 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15 transition-all">
             <Search className="h-5 w-5 text-muted-foreground ml-3.5 sm:ml-4 shrink-0 pointer-events-none" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search books, drafters, kits, freelance gigs..."
-              className="border-0 bg-transparent text-sm sm:text-base h-full shadow-none focus-visible:ring-0 px-3.5 placeholder:text-muted-foreground/70"
+              className="border-0 bg-transparent text-xs sm:text-sm md:text-base h-full shadow-none focus-visible:ring-0 px-3 placeholder:text-muted-foreground/70 font-medium"
             />
             <Button
               type="submit"
               size="default"
-              className="btn-gradient-primary rounded-xl sm:rounded-2xl px-6 sm:px-8 h-full font-extrabold text-sm sm:text-base shrink-0 shadow-xs active:scale-95 transition-transform"
+              className="btn-gradient-primary rounded-2xl px-6 sm:px-8 h-full font-black text-xs sm:text-sm md:text-base shrink-0 shadow-xs active:scale-95 transition-transform"
             >
               Search
             </Button>
           </div>
         </form>
 
-        {/* 4 Clean Large Quick-Action Hub Cards - Responsive Layout without truncation */}
+        {/* 4 Clean Frosted Glass Quick-Action Hub Cards */}
         <div className="mt-6 sm:mt-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 max-w-4xl mx-auto">
           <Link
             href="/marketplace"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-border/70 bg-card hover:bg-secondary/60 hover:border-sky-500/40 transition-all active:scale-95 shadow-2xs group"
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-white/80 dark:border-border/80 bg-white/75 dark:bg-card/75 backdrop-blur-xl hover:bg-white/95 dark:hover:bg-card/95 hover:border-sky-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
             <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 shrink-0 group-hover:scale-105 transition-transform">
               <ShoppingBag className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
@@ -100,7 +100,7 @@ export function HeroSection() {
 
           <Link
             href="/services"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-border/70 bg-card hover:bg-secondary/60 hover:border-indigo-500/40 transition-all active:scale-95 shadow-2xs group"
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-white/80 dark:border-border/80 bg-white/75 dark:bg-card/75 backdrop-blur-xl hover:bg-white/95 dark:hover:bg-card/95 hover:border-indigo-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
             <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
               <Sparkles className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
@@ -113,7 +113,7 @@ export function HeroSection() {
 
           <Link
             href="/requests"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-border/70 bg-card hover:bg-secondary/60 hover:border-amber-500/40 transition-all active:scale-95 shadow-2xs group"
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-white/80 dark:border-border/80 bg-white/75 dark:bg-card/75 backdrop-blur-xl hover:bg-white/95 dark:hover:bg-card/95 hover:border-amber-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
             <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
               <Lightbulb className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
@@ -126,7 +126,7 @@ export function HeroSection() {
 
           <Link
             href={user ? '/seller/dashboard' : '/studio'}
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-border/70 bg-card hover:bg-secondary/60 hover:border-emerald-500/40 transition-all active:scale-95 shadow-2xs group"
+            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-white/80 dark:border-border/80 bg-white/75 dark:bg-card/75 backdrop-blur-xl hover:bg-white/95 dark:hover:bg-card/95 hover:border-emerald-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
             <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:scale-105 transition-transform">
               <Store className="h-5.5 w-5.5 sm:h-6 sm:w-6" />

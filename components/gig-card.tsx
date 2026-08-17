@@ -18,7 +18,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
     : 'CC';
 
   return (
-    <div className="group relative flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-500/40 hover:-translate-y-0.5 active:scale-[0.98]">
+    <div className="group relative flex flex-col rounded-[22px] sm:rounded-3xl border border-white/80 dark:border-border/80 bg-white/80 dark:bg-card/80 backdrop-blur-md shadow-xs overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-indigo-500/40 hover:-translate-y-1 active:scale-[0.98]">
       {/* Optimized Cover Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/40 select-none">
         <Image
@@ -29,7 +29,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute top-2.5 left-2.5 z-10">
-          <Badge className="bg-background/90 backdrop-blur-md text-foreground font-semibold text-[10px] sm:text-[11px] shadow-xs border-0">
+          <Badge className="bg-white/90 dark:bg-card/90 backdrop-blur-md text-foreground font-extrabold text-[10px] sm:text-[11px] shadow-2xs border border-white/40">
             {gig.category}
           </Badge>
         </div>
@@ -40,7 +40,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
         {/* Freelancer Header */}
         <Link
           href={`/seller/${sellerUsername}`}
-          className="flex items-center gap-2.5 mb-2 group/seller"
+          className="flex items-center gap-2.5 mb-1.5 group/seller"
         >
           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-1 ring-border shrink-0">
             <AvatarImage src={sellerAvatar} alt={sellerDisplayName} />
@@ -49,7 +49,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold group-hover/seller:text-primary transition-colors truncate text-foreground">
+            <p className="text-xs font-extrabold group-hover/seller:text-primary transition-colors truncate text-foreground">
               {sellerDisplayName}
             </p>
             {sellerDepartment && (
@@ -67,18 +67,18 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
 
         {/* Title */}
         <Link href={`/services/${gig.slug}`} className="flex-1">
-          <h3 className="font-display text-xs sm:text-sm font-bold leading-snug line-clamp-2 text-foreground group-hover:text-indigo-600 transition-colors">
+          <h3 className="font-display text-xs sm:text-sm font-extrabold leading-snug line-clamp-2 text-foreground group-hover:text-indigo-600 transition-colors min-h-[2rem]">
             {gig.title}
           </h3>
         </Link>
 
         {/* Tags */}
         {gig.tags && gig.tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-1 flex flex-wrap gap-1.5">
             {gig.tags.slice(0, 3).map((tag, idx) => (
               <span
                 key={idx}
-                className="text-[10px] sm:text-[11px] rounded-md bg-secondary/80 px-2 py-0.5 text-foreground/80 font-medium"
+                className="text-[10px] sm:text-[11px] rounded-lg bg-secondary/80 px-2 py-0.5 text-foreground/80 font-semibold"
               >
                 #{tag}
               </span>
@@ -87,7 +87,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
         )}
 
         {/* Footer info: Delivery time & Price */}
-        <div className="mt-3.5 pt-3 border-t border-border/60 flex items-center justify-between text-xs">
+        <div className="mt-auto pt-3 border-t border-border/50 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold">
             <Clock className="h-3.5 w-3.5" />
             <span>{gig.deliveryTimeDays} {gig.deliveryTimeDays === 1 ? 'day' : 'days'}</span>

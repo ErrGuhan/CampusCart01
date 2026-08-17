@@ -65,9 +65,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-2xl border-t border-border/80 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom,0.25rem)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-dock pb-[env(safe-area-inset-bottom,0.25rem)] transition-all"
     >
-      <div className="grid grid-cols-5 h-16 max-w-md mx-auto items-center px-1.5">
+      <div className="grid grid-cols-5 h-16 max-w-md mx-auto items-center px-2">
         {items.map((item) => {
           const isStudioActive = item.label === 'Studio' && (pathname.startsWith('/seller') || pathname === '/studio');
           const isActive = isSwipeActive
@@ -84,36 +84,36 @@ export function BottomNav() {
               href={item.href}
               onClick={(e) => handleNavClick(e, item.panelIndex)}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 py-1 rounded-2xl transition-all relative select-none active:scale-90',
+                'flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl transition-all relative select-none active:scale-95',
                 isActive
                   ? 'text-primary font-bold'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground/80 hover:text-foreground'
               )}
             >
-              <div className="relative flex items-center justify-center">
+              <div className={cn(
+                'relative flex items-center justify-center p-1 rounded-xl transition-all',
+                isActive && 'bg-primary/10 text-primary shadow-2xs'
+              )}>
                 <Icon
                   className={cn(
-                    'h-5.5 w-5.5 transition-transform duration-200',
-                    isActive && 'scale-110 text-primary'
+                    'h-5 w-5 transition-transform duration-200',
+                    isActive ? 'scale-110 stroke-[2.4]' : 'stroke-[1.8]'
                   )}
                 />
                 {item.label === 'Market' && totalItems > 0 && (
-                  <span className="absolute -top-1 -right-2 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground shadow-xs animate-pulse">
                     {totalItems}
                   </span>
                 )}
               </div>
               <span
                 className={cn(
-                  'text-[11px] tracking-tight leading-none',
-                  isActive ? 'font-bold text-primary' : 'font-medium'
+                  'text-[10px] tracking-tight leading-none font-semibold',
+                  isActive ? 'text-primary font-bold' : 'text-muted-foreground'
                 )}
               >
                 {item.label}
               </span>
-              {isActive && (
-                <span className="absolute -bottom-1 h-1 w-5 rounded-full bg-primary animate-scale-in" />
-              )}
             </Link>
           );
         })}
