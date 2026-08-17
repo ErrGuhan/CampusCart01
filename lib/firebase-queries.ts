@@ -303,7 +303,12 @@ export async function getAllGigRequests(): Promise<GigRequest[]> {
 
 export async function getGigsBySeller(username: string): Promise<ServiceGig[]> {
   const all = await getAllGigs();
-  return all.filter((g) => g.seller?.username?.toLowerCase() === username.toLowerCase());
+  const cleanU = (username || '').toLowerCase().trim();
+  return all.filter((g) => {
+    const gUser = (g.seller?.username || '').toLowerCase().trim();
+    const gId = (g.sellerId || g.seller?.id || '').toLowerCase().trim();
+    return gUser === cleanU || gId === cleanU;
+  });
 }
 
 // ---------- Products & Mappers ----------
@@ -367,18 +372,27 @@ function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product {
     ? [data.image]
     : ['https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'];
 
+  const rawSeller = data.seller || {};
+  const sellerId = rawSeller.id || data.seller_id || data.sellerId || 'seller';
+  const sellerUsername = (rawSeller.username || data.sellerUsername || data.seller_username || 'creator').toLowerCase().replace(/[^a-z0-9_]/g, '');
+  const sellerDisplayName = rawSeller.displayName || rawSeller.display_name || data.sellerName || data.seller_name || 'Campus Creator';
+  const sellerAvatar = rawSeller.avatar || rawSeller.avatar_url || data.sellerAvatar || data.seller_avatar || '';
+  const sellerDept = rawSeller.department || data.sellerDepartment || data.seller_department || '';
+  const sellerYear = rawSeller.year || data.sellerYear || data.seller_year || '';
+  const sellerBio = rawSeller.bio || data.sellerBio || data.seller_bio || '';
+
   const seller: Seller = sellerData || {
-    id: data.seller_id || data.sellerId || 'seller',
-    username: data.sellerUsername || data.seller_username || 'creator',
-    displayName: data.sellerName || data.seller_name || 'Campus Creator',
-    avatar: data.sellerAvatar || '',
-    department: data.sellerDepartment || '',
-    year: data.sellerYear || '',
-    bio: '',
-    skills: [],
-    rating: Number(data.rating) || 5.0,
-    productCount: 1,
-    joinedAt: data.created_at || new Date().toISOString(),
+    id: sellerId,
+    username: sellerUsername,
+    displayName: sellerDisplayName,
+    avatar: sellerAvatar,
+    department: sellerDept,
+    year: sellerYear,
+    bio: sellerBio,
+    skills: Array.isArray(rawSeller.skills) ? rawSeller.skills : [],
+    rating: Number(rawSeller.rating ?? data.rating) || 5.0,
+    productCount: Number(rawSeller.productCount) || 1,
+    joinedAt: rawSeller.joinedAt || data.created_at || new Date().toISOString(),
   };
 
   return {
@@ -497,7 +511,63 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
 
   const products = Array.from(prodMap.values());
 
-  // 4. Attach dynamically computed reviews & ratings to every product from client session
+  // 4. Enrich & synchronize seller details with live profiles from Firestore and local cache
+  try {
+    const profileMap = new Map<string, any>();
+    if (typeof window !== 'undefined') {
+      try {
+        const storedFallback = localStorage.getItem('campuscart_fallback_user');
+        if (storedFallback) {
+          const parsed = JSON.parse(storedFallback);
+          if (parsed?.profile) {
+            const p = parsed.profile;
+            const uid = p.id || parsed?.user?.uid;
+            if (uid) profileMap.set(uid.toLowerCase(), p);
+            if (p.username) profileMap.set(p.username.toLowerCase(), p);
+            if (p.email) profileMap.set(p.email.toLowerCase(), p);
+          }
+        }
+      } catch {}
+    }
+
+    try {
+      const pSnap = await getDocs(collection(db, 'profiles'));
+      if (!pSnap.empty) {
+        pSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          const uid = docSnap.id.toLowerCase();
+          profileMap.set(uid, d);
+          if (d.username) profileMap.set(d.username.toLowerCase(), d);
+          if (d.email) profileMap.set(d.email.toLowerCase(), d);
+        });
+      }
+    } catch {}
+
+    if (profileMap.size > 0) {
+      products.forEach((prod) => {
+        const sId = (prod.seller?.id || '').toLowerCase();
+        const sUser = (prod.seller?.username || '').toLowerCase();
+        const liveProfile = profileMap.get(sId) || profileMap.get(sUser);
+        if (liveProfile && prod.seller) {
+          const liveName = liveProfile.display_name || liveProfile.displayName;
+          const liveAvatar = liveProfile.avatar_url || liveProfile.avatarUrl || liveProfile.avatar;
+          const liveDept = liveProfile.department;
+          const liveYear = liveProfile.year;
+          const liveBio = liveProfile.bio;
+          const liveUsername = liveProfile.username;
+
+          if (liveName) prod.seller.displayName = liveName;
+          if (liveAvatar) prod.seller.avatar = liveAvatar;
+          if (liveDept) prod.seller.department = liveDept;
+          if (liveYear) prod.seller.year = liveYear;
+          if (liveBio) prod.seller.bio = liveBio;
+          if (liveUsername) prod.seller.username = liveUsername.toLowerCase();
+        }
+      });
+    }
+  } catch {}
+
+  // 5. Attach dynamically computed reviews & ratings to every product from client session
   if (typeof window !== 'undefined') {
     products.forEach((p) => {
       try {
@@ -673,7 +743,12 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
 
 export async function getProductsBySeller(username: string): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.filter((p) => p.seller.username.toLowerCase() === username.toLowerCase());
+  const cleanU = (username || '').toLowerCase().trim();
+  return all.filter((p) => {
+    const pU = (p.seller?.username || '').toLowerCase().trim();
+    const pId = (p.seller?.id || '').toLowerCase().trim();
+    return pU === cleanU || pId === cleanU;
+  });
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
