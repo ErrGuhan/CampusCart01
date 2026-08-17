@@ -7,7 +7,8 @@ import {
   Sparkles, CheckCheck, ShieldCheck, ArrowLeft,
   ChevronLeft, Loader2, Info, MapPin, Handshake, ShoppingBag,
   Settings, Bell, Plus, Mic, Copy, ThumbsUp, Volume2, RotateCcw,
-  Check, X,
+  Check, X, Trash2, MoreVertical, BellRing, ExternalLink,
+  AlertTriangle,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -15,6 +16,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
@@ -24,8 +40,11 @@ import {
   getConversations,
   getMessages,
   sendChatMessage,
+  deleteConversation,
+  getNotifications,
+  markNotificationRead,
 } from '@/lib/firebase-queries';
-import type { Conversation, ChatMessage } from '@/lib/types';
+import type { Conversation, ChatMessage, NotificationItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 // Deduplicate message arrays by ID and prevent rapid duplicate bubbles
@@ -67,10 +86,23 @@ function MessagesContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMsg, setInputMsg] = useState('');
   const [search, setSearch] = useState('');
+  const [activeFilterTag, setActiveFilterTag] = useState<'all' | 'unread' | 'offers'>('all');
+  const [showFilterTags, setShowFilterTags] = useState(false);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>(targetUserParam ? 'chat' : 'list');
   const [sending, setSending] = useState(false);
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  // Notification Modal States
+  const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  // Delete Conversation Dialog States
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [convToDelete, setConvToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const chatScrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Smoothly scroll only the chat message list without jumping the window
@@ -110,6 +142,19 @@ function MessagesContent() {
       setActiveConvId(sorted[0].id);
     }
   }, [user, activeConvId, targetUserParam]);
+
+  // Load notifications for the bell icon
+  const loadUserNotifications = useCallback(async () => {
+    if (!user) return;
+    try {
+      const notifs = await getNotifications(user.uid);
+      setNotifications(notifs);
+    } catch {}
+  }, [user]);
+
+  useEffect(() => {
+    loadUserNotifications();
+  }, [loadUserNotifications]);
 
   // Real-time listener for ALL user conversations in Firestore
   useEffect(() => {
@@ -304,6 +349,8 @@ function MessagesContent() {
         senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
         senderAvatar: profile?.avatar_url || '',
         recipientId: otherId,
+        recipientName: otherName,
+        recipientAvatar: otherAvatar,
         text: textToSend,
       });
     } catch (err: any) {
@@ -312,6 +359,54 @@ function MessagesContent() {
       setSending(false);
       setTimeout(() => scrollToBottom(true), 50);
     }
+  }
+
+  // Handle Delete Conversation
+  async function handleConfirmDeleteConversation() {
+    if (!user || !convToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      await deleteConversation(convToDelete.id, user.uid);
+      setConversations((prev) => prev.filter((c) => c.id !== convToDelete.id));
+      
+      if (activeConvId === convToDelete.id) {
+        setActiveConvId(null);
+        setMessages([]);
+        setMobileView('list');
+      }
+
+      toast({
+        title: 'Conversation deleted 🗑️',
+        description: `Chat with ${convToDelete.name} has been removed.`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setConvToDelete(null);
+    }
+  }
+
+  // Handle Clear History
+  function handleClearChatHistory() {
+    if (!activeConvId) return;
+    setMessages([]);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(`campuscart_msgs_${activeConvId}`);
+      } catch {}
+    }
+    toast({ title: 'Chat history cleared' });
+  }
+
+  // Handle Mark Notifications Read
+  async function handleMarkAllNotificationsRead() {
+    if (!user) return;
+    notifications.forEach((n) => markNotificationRead(user.uid, n.id));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    toast({ title: 'All notifications marked as read' });
   }
 
   function handleCopy(text: string, id: string) {
@@ -336,16 +431,26 @@ function MessagesContent() {
     }
   }
 
+  const unreadNotificationsCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
+  }, [notifications]);
+
   const filteredConversations = useMemo(() => {
-    if (!search.trim()) return conversations;
+    let list = conversations;
+
+    if (activeFilterTag === 'offers') {
+      list = list.filter((c) => (c.lastMessage || '').toLowerCase().includes('offer') || (c.lastMessage || '').includes('₹'));
+    }
+
+    if (!search.trim()) return list;
     const q = search.toLowerCase().trim();
-    return conversations.filter((c) => {
+    return list.filter((c) => {
       const otherId = c.participantIds.find((id) => id !== user?.uid) || '';
       const otherName = (c.participantNames?.[otherId] || '').toLowerCase();
       const lastMsg = (c.lastMessage || '').toLowerCase();
       return otherName.includes(q) || lastMsg.includes(q);
     });
-  }, [conversations, search, user?.uid]);
+  }, [conversations, search, activeFilterTag, user?.uid]);
 
   const activeConv = useMemo(() => {
     const found = conversations.find((c) => c.id === activeConvId);
@@ -439,26 +544,46 @@ function MessagesContent() {
                 mobileView === 'chat' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              {/* Chats Header: Title + Search/Bell Icons */}
+              {/* Chats Header: Title + Active Search/Bell Buttons */}
               <div className="p-3.5 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                     Chats
                   </h1>
                   <div className="flex items-center gap-2">
+                    {/* Search Focus Button */}
                     <button
                       type="button"
+                      onClick={() => {
+                        setShowFilterTags(!showFilterTags);
+                        searchInputRef.current?.focus();
+                      }}
+                      title="Search & filter chats"
                       aria-label="Search"
-                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
+                      className={cn(
+                        'h-9 w-9 sm:h-10 sm:w-10 rounded-2xl border shadow-2xs flex items-center justify-center transition-all',
+                        showFilterTags
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm scale-105'
+                          : 'bg-white/80 dark:bg-card/80 border-white/80 dark:border-border/80 text-foreground hover:scale-105 active:scale-95'
+                      )}
                     >
                       <Search className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                     </button>
+
+                    {/* Notifications Button with Live Unread Dot */}
                     <button
                       type="button"
+                      onClick={() => setNotificationsModalOpen(true)}
+                      title="View campus notifications"
                       aria-label="Notifications"
-                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
+                      className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
                       <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                      {unreadNotificationsCount > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-white text-[9px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                          {unreadNotificationsCount}
+                        </span>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -467,7 +592,8 @@ function MessagesContent() {
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
-                    placeholder="Search Chats"
+                    ref={searchInputRef}
+                    placeholder="Search Chats..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-white/70 dark:bg-card/70 border border-white/70 dark:border-border/70 shadow-2xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-purple-500/20"
@@ -476,12 +602,42 @@ function MessagesContent() {
                     <button
                       type="button"
                       onClick={() => setSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
+
+                {/* Quick Filter Tag Chips (Toggled via Search button) */}
+                {showFilterTags && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 animate-in slide-in-from-top-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveFilterTag('all')}
+                      className={cn(
+                        'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all',
+                        activeFilterTag === 'all'
+                          ? 'bg-purple-600 text-white shadow-2xs'
+                          : 'bg-white/80 dark:bg-card/80 text-muted-foreground hover:text-foreground border border-white/80'
+                      )}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveFilterTag('offers')}
+                      className={cn(
+                        'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1',
+                        activeFilterTag === 'offers'
+                          ? 'bg-purple-600 text-white shadow-2xs'
+                          : 'bg-white/80 dark:bg-card/80 text-muted-foreground hover:text-foreground border border-white/80'
+                      )}
+                    >
+                      <span>🤝 Offers</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Chat Thread Cards List */}
@@ -507,42 +663,58 @@ function MessagesContent() {
                     const isSelected = c.id === activeConvId;
 
                     return (
-                      <button
+                      <div
                         key={c.id}
-                        onClick={() => handleSelectConversation(c.id)}
                         className={cn(
-                          'w-full p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center gap-3 sm:gap-3.5 text-left transition-all border',
+                          'group relative w-full rounded-2xl sm:rounded-3xl flex items-center transition-all border',
                           isSelected
                             ? 'bg-white dark:bg-card border-purple-500/30 shadow-md ring-2 ring-purple-500/10'
                             : 'bg-white/70 dark:bg-card/70 border-white/60 dark:border-border/50 hover:bg-white/90 dark:hover:bg-card/90 shadow-2xs hover:scale-[1.01]'
                         )}
                       >
-                        {/* Circular Avatar */}
-                        <Avatar className="h-11 w-11 sm:h-13 sm:w-13 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
-                          <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
-                          <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black">
-                            {otherName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <button
+                          onClick={() => handleSelectConversation(c.id)}
+                          className="flex-1 p-3 sm:p-4 flex items-center gap-3 sm:gap-3.5 text-left min-w-0"
+                        >
+                          {/* Circular Avatar */}
+                          <Avatar className="h-11 w-11 sm:h-13 sm:w-13 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
+                            <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
+                            <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black">
+                              {otherName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
 
-                        {/* Name & Subtitle Preview */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <h4 className="text-xs sm:text-sm font-extrabold text-foreground truncate">{otherName}</h4>
-                            <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
-                              {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                          {/* Name & Subtitle Preview */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h4 className="text-xs sm:text-sm font-extrabold text-foreground truncate">{otherName}</h4>
+                              <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
+                                {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium flex items-center gap-1">
+                              <span>{c.lastMessage || 'Say hi'}</span>
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium flex items-center gap-1">
-                            <span>{c.lastMessage || 'Say hi'}</span>
-                          </p>
-                        </div>
+                        </button>
 
-                        {/* Status / Badge on Right */}
-                        <div className="shrink-0">
+                        {/* Direct Delete Quick Button */}
+                        <div className="pr-3 flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConvToDelete({ id: c.id, name: otherName });
+                              setDeleteDialogOpen(true);
+                            }}
+                            title="Delete Chat"
+                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 block" />
                         </div>
-                      </button>
+                      </div>
                     );
                   })
                 )}
@@ -559,7 +731,7 @@ function MessagesContent() {
             >
               {activeConv && otherParticipant ? (
                 <>
-                  {/* Top Bar: Back Button, Title, and Settings Gear */}
+                  {/* Top Bar: Back Button, Title, and Interactive Settings Dropdown */}
                   <div className="p-3 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       {/* Back Button */}
@@ -583,14 +755,47 @@ function MessagesContent() {
                       </div>
                     </div>
 
-                    {/* Settings Button */}
-                    <button
-                      type="button"
-                      aria-label="Chat Settings"
-                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
-                    >
-                      <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                    </button>
+                    {/* Settings Dropdown with Delete & Clear options */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label="Chat Settings & Options"
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                        >
+                          <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-xl">
+                        <DropdownMenuItem asChild className="rounded-xl font-medium text-xs cursor-pointer">
+                          <Link href={`/seller/${encodeURIComponent(otherParticipant.name.toLowerCase().replace(/\s+/g, '-'))}`}>
+                            <Store className="h-4 w-4 mr-2 text-primary" />
+                            View Storefront
+                          </Link>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem
+                          onClick={handleClearChatHistory}
+                          className="rounded-xl font-medium text-xs cursor-pointer"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2 text-muted-foreground" />
+                          Clear Chat History
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator className="my-1" />
+
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setConvToDelete({ id: activeConv.id, name: otherParticipant.name });
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="rounded-xl font-bold text-xs text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Conversation
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
                   {/* Messages Scroll Area with independent non-jumping overflow */}
@@ -598,7 +803,6 @@ function MessagesContent() {
                     ref={chatScrollContainerRef}
                     className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 scrollbar-thin overscroll-contain"
                   >
-                    
                     {/* Centered Date Pill Separator */}
                     <div className="flex justify-center my-1">
                       <div className="rounded-full px-4 py-0.5 sm:py-1 bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/60 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-2xs">
@@ -635,9 +839,8 @@ function MessagesContent() {
                               </Avatar>
                             )}
 
-                            {/* Message Bubble Block - Prevents collapsing & preserves natural bubble width */}
+                            {/* Message Bubble Block */}
                             <div className={cn('flex flex-col gap-1 max-w-[82%] sm:max-w-[75%] min-w-0', isMe ? 'items-end' : 'items-start')}>
-                              
                               {/* Bubble */}
                               <div
                                 className={cn(
@@ -705,10 +908,8 @@ function MessagesContent() {
                      ========================================================================= */}
                   <div className="p-2.5 sm:p-4 bg-transparent shrink-0">
                     <form onSubmit={handleSend} className="flex items-center gap-2 max-w-3xl mx-auto">
-                      
                       {/* Floating Pill Input Box */}
                       <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
-                        
                         {/* Left '+' Attachment / Options Button */}
                         <button
                           type="button"
@@ -772,6 +973,118 @@ function MessagesContent() {
         </div>
       </main>
       <Footer />
+
+      {/* =========================================================================
+          NOTIFICATIONS SLIDE-OVER / MODAL (Triggered via Bell Icon)
+         ========================================================================= */}
+      <Dialog open={notificationsModalOpen} onOpenChange={setNotificationsModalOpen}>
+        <DialogContent className="max-w-md rounded-3xl p-5 sm:p-6 bg-white/95 dark:bg-card/95 backdrop-blur-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
+                  <BellRing className="h-4 w-4" />
+                </div>
+                <DialogTitle className="font-display font-black text-lg">Notifications</DialogTitle>
+              </div>
+              {notifications.some((n) => !n.isRead) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleMarkAllNotificationsRead}
+                  className="text-xs text-purple-600 hover:text-purple-700 h-8 font-bold"
+                >
+                  <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                  Mark all read
+                </Button>
+              )}
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Direct messages, order milestones, and campus offers.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[350px] overflow-y-auto space-y-2 py-2 pr-1 scrollbar-thin">
+            {notifications.length === 0 ? (
+              <div className="py-8 text-center space-y-2 text-muted-foreground">
+                <Bell className="h-8 w-8 mx-auto opacity-30" />
+                <p className="text-xs font-semibold">No notifications right now</p>
+              </div>
+            ) : (
+              notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className={cn(
+                    'p-3 rounded-2xl border transition-all text-left flex items-start gap-3',
+                    !n.isRead
+                      ? 'bg-purple-500/5 border-purple-500/20'
+                      : 'bg-secondary/40 border-border/60'
+                  )}
+                >
+                  <div className="h-7 w-7 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-bold text-xs text-foreground truncate">{n.title}</h5>
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{n.message}</p>
+                    <span className="text-[9px] text-muted-foreground mt-1 block">
+                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button asChild variant="outline" className="w-full rounded-xl text-xs font-bold">
+              <Link href="/notifications" onClick={() => setNotificationsModalOpen(false)}>
+                View Full Notifications Center
+                <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* =========================================================================
+          CONFIRM DELETE CONVERSATION DIALOG
+         ========================================================================= */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-white dark:bg-card">
+          <DialogHeader className="text-center sm:text-center">
+            <div className="h-12 w-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-2">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <DialogTitle className="font-display font-black text-lg">Delete Conversation?</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Are you sure you want to delete your conversation with <strong className="text-foreground">{convToDelete?.name}</strong>? All message history will be removed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex sm:flex-row gap-2 pt-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setConvToDelete(null);
+              }}
+              className="flex-1 rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteConversation}
+              disabled={isDeleting}
+              className="flex-1 rounded-xl font-bold"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
+              Delete Chat
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

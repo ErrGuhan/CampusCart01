@@ -6,6 +6,7 @@ import {
   setDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -1524,6 +1525,44 @@ export async function sendChatMessage(msg: Partial<ChatMessage> & {
   }
 
   return newMsg;
+}
+
+export async function deleteConversation(conversationId: string, userId: string): Promise<void> {
+  // 1. Remove from local storage
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_conversations');
+      if (raw) {
+        let list: Conversation[] = JSON.parse(raw);
+        list = list.filter((c) => c.id !== conversationId);
+        localStorage.setItem('campuscart_conversations', JSON.stringify(list));
+      }
+      localStorage.removeItem(`campuscart_msgs_${conversationId}`);
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('campuscart_conversation_deleted', { detail: { conversationId } }));
+    } catch {}
+  }
+
+  // 2. Dissociate or delete in Firestore
+  try {
+    const chatDocRef = doc(db, 'chats', conversationId);
+    const snap = await getDoc(chatDocRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const participants: string[] = Array.isArray(data.participants) ? data.participants : [];
+      const updated = participants.filter((id) => id !== userId);
+
+      if (updated.length === 0) {
+        await deleteDoc(chatDocRef);
+      } else {
+        await updateDoc(chatDocRef, {
+          participants: updated,
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Notice in deleteConversation Firestore operation:', err);
+  }
 }
 
 // ---------- Notifications ----------
