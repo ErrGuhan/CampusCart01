@@ -5,6 +5,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   updateProfile as updateFirebaseProfile,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
@@ -49,6 +50,7 @@ type AuthContextType = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (params: SignUpParams) => Promise<{ success: boolean; error?: string }>;
+  sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   updateUserProfile: (data: Partial<Profile>) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -60,6 +62,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => ({ success: false }),
   signUp: async () => ({ success: false }),
+  sendPasswordReset: async () => ({ success: false }),
   updateUserProfile: async () => {},
   signOut: async () => {},
 });
@@ -366,6 +369,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function sendPasswordReset(email: string) {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      return { success: false, error: 'Please enter your email address.' };
+    }
+
+    // 1. Try secure backend API endpoint if available
+    try {
+      const backendRes = await secureApiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      if (backendRes.success) {
+        return { success: true };
+      }
+    } catch (e) {
+      // Fall through to Firebase auth
+    }
+
+    // 2. Firebase sendPasswordResetEmail
+    try {
+      await sendPasswordResetEmail(auth, trimmedEmail);
+      return { success: true };
+    } catch (err: any) {
+      console.warn('Firebase sendPasswordResetEmail notice:', err);
+      let errorMsg = 'Failed to send password reset email. Please verify your email address.';
+      if (err.code === 'auth/user-not-found') {
+        errorMsg = 'No registered account found with this email address.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMsg = 'Invalid email address format.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMsg = 'Too many requests. Please wait a few moments before trying again.';
+      }
+      return { success: false, error: errorMsg };
+    }
+  }
+
   async function updateUserProfile(data: Partial<Profile>) {
     if (!profile) return;
     const updated: Profile = {
@@ -418,6 +458,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signUp,
+        sendPasswordReset,
         updateUserProfile,
         signOut,
       }}

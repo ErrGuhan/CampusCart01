@@ -3,9 +3,16 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth-provider';
 
@@ -15,11 +22,17 @@ function LoginForm() {
   const redirectUrl = searchParams.get('redirect') || '/';
 
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, sendPasswordReset } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Forgot password modal state
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +59,44 @@ function LoginForm() {
       toast({
         title: 'Sign in failed',
         description: result.error || 'Invalid email or password. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  function handleOpenForgotModal() {
+    setResetEmail(email.trim());
+    setResetSuccess(false);
+    setForgotModalOpen(true);
+  }
+
+  async function handleSendResetEmail(e: React.FormEvent) {
+    e.preventDefault();
+    const targetEmail = resetEmail.trim();
+
+    if (!targetEmail) {
+      toast({
+        title: 'Email required',
+        description: 'Please enter the email associated with your account.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    const result = await sendPasswordReset(targetEmail);
+    setResetLoading(false);
+
+    if (result.success) {
+      setResetSuccess(true);
+      toast({
+        title: 'Reset link sent! 📬',
+        description: `We've sent a password reset link to ${targetEmail}.`,
+      });
+    } else {
+      toast({
+        title: 'Reset failed',
+        description: result.error || 'Could not send reset link. Please verify your email.',
         variant: 'destructive',
       });
     }
@@ -125,14 +176,15 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Forgot Password Right-Aligned */}
+          {/* Forgot Password Right-Aligned Link (triggers reset modal) */}
           <div className="flex justify-end pt-0.5">
-            <a
-              href="mailto:campuscartsvcet@gmail.com?subject=CampusCart%20Password%20Reset%20Request"
-              className="text-xs font-semibold text-[#2563eb] hover:text-blue-700 hover:underline transition-colors"
+            <button
+              type="button"
+              onClick={handleOpenForgotModal}
+              className="text-xs font-semibold text-[#2563eb] hover:text-blue-700 hover:underline transition-colors cursor-pointer"
             >
               Forgot password?
-            </a>
+            </button>
           </div>
 
           {/* Solid Blue Sign In Action Button */}
@@ -183,6 +235,88 @@ function LoginForm() {
           <span>Back to Campus Marketplace</span>
         </Link>
       </div>
+
+      {/* Interactive Forgot Password Modal */}
+      <Dialog open={forgotModalOpen} onOpenChange={setForgotModalOpen}>
+        <DialogContent className="sm:max-w-[400px] rounded-3xl p-6 bg-white border border-slate-200 shadow-2xl">
+          <DialogHeader className="space-y-1.5 text-center sm:text-left">
+            <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Mail className="h-5 w-5 text-[#2563eb]" />
+              <span>Reset Password</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Enter the email address registered with your account. We will send you a secure link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+
+          {resetSuccess ? (
+            <div className="py-4 space-y-4 text-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-slate-900">Email Sent!</h3>
+                <p className="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
+                  A password reset link has been sent to <span className="font-semibold text-slate-900">{resetEmail}</span>. Please check your inbox and spam folders.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setForgotModalOpen(false)}
+                className="w-full h-11 rounded-xl bg-[#1d63ff] hover:bg-[#1554e0] text-white font-semibold text-xs mt-2"
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSendResetEmail} className="space-y-4 pt-2">
+              <div className="space-y-1.5 text-left">
+                <label
+                  htmlFor="resetEmail"
+                  className="block text-xs font-semibold text-slate-700"
+                >
+                  Email address
+                </label>
+                <Input
+                  id="resetEmail"
+                  type="email"
+                  placeholder="you@svcet.edu"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus-visible:ring-2 focus-visible:ring-blue-500"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setForgotModalOpen(false)}
+                  className="flex-1 h-11 rounded-xl border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="flex-1 h-11 rounded-xl bg-[#1d63ff] hover:bg-[#1554e0] text-white font-semibold text-xs shadow-sm"
+                >
+                  {resetLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-white mr-1.5" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <span>Send Reset Link</span>
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -200,6 +334,7 @@ export default function LoginPage() {
     </main>
   );
 }
+
 
 
 
