@@ -476,7 +476,8 @@ export function Navbar() {
                 <DropdownMenuContent
                   align="end"
                   sideOffset={8}
-                  className="w-[280px] xs:w-[305px] sm:w-[325px] rounded-2xl sm:rounded-3xl p-2.5 shadow-2xl border border-border/80 bg-popover/98 backdrop-blur-xl animate-in fade-in-50 zoom-in-95"
+                  collisionPadding={12}
+                  className="w-[calc(100vw-24px)] max-w-[320px] rounded-2xl sm:rounded-3xl p-2.5 shadow-2xl border border-border/80 bg-popover/98 backdrop-blur-xl animate-in fade-in-50 zoom-in-95"
                 >
                   {/* User Profile Header Card - Clicking opens Profile & Settings */}
                   <DropdownMenuItem asChild className="p-0 rounded-2xl mb-1.5 focus:bg-transparent cursor-pointer">

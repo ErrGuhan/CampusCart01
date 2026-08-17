@@ -243,8 +243,10 @@
     scroll-snap-align: center;
     scroll-snap-stop: always;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
+    contain: layout paint;
+    isolation: isolate;
   }
 }
 

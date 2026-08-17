@@ -30,7 +30,7 @@ export function SellerSidebar() {
   return (
     <>
       {/* Mobile Horizontal Navigation Tabs */}
-      <div className="lg:hidden mb-5 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="lg:hidden mb-5 w-full overflow-hidden">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {isAdmin && (
             <Link
