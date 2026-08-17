@@ -48,15 +48,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setItems(JSON.parse(stored));
+    const syncCart = () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          setItems(JSON.parse(stored));
+        } else {
+          setItems([]);
+        }
+      } catch {
+        // ignore parse errors
       }
-    } catch {
-      // ignore parse errors
+      setLoaded(true);
+    };
+
+    syncCart();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', syncCart);
+      window.addEventListener('focus', syncCart);
+      return () => {
+        window.removeEventListener('storage', syncCart);
+        window.removeEventListener('focus', syncCart);
+      };
     }
-    setLoaded(true);
   }, []);
 
   useEffect(() => {

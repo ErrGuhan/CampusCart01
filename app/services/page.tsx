@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { AuthPromptDialog } from '@/components/auth-prompt-dialog';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { getAllGigs } from '@/lib/firebase-queries';
 import { getBounties, claimBounty } from '@/lib/collaboration-hub';
 import type { ServiceGig, CampusBounty } from '@/lib/types';
@@ -41,9 +43,18 @@ export default function ServicesPage() {
   const [bounties, setBounties] = useState<CampusBounty[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedOutcome, setSelectedOutcome] = useState('all');
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [authPromptOpen, setAuthPromptOpen] = useState(false);
+
+  // Debounce search input (150ms) for high typing responsiveness
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const refreshData = useCallback(() => {
     Promise.all([getAllGigs(), getBounties('ALL')])
@@ -53,13 +64,27 @@ export default function ServicesPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
+        console.warn('Services fetch notice:', err);
         setLoading(false);
       });
   }, []);
 
+  // Real-time listener for gigs & bounties
   useEffect(() => {
     refreshData();
+
+    let unsubscribeGigs = () => {};
+    let unsubscribeBounties = () => {};
+
+    try {
+      unsubscribeGigs = onSnapshot(collection(db, 'gigs'), () => {
+        refreshData();
+      }, (e) => console.warn('Firestore gigs snapshot notice:', e));
+
+      unsubscribeBounties = onSnapshot(collection(db, 'collaboration_bounties'), () => {
+        refreshData();
+      }, (e) => console.warn('Firestore bounties snapshot notice:', e));
+    } catch {}
 
     if (typeof window !== 'undefined') {
       window.addEventListener('campuscart_gig_updated', refreshData);
@@ -68,19 +93,26 @@ export default function ServicesPage() {
       window.addEventListener('focus', refreshData);
 
       return () => {
+        unsubscribeGigs();
+        unsubscribeBounties();
         window.removeEventListener('campuscart_gig_updated', refreshData);
         window.removeEventListener('campuscart_bounty_updated', refreshData);
         window.removeEventListener('storage', refreshData);
         window.removeEventListener('focus', refreshData);
       };
     }
+
+    return () => {
+      unsubscribeGigs();
+      unsubscribeBounties();
+    };
   }, [refreshData]);
 
   // Filter gigs by outcome & search
   const filteredGigs = useMemo(() => {
     const activeOutcome = OUTCOMES.find((o) => o.id === selectedOutcome);
     return gigs.filter((gig) => {
-      const q = search.toLowerCase().trim();
+      const q = debouncedSearch.toLowerCase().trim();
       const matchesSearch =
         !q ||
         gig.title.toLowerCase().includes(q) ||
@@ -93,7 +125,7 @@ export default function ServicesPage() {
 
       return matchesSearch && matchesOutcome;
     });
-  }, [gigs, search, selectedOutcome]);
+  }, [gigs, debouncedSearch, selectedOutcome]);
 
   // Handle live claiming of a bounty
   async function handleClaimBounty(bounty: CampusBounty) {

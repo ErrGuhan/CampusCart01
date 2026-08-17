@@ -30,6 +30,8 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { getAllProducts } from '@/lib/firebase-queries';
 import type { Product, Category } from '@/lib/types';
 
@@ -52,6 +54,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [search, setSearch] = useState(urlSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(urlSearch);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     urlCategory ? [urlCategory] : []
   );
@@ -60,14 +63,32 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
   const [sort, setSort] = useState('relevance');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
+  // Debounce search input (150ms) for high typing responsiveness
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     setProducts(initialProducts);
   }, [initialProducts]);
 
+  // Real-time Firestore sync & multi-tab storage events
   useEffect(() => {
     const refresh = () => {
       getAllProducts().then((data) => setProducts(data));
     };
+
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = onSnapshot(collection(db, 'products'), () => {
+        refresh();
+      }, (err) => {
+        console.warn('Firestore products onSnapshot notice:', err);
+      });
+    } catch {}
 
     if (typeof window !== 'undefined') {
       window.addEventListener('campuscart_product_updated', refresh);
@@ -75,17 +96,20 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
       window.addEventListener('focus', refresh);
 
       return () => {
+        unsubscribe();
         window.removeEventListener('campuscart_product_updated', refresh);
         window.removeEventListener('storage', refresh);
         window.removeEventListener('focus', refresh);
       };
     }
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
     const q = searchParams?.get('search');
     if (q !== null && q !== undefined) {
       setSearch(q);
+      setDebouncedSearch(q);
     }
     const cat = searchParams?.get('category');
     if (cat) {
@@ -96,8 +120,8 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
   const filtered = useMemo(() => {
     let result = [...products];
 
-    if (search) {
-      const q = search.toLowerCase().trim();
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase().trim();
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||

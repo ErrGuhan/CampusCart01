@@ -31,6 +31,9 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { getNotifications } from '@/lib/firebase-queries';
 
 const navItems = [
   { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
@@ -49,6 +52,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const { user, profile, isAdmin, loading, signOut } = useAuth();
   const { totalItems } = useCart();
 
@@ -58,6 +62,44 @@ export function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Real-time unread notifications sync
+  useEffect(() => {
+    if (!user) {
+      setUnreadNotifs(0);
+      return;
+    }
+    const syncNotifs = async () => {
+      try {
+        const notifs = await getNotifications(user.uid);
+        setUnreadNotifs(notifs.filter((n) => !n.isRead).length);
+      } catch {}
+    };
+    syncNotifs();
+
+    let unsubscribe = () => {};
+    try {
+      const q = query(
+        collection(db, 'users', user.uid, 'notifications'),
+        orderBy('createdAt', 'desc')
+      );
+      unsubscribe = onSnapshot(q, (snap) => {
+        let count = 0;
+        snap.forEach((d) => {
+          if (!d.data().isRead) count++;
+        });
+        setUnreadNotifs(count);
+      }, () => {});
+    } catch {}
+
+    window.addEventListener('campuscart_notification_updated', syncNotifs);
+    window.addEventListener('storage', syncNotifs);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('campuscart_notification_updated', syncNotifs);
+      window.removeEventListener('storage', syncNotifs);
+    };
+  }, [user]);
 
   async function handleSignOut() {
     await signOut();
@@ -245,12 +287,31 @@ export function Navbar() {
                         <Link
                           href="/messages"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                          className="flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
                         >
-                          <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
-                            <MessageSquare className="h-4.5 w-4.5" />
+                          <div className="flex items-center gap-3.5">
+                            <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+                              <MessageSquare className="h-4.5 w-4.5" />
+                            </div>
+                            <span>Campus Messages</span>
                           </div>
-                          <span>Campus Messages</span>
+                        </Link>
+                        <Link
+                          href="/notifications"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-semibold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                        >
+                          <div className="flex items-center gap-3.5">
+                            <div className="flex h-7.5 w-7.5 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
+                              <Bell className="h-4.5 w-4.5" />
+                            </div>
+                            <span>Notifications</span>
+                          </div>
+                          {unreadNotifs > 0 && (
+                            <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-2xs">
+                              {unreadNotifs}
+                            </span>
+                          )}
                         </Link>
                         {isAdmin && (
                           <Link
@@ -431,6 +492,20 @@ export function Navbar() {
                 <MessageSquare className="h-5 w-5" />
               </Link>
             </Button>
+
+            {/* Desktop Notifications shortcut */}
+            {user && (
+              <Button variant="ghost" size="icon" asChild className="hidden sm:flex relative h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
+                <Link href="/notifications" aria-label="Notifications">
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifs > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-xs animate-pulse">
+                      {unreadNotifs > 9 ? '9+' : unreadNotifs}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            )}
 
             {/* Wishlist */}
             <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
