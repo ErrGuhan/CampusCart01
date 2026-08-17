@@ -89,19 +89,19 @@ export function Navbar() {
         'border-b border-border/60 bg-background/95 backdrop-blur-md'
       )}
     >
-      <div className="px-3.5 xs:px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full min-w-0">
+      <div className="px-3.5 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full min-w-0">
         {/* Auto-Adjusting Responsive Header Bar for Every Screen */}
-        <div className="flex h-15 xs:h-16 sm:h-18 items-center justify-between w-full">
+        <div className="flex h-16 sm:h-18 items-center justify-between w-full">
           {/* Left: Mobile Menu + Blue Squircle Logo + Bold CampusCart text */}
-          <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 shrink-0 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
                   type="button"
-                  className="md:hidden flex items-center justify-center h-9 w-9 xs:h-10 xs:w-10 rounded-xl text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+                  className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
                   aria-label="Open navigation menu"
                 >
-                  <Menu className="h-5.5 w-5.5 xs:h-6 xs:w-6 stroke-[2.2]" />
+                  <Menu className="h-6 w-6 stroke-[2.2]" />
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[88vw] max-w-sm p-0 flex flex-col bg-background">
@@ -113,7 +113,7 @@ export function Navbar() {
                       className="flex items-center gap-3"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#0ea5e9] text-white font-bold shadow-2xs">
-                        <Store className="h-5.5 w-5.5" />
+                        <Store className="h-5 w-5" />
                       </div>
                       <div>
                         <span className="font-display text-xl font-black tracking-tight text-foreground block leading-tight">
@@ -385,15 +385,15 @@ export function Navbar() {
           </form>
 
           {/* Right Action Icons - Fluid auto-adjusting targets for every phone screen size */}
-          <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Mobile Search Toggle */}
             <button
               type="button"
-              className="md:hidden flex items-center justify-center h-9 w-9 xs:h-10 xs:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="md:hidden flex items-center justify-center h-10 w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
               onClick={() => setMobileSearchOpen((prev) => !prev)}
               aria-label="Toggle mobile search"
             >
-              <Search className="h-5 w-5 xs:h-5.5 xs:w-5.5 stroke-[2.2]" />
+              <Search className="h-5 w-5 stroke-[2.2]" />
             </button>
 
             {/* Quick Access: Admin Approval Center & Sell Item (Desktop) */}
@@ -442,9 +442,9 @@ export function Navbar() {
             <Link
               href="/cart"
               aria-label="Shopping Cart"
-              className="relative flex items-center justify-center h-9 w-9 xs:h-10 xs:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="relative flex items-center justify-center h-10 w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
             >
-              <ShoppingCart className="h-5 w-5 xs:h-5.5 xs:w-5.5 stroke-[1.8]" />
+              <ShoppingCart className="h-5 w-5 stroke-[1.8]" />
               {totalItems > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                   {totalItems > 99 ? '99+' : totalItems}
@@ -454,18 +454,18 @@ export function Navbar() {
 
             {/* User Account / Profile dropdown or Login buttons */}
             {loading ? (
-              <div className="h-8.5 w-8.5 xs:h-9.5 xs:w-9.5 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="h-10 w-10 rounded-full bg-muted animate-pulse shrink-0" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center justify-center h-8.5 w-8.5 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0"
+                    className="flex items-center justify-center h-10 w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0 overflow-hidden"
                     aria-label="Account menu"
                   >
-                    <Avatar className="h-8.5 w-8.5 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 ring-2 ring-primary/20">
+                    <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-primary/20 shrink-0 overflow-hidden">
                       {profile?.avatar_url && (
-                        <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} />
+                        <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} className="h-full w-full object-cover" />
                       )}
                       <AvatarFallback className="text-xs font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
                         {initials}
