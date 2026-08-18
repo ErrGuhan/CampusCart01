@@ -133,7 +133,7 @@ export function Navbar() {
     <header
       className={cn(
         'sticky top-0 z-50 w-full transition-all duration-200',
-        'border-b border-[#E2E4F6]/80 bg-[#F5FFFA]/85 dark:bg-background/95 backdrop-blur-xl shadow-xs'
+        'border-b border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-xl shadow-xs'
       )}
     >
       <div className="px-3.5 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full min-w-0">
@@ -152,15 +152,15 @@ export function Navbar() {
                   <Menu className="h-6 w-6 stroke-[2.2]" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[88vw] max-w-sm p-0 flex flex-col bg-[#F5FFFA]/95 dark:bg-background backdrop-blur-xl">
-                <div className="p-5 border-b border-[#E2E4F6] bg-[#F5FFFA]/90 dark:bg-card">
+              <SheetContent side="left" className="w-[88vw] max-w-sm p-0 flex flex-col bg-card/95 dark:bg-card/95 backdrop-blur-xl border-r border-border/80">
+                <div className="p-5 border-b border-border/80 bg-card/90">
                   <div className="flex items-center justify-between">
                     <Link
                       href="/"
                       onClick={() => setMobileOpen(false)}
                       className="flex items-center gap-3"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] font-bold shadow-2xs">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground font-bold shadow-xs">
                         <Store className="h-5 w-5" />
                       </div>
                       <div>
@@ -428,7 +428,7 @@ export function Navbar() {
 
             {/* Brand Logo */}
             <Link href="/" className="flex items-center gap-2 xs:gap-2.5 shrink-0 group">
-              <div className="flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] xs:rounded-[14px] bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+              <div className="flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] xs:rounded-[14px] bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground font-bold shadow-xs group-hover:scale-105 transition-transform shrink-0">
                 <Store className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-6 sm:w-6" />
               </div>
               <span className="font-display text-lg xs:text-xl sm:text-2xl font-black tracking-tight text-foreground leading-none">

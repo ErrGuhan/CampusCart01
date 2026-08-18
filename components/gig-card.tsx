@@ -18,7 +18,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
     : 'CC';
 
   return (
-    <div className="group relative flex flex-col rounded-[22px] sm:rounded-3xl border border-[#E2E4F6]/80 dark:border-border/80 bg-[#F5FFFA]/85 dark:bg-card/80 backdrop-blur-md shadow-2xs overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#3B42C4]/40 hover:-translate-y-1 active:scale-[0.98]">
+    <div className="group relative flex flex-col rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md shadow-xs overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-indigo-500/40 hover:-translate-y-1 active:scale-[0.98]">
       {/* Optimized Cover Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden shimmer-placeholder select-none">
         <Image
@@ -29,7 +29,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute top-2.5 left-2.5 z-10">
-          <Badge className="bg-[#F5FFFA]/90 dark:bg-card/90 backdrop-blur-md text-foreground font-extrabold text-[10px] sm:text-[11px] shadow-2xs border border-[#E2E4F6]/80">
+          <Badge className="bg-card/90 dark:bg-card/90 backdrop-blur-md text-foreground font-extrabold text-[10px] sm:text-[11px] shadow-xs border border-border/70">
             {gig.category}
           </Badge>
         </div>
@@ -60,7 +60,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
             )}
           </div>
           {gig.isVerified && (
-            <span title="Verified Student Freelancer" className="text-[#1D5BF1]">
+            <span title="Verified Student Freelancer" className="text-primary">
               <CheckCircle2 className="h-4 w-4" />
             </span>
           )}
@@ -68,7 +68,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
 
         {/* Title */}
         <Link href={`/services/${gig.slug}`} prefetch={true} className="flex-1">
-          <h3 className="font-display text-xs sm:text-sm font-extrabold leading-snug line-clamp-2 text-foreground group-hover:text-[#3B42C4] transition-colors min-h-[2rem]">
+          <h3 className="font-display text-xs sm:text-sm font-extrabold leading-snug line-clamp-2 text-foreground group-hover:text-indigo-500 transition-colors min-h-[2rem]">
             {gig.title}
           </h3>
         </Link>
@@ -79,7 +79,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
             {gig.tags.slice(0, 3).map((tag, idx) => (
               <span
                 key={idx}
-                className="text-[10px] sm:text-[11px] rounded-lg bg-[#F5FFFA] dark:bg-secondary/80 border border-[#E2E4F6]/80 px-2 py-0.5 text-foreground/80 font-semibold"
+                className="text-[10px] sm:text-[11px] rounded-lg bg-secondary/70 dark:bg-secondary/60 border border-border/70 px-2 py-0.5 text-foreground/80 font-semibold"
               >
                 #{tag}
               </span>

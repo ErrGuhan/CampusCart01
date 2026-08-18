@@ -139,19 +139,19 @@ function RegisterForm() {
 
   return (
     <div className="relative z-10 w-full max-w-[440px] mx-auto flex flex-col items-center">
-      {/* Main Glassmorphism Mint Cream Card */}
-      <div className="w-full rounded-[28px] sm:rounded-3xl bg-[#F5FFFA]/90 backdrop-blur-xl border border-white/80 dark:border-white/10 shadow-[0_16px_50px_rgba(29,91,241,0.08)] p-6 sm:p-7">
+      {/* Main Glassmorphism Card */}
+      <div className="w-full rounded-[28px] sm:rounded-3xl bg-card/90 dark:bg-card/85 backdrop-blur-xl border border-border/80 shadow-xl p-6 sm:p-7">
         
-        {/* CampusConnect Title & Header */}
+        {/* CampusCart Title & Header */}
         <div className="text-center mt-2 mb-5 space-y-1">
-          <h1 className="font-display text-2xl font-black text-[#1D5BF1] tracking-tight">
-            CampusConnect
+          <h1 className="font-display text-2xl font-black text-primary tracking-tight">
+            CampusCart
           </h1>
-          <h2 className="text-lg font-bold text-[#0F172A]">
+          <h2 className="text-lg font-bold text-foreground">
             Create account
           </h2>
-          <p className="text-xs text-[#64748B] font-medium">
-            Join the Smart Campus student network
+          <p className="text-xs text-muted-foreground font-medium">
+            Join the SVCET student marketplace & hub
           </p>
         </div>
 
@@ -161,7 +161,7 @@ function RegisterForm() {
           <div className="space-y-1 text-left">
             <label
               htmlFor="displayName"
-              className="block text-xs font-semibold text-[#0F172A]"
+              className="block text-xs font-semibold text-foreground"
             >
               Full name
             </label>
@@ -171,7 +171,7 @@ function RegisterForm() {
               placeholder="Rahul Sharma"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+              className="w-full h-11 px-4 rounded-xl bg-secondary/50 hover:bg-secondary/70 focus:bg-secondary/80 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all shadow-none"
               required
               autoComplete="name"
             />
@@ -181,7 +181,7 @@ function RegisterForm() {
           <div className="space-y-1 text-left">
             <label
               htmlFor="email"
-              className="block text-xs font-semibold text-[#0F172A]"
+              className="block text-xs font-semibold text-foreground"
             >
               College Email
             </label>
@@ -191,7 +191,7 @@ function RegisterForm() {
               placeholder={`you@${COLLEGE_EMAIL_DOMAIN}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+              className="w-full h-11 px-4 rounded-xl bg-secondary/50 hover:bg-secondary/70 focus:bg-secondary/80 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all shadow-none"
               required
               autoComplete="email"
             />
@@ -202,23 +202,23 @@ function RegisterForm() {
             <div className="space-y-1 text-left">
               <label
                 htmlFor="department"
-                className="block text-xs font-semibold text-[#0F172A]"
+                className="block text-xs font-semibold text-foreground"
               >
                 Department
               </label>
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-[#F5FFFA]/70 border-[#D2D6EE] text-[#0F172A] text-xs font-medium focus:ring-2 focus:ring-[#1D5BF1]">
+                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-secondary/50 border-border/70 text-foreground text-xs font-medium focus:ring-2 focus:ring-primary">
                   <div className="flex items-center gap-1.5 truncate">
-                    <Building2 className="h-3.5 w-3.5 text-[#64748B] shrink-0" />
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <SelectValue placeholder="Department" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="rounded-xl max-h-56 bg-[#F5FFFA]/95 backdrop-blur-xl border border-white/80 dark:border-border shadow-xl">
+                <SelectContent className="rounded-xl max-h-56 bg-popover/95 backdrop-blur-xl border border-border shadow-xl">
                   {COLLEGE_DEPARTMENTS.map((dept) => (
                     <SelectItem
                       key={dept}
                       value={dept}
-                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-[#E2E4F6]/50 focus:text-[#1D5BF1] cursor-pointer text-[#0F172A]"
+                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-primary/10 focus:text-primary cursor-pointer"
                     >
                       {dept}
                     </SelectItem>
@@ -230,23 +230,23 @@ function RegisterForm() {
             <div className="space-y-1 text-left">
               <label
                 htmlFor="year"
-                className="block text-xs font-semibold text-[#0F172A]"
+                className="block text-xs font-semibold text-foreground"
               >
                 Year of Study
               </label>
               <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-[#F5FFFA]/70 border-[#D2D6EE] text-[#0F172A] text-xs font-medium focus:ring-2 focus:ring-[#1D5BF1]">
+                <SelectTrigger className="w-full h-11 px-3 rounded-xl bg-secondary/50 border-border/70 text-foreground text-xs font-medium focus:ring-2 focus:ring-primary">
                   <div className="flex items-center gap-1.5 truncate">
-                    <GraduationCap className="h-3.5 w-3.5 text-[#64748B] shrink-0" />
+                    <GraduationCap className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <SelectValue placeholder="Year" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="rounded-xl bg-[#F5FFFA]/95 backdrop-blur-xl border border-white/80 dark:border-border shadow-xl">
+                <SelectContent className="rounded-xl bg-popover/95 backdrop-blur-xl border border-border shadow-xl">
                   {COLLEGE_YEARS.map((y) => (
                     <SelectItem
                       key={y}
                       value={y}
-                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-[#E2E4F6]/50 focus:text-[#1D5BF1] cursor-pointer text-[#0F172A]"
+                      className="text-xs font-medium py-1.5 rounded-lg focus:bg-primary/10 focus:text-primary cursor-pointer"
                     >
                       {y}
                     </SelectItem>
@@ -261,7 +261,7 @@ function RegisterForm() {
             <div className="space-y-1 text-left">
               <label
                 htmlFor="password"
-                className="block text-xs font-semibold text-[#0F172A]"
+                className="block text-xs font-semibold text-foreground"
               >
                 Password
               </label>
@@ -272,14 +272,14 @@ function RegisterForm() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-secondary/50 hover:bg-secondary/70 focus:bg-secondary/80 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all shadow-none"
                   required
                   autoComplete="new-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#0F172A] transition-colors p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -294,7 +294,7 @@ function RegisterForm() {
             <div className="space-y-1 text-left">
               <label
                 htmlFor="confirmPassword"
-                className="block text-xs font-semibold text-[#0F172A]"
+                className="block text-xs font-semibold text-foreground"
               >
                 Confirm
               </label>
@@ -305,14 +305,14 @@ function RegisterForm() {
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+                  className="w-full h-11 pl-3.5 pr-9 rounded-xl bg-secondary/50 hover:bg-secondary/70 focus:bg-secondary/80 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all shadow-none"
                   required
                   autoComplete="new-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#0F172A] transition-colors p-1"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                   aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
                   {showConfirmPassword ? (
@@ -330,11 +330,11 @@ function RegisterForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-2xl bg-[#1D5BF1] hover:bg-[#184ECC] active:scale-[0.98] text-[#F5FFFA] font-semibold text-sm shadow-md shadow-[#1D5BF1]/25 transition-all flex items-center justify-center gap-1.5"
+              className="w-full h-12 rounded-2xl btn-gradient-primary active:scale-[0.98] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-1.5"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-[#F5FFFA]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
                   <span>Creating account...</span>
                 </>
               ) : (
@@ -345,8 +345,8 @@ function RegisterForm() {
         </form>
 
         {/* Switch to Sign In */}
-        <div className="mt-5 pt-4 border-t border-[#E2E4F6] text-center">
-          <p className="text-xs text-[#64748B]">
+        <div className="mt-5 pt-4 border-t border-border/60 text-center">
+          <p className="text-xs text-muted-foreground">
             Already have an account?{' '}
             <Link
               href={
@@ -354,7 +354,7 @@ function RegisterForm() {
                   ? `/login?redirect=${encodeURIComponent(redirectUrl)}`
                   : '/login'
               }
-              className="font-bold text-[#1D5BF1] hover:text-[#3B42C4] hover:underline ml-1"
+              className="font-bold text-primary hover:underline ml-1"
             >
               Sign in
             </Link>
@@ -367,7 +367,7 @@ function RegisterForm() {
       <div className="mt-4 text-center">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#0F172A] transition-colors font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Campus Marketplace</span>
@@ -379,10 +379,10 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#F5FFFA] flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <main className="min-h-[100dvh] w-full flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       <Suspense
         fallback={
-          <div className="h-[520px] w-full max-w-[440px] rounded-3xl animate-pulse bg-[#F5FFFA]/70 shadow-lg" />
+          <div className="h-[520px] w-full max-w-[440px] rounded-3xl animate-pulse bg-card/70 shadow-lg" />
         }
       >
         <RegisterForm />

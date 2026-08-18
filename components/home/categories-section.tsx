@@ -47,12 +47,12 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
               key={category.id}
               href={`/categories/${category.slug}`}
               className={cn(
-                'group flex flex-col items-center gap-3 rounded-3xl border border-[#E2E4F6]/80 dark:border-border/80 bg-card/85 backdrop-blur-md p-4 sm:p-5 text-center transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-2xs',
+                'group flex flex-col items-center gap-3 rounded-3xl border border-border/80 bg-card/85 backdrop-blur-md p-4 sm:p-5 text-center transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 active:scale-95 shadow-xs',
                 isEmpty && 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100 border-dashed bg-card/60'
               )}
             >
               <div className={cn(
-                'flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-accent/70 text-accent-foreground transition-all group-hover:bg-gradient-to-br group-hover:from-[#1D5BF1] group-hover:to-[#3B42C4] group-hover:text-white group-hover:scale-105 shadow-2xs',
+                'flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-accent/70 text-accent-foreground transition-all group-hover:bg-gradient-to-br group-hover:from-primary group-hover:to-indigo-600 group-hover:text-white group-hover:scale-105 shadow-xs',
                 isEmpty && 'bg-secondary text-muted-foreground'
               )}>
                 <Icon className="h-7 w-7 sm:h-8 sm:w-8" />

@@ -104,19 +104,19 @@ function LoginForm() {
 
   return (
     <div className="relative z-10 w-full max-w-[390px] mx-auto flex flex-col items-center">
-      {/* Main Glassmorphism Mint Cream Card */}
-      <div className="w-full rounded-[28px] sm:rounded-3xl bg-[#F5FFFA]/90 backdrop-blur-xl border border-white/80 dark:border-white/10 shadow-[0_16px_50px_rgba(29,91,241,0.08)] p-6 sm:p-7">
+      {/* Main Glassmorphism Card */}
+      <div className="w-full rounded-[28px] sm:rounded-3xl bg-card/90 dark:bg-card/85 backdrop-blur-xl border border-border/80 shadow-xl p-6 sm:p-7">
         
-        {/* CampusConnect Title & Header */}
+        {/* CampusCart Title & Header */}
         <div className="text-center mt-2 mb-6 space-y-1">
-          <h1 className="font-display text-2xl font-black text-[#1D5BF1] tracking-tight">
-            CampusConnect
+          <h1 className="font-display text-2xl font-black text-primary tracking-tight">
+            CampusCart
           </h1>
-          <h2 className="text-lg font-bold text-[#0F172A]">
+          <h2 className="text-lg font-bold text-foreground">
             Welcome back
           </h2>
-          <p className="text-xs text-[#64748B] font-medium">
-            Sign in to your Smart Campus portal
+          <p className="text-xs text-muted-foreground font-medium">
+            Sign in to your Student Marketplace account
           </p>
         </div>
 
@@ -126,7 +126,7 @@ function LoginForm() {
           <div className="space-y-1.5 text-left">
             <label
               htmlFor="email"
-              className="block text-xs font-semibold text-[#0F172A]"
+              className="block text-xs font-semibold text-foreground"
             >
               Email address
             </label>
@@ -136,7 +136,7 @@ function LoginForm() {
               placeholder="you@svcet.edu"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-12 px-4 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+              className="w-full h-12 px-4 rounded-xl bg-secondary/50 hover:bg-secondary/70 focus:bg-secondary/80 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all shadow-none"
               required
               autoComplete="email"
             />
@@ -146,7 +146,7 @@ function LoginForm() {
           <div className="space-y-1.5 text-left">
             <label
               htmlFor="password"
-              className="block text-xs font-semibold text-[#0F172A]"
+              className="block text-xs font-semibold text-foreground"
             >
               Password
             </label>
@@ -157,14 +157,14 @@ function LoginForm() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-12 pl-4 pr-11 rounded-xl bg-[#F5FFFA]/70 hover:bg-[#F5FFFA] focus:bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm font-medium focus-visible:ring-2 focus-visible:ring-[#1D5BF1] focus-visible:border-[#1D5BF1] transition-all shadow-none"
+                className="w-full h-12 pl-4 pr-11 rounded-xl bg-secondary/50 hover:bg-secondary/70 focus:bg-secondary/80 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all shadow-none"
                 required
                 autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#0F172A] transition-colors p-1"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
@@ -181,22 +181,22 @@ function LoginForm() {
             <button
               type="button"
               onClick={handleOpenForgotModal}
-              className="text-xs font-semibold text-[#1D5BF1] hover:text-[#3B42C4] hover:underline transition-colors cursor-pointer"
+              className="text-xs font-semibold text-primary hover:underline transition-colors cursor-pointer"
             >
               Forgot password?
             </button>
           </div>
 
-          {/* Solid Blue Sign In Action Button */}
+          {/* Sign In Action Button */}
           <div className="pt-2">
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-2xl bg-[#1D5BF1] hover:bg-[#184ECC] active:scale-[0.98] text-[#F5FFFA] font-semibold text-sm shadow-md shadow-[#1D5BF1]/25 transition-all flex items-center justify-center gap-1.5"
+              className="w-full h-12 rounded-2xl btn-gradient-primary active:scale-[0.98] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-1.5"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-[#F5FFFA]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
                   <span>Signing in...</span>
                 </>
               ) : (
@@ -207,8 +207,8 @@ function LoginForm() {
         </form>
 
         {/* Switch to Sign Up */}
-        <div className="mt-5 pt-4 border-t border-[#E2E4F6] text-center">
-          <p className="text-xs text-[#64748B]">
+        <div className="mt-5 pt-4 border-t border-border/60 text-center">
+          <p className="text-xs text-muted-foreground">
             Don&apos;t have an account?{' '}
             <Link
               href={
@@ -216,7 +216,7 @@ function LoginForm() {
                   ? `/register?redirect=${encodeURIComponent(redirectUrl)}`
                   : '/register'
               }
-              className="font-bold text-[#1D5BF1] hover:text-[#3B42C4] hover:underline ml-1"
+              className="font-bold text-primary hover:underline ml-1"
             >
               Sign up
             </Link>
