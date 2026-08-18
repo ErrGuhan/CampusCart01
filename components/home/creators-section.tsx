@@ -42,7 +42,7 @@ export function CreatorsSection({ sellers }: { sellers: Seller[] }) {
           </div>
           <Link
             href="/sellers"
-            className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all"
+            className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all pb-1 shrink-0"
           >
             Explore all creators
             <ArrowRight className="h-4 w-4" />

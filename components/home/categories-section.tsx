@@ -30,7 +30,7 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
         </div>
         <Link
           href="/categories"
-          className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all"
+          className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all pb-1 shrink-0"
         >
           View all categories
           <ArrowRight className="h-4 w-4" />

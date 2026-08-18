@@ -35,7 +35,7 @@ export function ProductSection({
         {products.length > 0 && (
           <Link
             href={viewAllHref}
-            className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all"
+            className="hidden sm:flex items-center gap-1 text-sm font-bold text-primary hover:gap-2 transition-all pb-1 shrink-0"
           >
             View all listings
             <ArrowRight className="h-4 w-4" />

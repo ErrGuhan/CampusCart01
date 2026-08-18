@@ -40,9 +40,9 @@ import { getNotifications } from '@/lib/firebase-queries';
 
 const navItems = [
   { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
-  { href: '/used', label: 'Used Items', icon: Recycle, badge: 'Save' },
-  { href: '/services', label: 'Freelance & Gigs', icon: Sparkles, badge: 'Earn' },
-  { href: '/requests', label: 'Campus Requests', icon: Tag, badge: 'Live' },
+  { href: '/used', label: 'Used', icon: Recycle, badge: 'Save' },
+  { href: '/services', label: 'Freelance', icon: Sparkles, badge: 'Earn' },
+  { href: '/requests', label: 'Requests', icon: Tag, badge: 'Live' },
   { href: '/deals', label: 'Deals', icon: Zap, badge: 'Hot' },
   { href: '/community', label: 'Community', icon: MessageSquare },
 ];
@@ -438,7 +438,7 @@ export function Navbar() {
           </div>
 
           {/* Center: Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1.5">
+          <nav className="hidden xl:flex items-center gap-1">
             {navItems.map((item) => {
               const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
@@ -446,7 +446,7 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5',
+                    'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5',
                     active
                       ? 'bg-primary/10 text-primary font-bold'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -454,7 +454,7 @@ export function Navbar() {
                 >
                   <span>{item.label}</span>
                   {item.badge && (
-                    <span className="rounded-full bg-primary/15 text-primary text-[9px] font-extrabold px-1.5 py-0.5 leading-none">
+                    <span className="rounded-full bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 leading-none">
                       {item.badge}
                     </span>
                   )}
@@ -464,24 +464,24 @@ export function Navbar() {
           </nav>
 
           {/* Desktop Instant Command Search Trigger */}
-          <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-3">
+          <div className="hidden md:flex flex-1 max-w-[180px] lg:max-w-xs xl:max-w-sm mx-2 lg:mx-3">
             <button
               type="button"
               onClick={() => setSearchCommandOpen(true)}
-              className="relative flex h-10 w-full items-center justify-between rounded-xl bg-secondary/50 hover:bg-secondary/80 px-3 text-xs text-muted-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-2xs group"
+              className="relative flex h-10 w-full items-center justify-between rounded-xl bg-secondary/50 hover:bg-secondary/80 px-3 text-xs text-muted-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-xs group"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                 <span className="truncate text-muted-foreground/80 font-medium">Search campus items...</span>
               </div>
-              <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground shadow-2xs">
+              <kbd className="hidden xl:inline-flex items-center gap-0.5 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground shadow-xs">
                 <span>⌘</span>K
               </kbd>
             </button>
           </div>
 
           {/* Right Action Icons - Fluid auto-adjusting targets for every phone screen size */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-2.5 shrink-0">
             {/* Mobile Search Toggle */}
             <button
               type="button"
@@ -501,7 +501,7 @@ export function Navbar() {
                   if (isIOS) openInstallDialog();
                   else promptInstall();
                 }}
-                className="hidden xl:inline-flex rounded-xl text-xs font-bold border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 h-9 px-3 gap-1.5 shadow-2xs animate-in fade-in"
+                className="hidden 2xl:inline-flex rounded-xl text-xs font-bold border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 h-9 px-3 gap-1.5 shadow-xs animate-in fade-in"
               >
                 <Download className="h-3.5 w-3.5" />
                 <span>Install App</span>
@@ -513,7 +513,7 @@ export function Navbar() {
                 variant="outline"
                 size="sm"
                 asChild
-                className="hidden lg:inline-flex rounded-xl text-xs font-bold border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 h-9 px-3.5 gap-1.5"
+                className="hidden xl:inline-flex rounded-xl text-xs font-bold border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 h-9 px-3 gap-1.5"
               >
                 <Link href="/admin">
                   <ShieldCheck className="h-4 w-4" />
@@ -526,7 +526,7 @@ export function Navbar() {
               <Button
                 size="sm"
                 asChild
-                className="hidden sm:inline-flex rounded-xl text-xs font-bold h-9 px-3.5 gap-1.5 shadow-2xs"
+                className="hidden sm:inline-flex rounded-xl text-xs font-bold h-9 px-3.5 gap-1.5 shadow-xs"
               >
                 <Link href="/seller/dashboard/products">
                   <Plus className="h-4 w-4" />
@@ -536,7 +536,7 @@ export function Navbar() {
             )}
 
             {/* Desktop Messages shortcut */}
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" asChild className="hidden lg:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
               <Link href="/messages" aria-label="Campus Messages">
                 <MessageSquare className="h-5 w-5" />
               </Link>

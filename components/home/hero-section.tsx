@@ -46,15 +46,15 @@ export function HeroSection() {
         </div>
 
         {/* Hero Headline */}
-        <div className="text-center max-w-2xl mx-auto space-y-2.5 sm:space-y-3.5">
-          <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.12]">
+        <div className="text-center max-w-3xl mx-auto space-y-2.5 sm:space-y-3.5">
+          <h1 className="font-display text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground leading-[1.14] text-balance">
             {user ? (
-              <span>What are you <span className="text-gradient-primary">looking for</span> today?</span>
+              <span>What are you <span className="inline-block text-gradient-primary">looking for</span> today?</span>
             ) : (
-              <span>Buy, Sell & Trade on <span className="text-gradient-primary">Campus</span></span>
+              <span>Buy, Sell & Trade on <span className="inline-block text-gradient-primary">Campus</span></span>
             )}
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium max-w-xl mx-auto leading-relaxed text-balance">
             {user ? (
               <span>Discover textbooks, project kits, peer freelance gigs, or post a campus bounty.</span>
             ) : (
@@ -84,56 +84,56 @@ export function HeroSection() {
         </form>
 
         {/* 4 Clean Frosted Glass Quick-Action Hub Cards */}
-        <div className="mt-6 sm:mt-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 max-w-4xl mx-auto">
+        <div className="mt-6 sm:mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
           <Link
             href="/marketplace"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-primary/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
+            className="flex items-center gap-3 sm:gap-3.5 p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-primary/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
-            <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-primary/10 text-primary shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shrink-0 group-hover:scale-105 transition-transform">
               <ShoppingBag className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
             </div>
-            <div className="min-w-0 w-full">
-              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-primary transition-colors leading-tight">Marketplace</span>
-              <span className="text-xs text-muted-foreground font-medium block mt-0.5">Kits & Books</span>
+            <div className="min-w-0 flex-1 text-left">
+              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-primary transition-colors leading-tight truncate">Marketplace</span>
+              <span className="text-xs text-muted-foreground font-medium block mt-0.5 truncate">Kits & Books</span>
             </div>
           </Link>
 
           <Link
             href="/services"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-indigo-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
+            className="flex items-center gap-3 sm:gap-3.5 p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-indigo-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
-            <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 shrink-0 group-hover:scale-105 transition-transform">
               <Sparkles className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
             </div>
-            <div className="min-w-0 w-full">
-              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-indigo-500 transition-colors leading-tight">Freelance</span>
-              <span className="text-xs text-muted-foreground font-medium block mt-0.5">Design & Code</span>
+            <div className="min-w-0 flex-1 text-left">
+              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-indigo-500 transition-colors leading-tight truncate">Freelance</span>
+              <span className="text-xs text-muted-foreground font-medium block mt-0.5 truncate">Design & Code</span>
             </div>
           </Link>
 
           <Link
             href="/requests"
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-amber-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
+            className="flex items-center gap-3 sm:gap-3.5 p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-amber-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
-            <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 shrink-0 group-hover:scale-105 transition-transform">
               <Lightbulb className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
             </div>
-            <div className="min-w-0 w-full">
-              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-amber-500 transition-colors leading-tight">Requests</span>
-              <span className="text-xs text-muted-foreground font-medium block mt-0.5">Bounty Board</span>
+            <div className="min-w-0 flex-1 text-left">
+              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-amber-500 transition-colors leading-tight truncate">Requests</span>
+              <span className="text-xs text-muted-foreground font-medium block mt-0.5 truncate">Bounty Board</span>
             </div>
           </Link>
 
           <Link
             href={user ? '/seller/dashboard' : '/studio'}
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-3.5 p-3.5 sm:p-5 rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-emerald-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
+            className="flex items-center gap-3 sm:gap-3.5 p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl border border-border/80 bg-card/75 dark:bg-card/60 backdrop-blur-xl hover:bg-card dark:hover:bg-card/90 hover:border-emerald-500/40 hover:-translate-y-1 transition-all active:scale-[0.98] shadow-xs group"
           >
-            <div className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 shrink-0 group-hover:scale-105 transition-transform">
               <Store className="h-5.5 w-5.5 sm:h-6 sm:w-6" />
             </div>
-            <div className="min-w-0 w-full">
-              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-emerald-500 transition-colors leading-tight">Seller Studio</span>
-              <span className="text-xs text-muted-foreground font-medium block mt-0.5">Sell & Earn</span>
+            <div className="min-w-0 flex-1 text-left">
+              <span className="font-extrabold text-sm sm:text-base text-foreground block group-hover:text-emerald-500 transition-colors leading-tight truncate">Seller Studio</span>
+              <span className="text-xs text-muted-foreground font-medium block mt-0.5 truncate">Sell & Earn</span>
             </div>
           </Link>
         </div>

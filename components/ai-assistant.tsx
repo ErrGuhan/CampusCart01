@@ -169,15 +169,15 @@ export function CampusCartAIAssistant() {
         <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-white/80 dark:border-white/15 bg-[#F5FFFA]/95 dark:bg-slate-900/80 backdrop-blur-2xl shadow-[0_16px_50px_rgba(29,91,241,0.14)] flex flex-col overflow-hidden animate-fade-in-up">
           
           {/* Header */}
-          <div className="p-3.5 sm:p-4 border-b border-[#E2E4F6]/80 dark:border-white/10 bg-[#F5FFFA]/90 dark:bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 border-b border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-2xl bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] flex items-center justify-center font-bold shadow-xs">
+              <div className="h-8 w-8 rounded-2xl btn-gradient-primary text-white flex items-center justify-center font-bold shadow-xs">
                 <Bot className="h-4.5 w-4.5" />
               </div>
               <div>
-                <h3 className="font-display font-black text-xs sm:text-sm text-[#0F172A] flex items-center gap-1.5">
+                <h3 className="font-display font-black text-xs sm:text-sm text-foreground flex items-center gap-1.5">
                   Chat Assistant
-                  <Badge variant="outline" className="text-[9px] bg-[#1D5BF1]/10 text-[#1D5BF1] border-[#1D5BF1]/20 font-bold px-1.5 py-0">
+                  <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20 font-bold px-1.5 py-0">
                     Smart AI
                   </Badge>
                 </h3>
@@ -187,7 +187,7 @@ export function CampusCartAIAssistant() {
 
             <button
               onClick={() => setOpen(false)}
-              className="h-8 w-8 rounded-2xl bg-[#F5FFFA] dark:bg-card/80 border border-[#E2E4F6] dark:border-border shadow-2xs flex items-center justify-center text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 rounded-2xl bg-secondary/80 border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -198,7 +198,7 @@ export function CampusCartAIAssistant() {
             
             {/* Centered Date Separator */}
             <div className="flex justify-center my-1">
-              <div className="rounded-full px-3.5 py-0.5 bg-[#F5FFFA] dark:bg-card/80 border border-[#E2E4F6] dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
+              <div className="rounded-full px-3.5 py-0.5 bg-card dark:bg-card/80 border border-border/60 text-[11px] font-bold text-muted-foreground shadow-xs">
                 Today
               </div>
             </div>
@@ -214,7 +214,7 @@ export function CampusCartAIAssistant() {
                   
                   {/* AI iridescent gradient orb / avatar */}
                   {isAi && (
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#1D5BF1] via-[#3B42C4] to-[#6366F1] shadow-2xs flex items-center justify-center text-[#F5FFFA] shrink-0 mb-1 ring-2 ring-[#1D5BF1]/30">
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-primary via-indigo-600 to-sky-500 shadow-xs flex items-center justify-center text-white shrink-0 mb-1 ring-2 ring-primary/30">
                       <Sparkles className="h-3.5 w-3.5" />
                     </div>
                   )}
@@ -224,8 +224,8 @@ export function CampusCartAIAssistant() {
                       className={cn(
                         'px-4 py-2.5 leading-relaxed max-w-[85%]',
                         isAi
-                          ? 'bg-[#F5FFFA] dark:bg-card/95 text-[#0F172A] shadow-xs border border-[#E2E4F6] dark:border-border/60 rounded-[22px] rounded-bl-[4px] font-medium'
-                          : 'bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] shadow-sm rounded-[22px] rounded-br-[4px] font-medium'
+                          ? 'bg-card text-foreground shadow-xs border border-border/70 rounded-[22px] rounded-bl-[4px] font-medium'
+                          : 'btn-gradient-primary text-white shadow-sm rounded-[22px] rounded-br-[4px] font-medium'
                       )}
                     >
                       <p className="break-words whitespace-pre-wrap">{m.text}</p>
@@ -245,7 +245,7 @@ export function CampusCartAIAssistant() {
                         <button
                           type="button"
                           onClick={() => toggleLike(msgId)}
-                          className={cn('p-0.5 rounded', isLiked ? 'text-[#1D5BF1]' : 'hover:text-foreground')}
+                          className={cn('p-0.5 rounded', isLiked ? 'text-primary' : 'hover:text-foreground')}
                           title="Like message"
                         >
                           <ThumbsUp className="h-3 w-3" />
@@ -269,7 +269,7 @@ export function CampusCartAIAssistant() {
                             key={p.id}
                             href={`/products/${p.slug}`}
                             onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#F5FFFA] dark:bg-card/90 shadow-2xs hover:border-[#1D5BF1]/50 transition-all"
+                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-border bg-card shadow-xs hover:border-primary/50 transition-all"
                           >
                             <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0">
                               <Image
@@ -282,7 +282,7 @@ export function CampusCartAIAssistant() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-xs truncate text-foreground">{p.name}</h4>
-                              <p className="text-[11px] text-[#1D5BF1] font-bold">
+                              <p className="text-[11px] text-primary font-bold">
                                 ₹{p.discountPrice ?? p.price}
                               </p>
                             </div>
@@ -300,7 +300,7 @@ export function CampusCartAIAssistant() {
                             key={g.id}
                             href={`/services/${g.slug}`}
                             onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-[#E2E4F6] dark:border-border/80 bg-[#F5FFFA] dark:bg-card/90 shadow-2xs hover:border-[#1D5BF1]/50 transition-all"
+                            className="flex items-center gap-2.5 p-2 rounded-2xl border border-border bg-card shadow-xs hover:border-primary/50 transition-all"
                           >
                             <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0">
                               <Image
@@ -313,7 +313,7 @@ export function CampusCartAIAssistant() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-xs truncate text-foreground">{g.title}</h4>
-                              <p className="text-[11px] text-[#1D5BF1] font-bold">
+                              <p className="text-[11px] text-primary font-bold">
                                 Starts at ₹{g.startingPrice}
                               </p>
                             </div>
@@ -338,8 +338,8 @@ export function CampusCartAIAssistant() {
             })}
 
             {loading && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-[#F5FFFA] dark:bg-card/80 p-2.5 rounded-2xl w-fit border border-[#E2E4F6] shadow-2xs">
-                <Sparkles className="h-3.5 w-3.5 animate-spin text-[#1D5BF1]" />
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card p-2.5 rounded-2xl w-fit border border-border shadow-xs">
+                <Sparkles className="h-3.5 w-3.5 animate-spin text-primary" />
                 <span>Searching campus catalog...</span>
               </div>
             )}
@@ -347,12 +347,12 @@ export function CampusCartAIAssistant() {
           </div>
 
           {/* Quick Prompt Chips */}
-          <div className="p-2 border-t border-[#E2E4F6]/80 dark:border-border/60 flex items-center gap-1.5 overflow-x-auto bg-[#F5FFFA]/90 dark:bg-card/50 scrollbar-none backdrop-blur-md">
+          <div className="p-2 border-t border-border/80 flex items-center gap-1.5 overflow-x-auto bg-card/90 dark:bg-card/50 scrollbar-none backdrop-blur-md">
             {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 onClick={() => handleSend(prompt)}
-                className="rounded-xl border border-[#E2E4F6] dark:border-border bg-[#F5FFFA] dark:bg-card/80 px-2.5 py-1 text-[10px] font-semibold text-[#0F172A] hover:text-[#1D5BF1] hover:border-[#1D5BF1]/40 whitespace-nowrap transition-colors shadow-2xs"
+                className="rounded-xl border border-border bg-card px-2.5 py-1 text-[10px] font-semibold text-foreground hover:text-primary hover:border-primary/40 whitespace-nowrap transition-colors shadow-xs"
               >
                 {prompt}
               </button>
@@ -367,18 +367,18 @@ export function CampusCartAIAssistant() {
             }}
             className="p-3 bg-transparent flex items-center gap-2 shrink-0"
           >
-            <div className="flex-1 flex items-center h-12 rounded-full bg-[#F5FFFA] dark:bg-card/90 border border-[#E2E4F6] dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+            <div className="flex-1 flex items-center h-12 rounded-full bg-card border border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
               <input
                 placeholder="Type your message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="flex-1 bg-transparent border-0 text-xs font-medium text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none px-1"
+                className="flex-1 bg-transparent border-0 text-xs font-medium text-foreground placeholder:text-muted-foreground/60 focus:outline-none px-1"
               />
 
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="h-8 w-8 rounded-xl bg-[#1D5BF1] text-[#F5FFFA] flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+                className="h-8 w-8 rounded-xl btn-gradient-primary text-white flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
               >
                 <Send className="h-3.5 w-3.5 -translate-y-0.5 translate-x-0.5" />
               </button>
@@ -388,7 +388,7 @@ export function CampusCartAIAssistant() {
               type="button"
               onClick={() => handleSend('Show me top budget student essentials')}
               aria-label="Voice note"
-              className="h-12 w-12 rounded-full bg-[#F5FFFA] dark:bg-card/90 border border-[#E2E4F6] dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+              className="h-12 w-12 rounded-full bg-card border border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
             >
               <Mic className="h-4.5 w-4.5" />
             </button>
