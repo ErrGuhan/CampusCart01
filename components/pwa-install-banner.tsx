@@ -90,13 +90,13 @@ export function PWAInstallBanner() {
 
           <div className="flex items-start gap-3.5 pr-6">
             {/* App Icon */}
-            <div className="relative h-12 w-12 shrink-0 rounded-2xl bg-linear-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 p-2 flex items-center justify-center shadow-inner">
+            <div className="relative h-12 w-12 shrink-0 rounded-2xl bg-card border border-border/80 p-1 flex items-center justify-center shadow-md">
               <Image
-                src="/icons/icon-192x192.svg"
+                src="/images/logo/logo-icon.png"
                 alt="CampusCart"
-                width={36}
-                height={36}
-                className="rounded-lg object-contain"
+                width={40}
+                height={40}
+                className="object-contain w-full h-full filter drop-shadow-xs"
               />
             </div>
 

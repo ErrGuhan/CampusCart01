@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Store, Instagram, Twitter, Linkedin, Mail, ShieldCheck, Heart, MapPin } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -97,12 +98,18 @@ export function Footer() {
         {/* Links Grid */}
         <div className="grid grid-cols-2 gap-8 md:grid-cols-6">
           <div className="col-span-2 md:col-span-2">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground font-bold shadow-xs">
-                <Store className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Image
+                  src="/images/logo/logo-icon.png"
+                  alt="CampusCart Logo"
+                  width={44}
+                  height={44}
+                  className="object-contain w-full h-full filter drop-shadow-sm"
+                />
               </div>
               <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                CampusCart
+                Campus<span className="text-amber-500 dark:text-amber-400">Cart</span>
               </span>
             </Link>
             <p className="mt-3.5 text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed font-medium">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Search, ShoppingCart, Heart, Menu, Store, User,
@@ -136,9 +137,9 @@ export function Navbar() {
         'border-b border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-xl shadow-xs'
       )}
     >
-      <div className="px-3.5 sm:px-6 lg:px-8 mx-auto max-w-7xl w-full min-w-0">
+      <div className="px-2.5 sm:px-4 lg:px-6 mx-auto max-w-7xl w-full min-w-0">
         {/* Auto-Adjusting Responsive Header Bar for Every Screen */}
-        <div className="flex h-16 sm:h-18 items-center justify-between w-full">
+        <div className="flex h-16 sm:h-18 items-center justify-between w-full gap-1.5 sm:gap-2 lg:gap-3 min-w-0">
           {/* Left: Mobile Menu + Blue Squircle Logo + Bold CampusCart text */}
           <div className="flex items-center gap-2 xs:gap-3 shrink-0">
             {/* Mobile Sheet Trigger */}
@@ -158,14 +159,21 @@ export function Navbar() {
                     <Link
                       href="/"
                       onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground font-bold shadow-xs">
-                        <Store className="h-5 w-5" />
+                      <div className="relative flex h-10 w-10 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Image
+                          src="/images/logo/logo-icon.png"
+                          alt="CampusCart"
+                          width={40}
+                          height={40}
+                          priority
+                          className="object-contain w-full h-full filter drop-shadow-xs"
+                        />
                       </div>
                       <div>
                         <span className="font-display text-xl font-black tracking-tight text-foreground block leading-tight">
-                          CampusCart
+                          Campus<span className="text-amber-500 dark:text-amber-400">Cart</span>
                         </span>
                         <span className="text-xs font-semibold text-muted-foreground block leading-none mt-0.5">
                           SVCET Student Hub
@@ -428,25 +436,49 @@ export function Navbar() {
 
             {/* Brand Logo */}
             <Link href="/" className="flex items-center gap-2 xs:gap-2.5 shrink-0 group">
-              <div className="flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center rounded-[12px] xs:rounded-[14px] bg-gradient-to-br from-primary to-indigo-600 text-primary-foreground font-bold shadow-xs group-hover:scale-105 transition-transform shrink-0">
-                <Store className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-6 sm:w-6" />
+              <div className="relative flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Image
+                  src="/images/logo/logo-icon.png"
+                  alt="CampusCart Logo"
+                  width={44}
+                  height={44}
+                  priority
+                  className="object-contain w-full h-full filter drop-shadow-xs"
+                />
               </div>
               <span className="font-display text-lg xs:text-xl sm:text-2xl font-black tracking-tight text-foreground leading-none">
-                CampusCart
+                Campus<span className="text-amber-500 dark:text-amber-400">Cart</span>
               </span>
             </Link>
           </div>
 
           {/* Center: Desktop Navigation Links */}
-          <nav className="hidden xl:flex items-center gap-1">
-            {navItems.map((item) => {
+          <nav className="hidden xl:flex items-center gap-0.5 shrink-0">
+            {navItems.slice(0, 3).map((item) => {
               const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5',
+                    'px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0',
+                    active
+                      ? 'bg-primary/10 text-primary font-bold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+                  )}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            {navItems.slice(3).map((item) => {
+              const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'hidden 2xl:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all items-center gap-1.5 shrink-0',
                     active
                       ? 'bg-primary/10 text-primary font-bold'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
@@ -464,15 +496,15 @@ export function Navbar() {
           </nav>
 
           {/* Desktop Instant Command Search Trigger */}
-          <div className="hidden md:flex flex-1 max-w-[180px] lg:max-w-xs xl:max-w-sm mx-2 lg:mx-3">
+          <div className="hidden lg:flex flex-1 min-w-[120px] max-w-[180px] xl:max-w-[220px] 2xl:max-w-[260px] mx-1 sm:mx-2">
             <button
               type="button"
               onClick={() => setSearchCommandOpen(true)}
-              className="relative flex h-10 w-full items-center justify-between rounded-xl bg-secondary/50 hover:bg-secondary/80 px-3 text-xs text-muted-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-xs group"
+              className="relative flex h-9.5 w-full items-center justify-between rounded-xl bg-secondary/50 hover:bg-secondary/80 px-2.5 sm:px-3 text-xs text-muted-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-xs group"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                <span className="truncate text-muted-foreground/80 font-medium">Search campus items...</span>
+                <span className="truncate text-muted-foreground/80 font-medium">Search campus...</span>
               </div>
               <kbd className="hidden xl:inline-flex items-center gap-0.5 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground shadow-xs">
                 <span>⌘</span>K
@@ -480,53 +512,39 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Right Action Icons - Fluid auto-adjusting targets for every phone screen size */}
-          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-2.5 shrink-0">
+          {/* Right Action Icons - Optimized responsive targets */}
+          <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
             {/* Mobile Search Toggle */}
             <button
               type="button"
-              className="md:hidden flex items-center justify-center h-10 w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="lg:hidden flex items-center justify-center h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
               onClick={() => setSearchCommandOpen(true)}
               aria-label="Open campus search"
             >
               <Search className="h-5 w-5 stroke-[2.2]" />
             </button>
 
-            {/* Quick Access: Admin Approval Center & Sell Item (Desktop) */}
-            {!isInstalled && (isInstallable || isIOS) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (isIOS) openInstallDialog();
-                  else promptInstall();
-                }}
-                className="hidden 2xl:inline-flex rounded-xl text-xs font-bold border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 h-9 px-3 gap-1.5 shadow-xs animate-in fade-in"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span>Install App</span>
-              </Button>
-            )}
-
+            {/* Quick Access: Admin Approval Center (Desktop 2xl) */}
             {isAdmin && (
               <Button
                 variant="outline"
                 size="sm"
                 asChild
-                className="hidden xl:inline-flex rounded-xl text-xs font-bold border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 h-9 px-3 gap-1.5"
+                className="hidden 2xl:inline-flex rounded-xl text-xs font-bold border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 h-9 px-2.5 gap-1.5 shrink-0"
               >
                 <Link href="/admin">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>Approval Center</span>
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Admin</span>
                 </Link>
               </Button>
             )}
 
+            {/* Quick Sell Button */}
             {user && (
               <Button
                 size="sm"
                 asChild
-                className="hidden sm:inline-flex rounded-xl text-xs font-bold h-9 px-3.5 gap-1.5 shadow-xs"
+                className="hidden sm:inline-flex rounded-xl text-xs font-bold h-9 px-3 gap-1.5 shadow-xs shrink-0"
               >
                 <Link href="/seller/dashboard/products">
                   <Plus className="h-4 w-4" />
@@ -536,17 +554,17 @@ export function Navbar() {
             )}
 
             {/* Desktop Messages shortcut */}
-            <Button variant="ghost" size="icon" asChild className="hidden lg:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" asChild className="hidden 2xl:flex h-9.5 w-9.5 rounded-full text-muted-foreground hover:text-foreground shrink-0">
               <Link href="/messages" aria-label="Campus Messages">
-                <MessageSquare className="h-5 w-5" />
+                <MessageSquare className="h-4.5 w-4.5" />
               </Link>
             </Button>
 
             {/* Desktop Notifications shortcut */}
             {user && (
-              <Button variant="ghost" size="icon" asChild className="hidden sm:flex relative h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" asChild className="hidden md:flex relative h-9.5 w-9.5 rounded-full text-muted-foreground hover:text-foreground shrink-0">
                 <Link href="/notifications" aria-label="Notifications">
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-4.5 w-4.5" />
                   {unreadNotifs > 0 && (
                     <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-xs animate-pulse">
                       {unreadNotifs > 9 ? '9+' : unreadNotifs}
@@ -557,22 +575,22 @@ export function Navbar() {
             )}
 
             {/* Wishlist */}
-            <Button variant="ghost" size="icon" asChild className="hidden sm:flex h-10 w-10 rounded-full text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" asChild className="hidden 2xl:flex h-9.5 w-9.5 rounded-full text-muted-foreground hover:text-foreground shrink-0">
               <Link href="/wishlist" aria-label="Wishlist">
-                <Heart className="h-5 w-5" />
+                <Heart className="h-4.5 w-4.5" />
               </Link>
             </Button>
 
             {/* Desktop Theme Switcher */}
-            <div className="hidden sm:flex items-center">
+            <div className="hidden lg:flex items-center shrink-0">
               <ThemeToggle variant="button" />
             </div>
 
-            {/* Cart Button with Counter */}
+            {/* Cart Button with Counter - Always Visible */}
             <Link
               href="/cart"
               aria-label="Shopping Cart"
-              className="relative flex items-center justify-center h-10 w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="relative flex items-center justify-center h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
             >
               <ShoppingCart className="h-5 w-5 stroke-[1.8]" />
               {totalItems > 0 && (
@@ -582,18 +600,18 @@ export function Navbar() {
               )}
             </Link>
 
-            {/* User Account / Profile dropdown or Login buttons */}
+            {/* User Account / Profile dropdown or Login buttons - Always Visible */}
             {loading ? (
-              <div className="h-10 w-10 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse shrink-0" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center justify-center h-10 w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0 overflow-hidden"
+                    className="flex items-center justify-center h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0 overflow-hidden"
                     aria-label="Account menu"
                   >
-                    <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-primary/20 shrink-0 overflow-hidden">
+                    <Avatar className="h-8.5 w-8.5 sm:h-9 sm:w-9 ring-2 ring-primary/20 shrink-0 overflow-hidden">
                       {profile?.avatar_url && (
                         <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} className="h-full w-full object-cover" />
                       )}
@@ -797,11 +815,11 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden sm:flex items-center gap-2 ml-1">
-                <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-9 px-3">
+              <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-9 px-2.5 sm:px-3">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button size="sm" asChild className="btn-gradient-primary rounded-xl text-xs h-9 px-3.5 shadow-xs font-bold">
+                <Button size="sm" asChild className="btn-gradient-primary rounded-xl text-xs h-9 px-3 sm:px-3.5 shadow-xs font-bold">
                   <Link href="/register">Join Campus</Link>
                 </Button>
               </div>

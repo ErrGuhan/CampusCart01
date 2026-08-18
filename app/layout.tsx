@@ -46,12 +46,15 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
       { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
+    shortcut: '/favicon.ico',
   },
   viewport: {
     width: 'device-width',
@@ -66,12 +69,21 @@ export const metadata: Metadata = {
     description:
       'Buy, sell, and discover products created by students in your college.',
     type: 'website',
+    images: [
+      {
+        url: '/images/logo/logo-full.png',
+        width: 1368,
+        height: 711,
+        alt: 'CampusCart - SVCET Student Marketplace',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'CampusCart — Discover what your campus creates',
     description:
       'Buy, sell, and discover products created by students in your college.',
+    images: ['/images/logo/logo-full.png'],
   },
 };
 

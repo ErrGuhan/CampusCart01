@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   WifiOff, RefreshCw, ShoppingBag, Sparkles, Home,
   ArrowRight, ShieldCheck, Zap, AlertCircle
@@ -50,11 +51,24 @@ export default function OfflinePage() {
     <main className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 md:p-8">
       <div className="max-w-xl w-full mx-auto text-center space-y-8 animate-in fade-in-50 zoom-in-95 duration-300">
         
-        {/* Animated Visual Beacon */}
-        <div className="relative inline-flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-destructive/10 animate-ping duration-1000 opacity-75" />
-          <div className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-3xl bg-linear-to-b from-muted/80 to-muted/30 border border-border/80 shadow-2xl flex items-center justify-center text-primary backdrop-blur-xl">
-            <WifiOff className="h-12 w-12 sm:h-14 sm:w-14 text-amber-500 animate-pulse" />
+        {/* Brand Logo & Animated Visual Beacon */}
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative h-16 w-16 sm:h-20 sm:w-20">
+            <Image
+              src="/images/logo/logo-icon.png"
+              alt="CampusCart Logo"
+              width={80}
+              height={80}
+              priority
+              className="object-contain w-full h-full filter drop-shadow-md"
+            />
+          </div>
+          
+          <div className="relative inline-flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-destructive/10 animate-ping duration-1000 opacity-75" />
+            <div className="relative h-16 w-16 sm:h-18 sm:w-18 rounded-2xl bg-muted/50 border border-border/80 shadow-lg flex items-center justify-center text-primary backdrop-blur-xl">
+              <WifiOff className="h-8 w-8 sm:h-9 sm:w-9 text-amber-500 animate-pulse" />
+            </div>
           </div>
         </div>
 

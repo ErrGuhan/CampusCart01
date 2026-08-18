@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Eye,
@@ -142,15 +143,29 @@ function RegisterForm() {
       {/* Main Glassmorphism Card */}
       <div className="w-full rounded-[28px] sm:rounded-3xl bg-card/90 dark:bg-card/85 backdrop-blur-xl border border-border/80 shadow-xl p-6 sm:p-7">
         
-        {/* CampusCart Title & Header */}
-        <div className="text-center mt-2 mb-5 space-y-1">
-          <h1 className="font-display text-2xl font-black text-primary tracking-tight">
-            CampusCart
-          </h1>
+        {/* CampusCart Title & Header with Official Logo */}
+        <div className="text-center mt-1 mb-5 flex flex-col items-center">
+          <Link href="/" className="group mb-2.5 inline-flex flex-col items-center">
+            <div className="relative h-16 w-16 sm:h-18 sm:w-18 transition-transform group-hover:scale-105 duration-300">
+              <Image
+                src="/images/logo/logo-icon.png"
+                alt="CampusCart Logo"
+                width={72}
+                height={72}
+                priority
+                className="object-contain w-full h-full filter drop-shadow-md"
+              />
+            </div>
+            <div className="mt-1 flex items-center justify-center">
+              <h1 className="font-display text-2xl sm:text-[26px] font-black tracking-tight text-foreground">
+                Campus<span className="text-amber-500 dark:text-amber-400">Cart</span>
+              </h1>
+            </div>
+          </Link>
           <h2 className="text-lg font-bold text-foreground">
             Create account
           </h2>
-          <p className="text-xs text-muted-foreground font-medium">
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">
             Join the SVCET student marketplace & hub
           </p>
         </div>
