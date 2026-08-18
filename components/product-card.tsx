@@ -78,7 +78,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       )}
     >
       {/* Optimized Product Image Container with zero CLS layout reservation */}
-      <div className="relative aspect-square w-full overflow-hidden bg-secondary/40 select-none">
+      <div className="relative aspect-square w-full overflow-hidden shimmer-placeholder select-none">
         <Image
           src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
           alt={product.name}

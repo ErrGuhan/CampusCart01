@@ -31,6 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
+import { SearchCommand } from '@/components/search-command';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getNotifications } from '@/lib/firebase-queries';
@@ -51,6 +52,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchCommandOpen, setSearchCommandOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const { user, profile, isAdmin, loading, signOut } = useAuth();
@@ -421,30 +423,22 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Desktop Search Bar */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-3"
-          >
-            <div className="relative w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products, gigs, notes..."
-                className="pl-9 pr-8 h-10 rounded-xl bg-secondary/50 border-transparent hover:bg-secondary/70 focus-visible:bg-background focus-visible:border-input text-xs transition-all"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-          </form>
+          {/* Desktop Instant Command Search Trigger */}
+          <div className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-3">
+            <button
+              type="button"
+              onClick={() => setSearchCommandOpen(true)}
+              className="relative flex h-10 w-full items-center justify-between rounded-xl bg-secondary/50 hover:bg-secondary/80 px-3 text-xs text-muted-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-2xs group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <span className="truncate text-muted-foreground/80 font-medium">Search campus items...</span>
+              </div>
+              <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground shadow-2xs">
+                <span>⌘</span>K
+              </kbd>
+            </button>
+          </div>
 
           {/* Right Action Icons - Fluid auto-adjusting targets for every phone screen size */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
@@ -452,8 +446,8 @@ export function Navbar() {
             <button
               type="button"
               className="md:hidden flex items-center justify-center h-10 w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
-              onClick={() => setMobileSearchOpen((prev) => !prev)}
-              aria-label="Toggle mobile search"
+              onClick={() => setSearchCommandOpen(true)}
+              aria-label="Open campus search"
             >
               <Search className="h-5 w-5 stroke-[2.2]" />
             </button>
@@ -522,7 +516,7 @@ export function Navbar() {
             >
               <ShoppingCart className="h-5 w-5 stroke-[1.8]" />
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-badge-pulse shadow-xs">
                   {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}
@@ -753,6 +747,9 @@ export function Navbar() {
         )}
 
       </div>
+
+      {/* Global Instant Command Search Dialog */}
+      <SearchCommand open={searchCommandOpen} onOpenChange={setSearchCommandOpen} />
     </header>
   );
 }

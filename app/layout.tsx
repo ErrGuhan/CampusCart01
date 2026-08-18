@@ -8,6 +8,7 @@ import { SwipeProvider } from '@/components/layout/swipe-context';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { CampusCartAIAssistant } from '@/components/ai-assistant';
 import { NavigationProgressBar } from '@/components/layout/progress-bar';
+import { ScrollToTop } from '@/components/layout/scroll-to-top';
 import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({
@@ -71,6 +72,7 @@ export default function RootLayout({
             <SwipeProvider>
               {children}
               <BottomNav />
+              <ScrollToTop />
               <CampusCartAIAssistant />
               <Toaster />
             </SwipeProvider>

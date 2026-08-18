@@ -20,7 +20,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
   return (
     <div className="group relative flex flex-col rounded-[22px] sm:rounded-3xl border border-[#E2E4F6]/80 dark:border-border/80 bg-[#F5FFFA]/85 dark:bg-card/80 backdrop-blur-md shadow-2xs overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#3B42C4]/40 hover:-translate-y-1 active:scale-[0.98]">
       {/* Optimized Cover Image Container */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/40 select-none">
+      <div className="relative aspect-[16/10] w-full overflow-hidden shimmer-placeholder select-none">
         <Image
           src={gig.coverImage || 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg'}
           alt={gig.title}

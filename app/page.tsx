@@ -22,7 +22,8 @@ import {
   getAllSellers,
 } from '@/lib/firebase-queries';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home() {
   const [categories, featured, trending, newArrivals, sellers] = await Promise.all([
