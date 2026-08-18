@@ -561,10 +561,10 @@ function MessagesContent() {
                       title="Search & filter chats"
                       aria-label="Search"
                       className={cn(
-                        'h-9 w-9 sm:h-10 sm:w-10 rounded-2xl border shadow-2xs flex items-center justify-center transition-all',
+                        'h-9 w-9 sm:h-10 sm:w-10 rounded-2xl border shadow-xs flex items-center justify-center transition-all',
                         showFilterTags
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm scale-105'
-                          : 'bg-white/80 dark:bg-card/80 border-white/80 dark:border-border/80 text-foreground hover:scale-105 active:scale-95'
+                          ? 'btn-gradient-primary text-white border-transparent shadow-sm scale-105'
+                          : 'bg-card border-border text-foreground hover:scale-105 active:scale-95'
                       )}
                     >
                       <Search className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
@@ -576,7 +576,7 @@ function MessagesContent() {
                       onClick={() => setNotificationsModalOpen(true)}
                       title="View campus notifications"
                       aria-label="Notifications"
-                      className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/80 shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
+                      className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
                       <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                       {unreadNotificationsCount > 0 && (
@@ -596,7 +596,7 @@ function MessagesContent() {
                     placeholder="Search Chats..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-white/70 dark:bg-card/70 border border-white/70 dark:border-border/70 shadow-2xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-purple-500/20"
+                    className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-card border border-border shadow-xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground"
                   />
                   {search && (
                     <button
@@ -618,8 +618,8 @@ function MessagesContent() {
                       className={cn(
                         'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all',
                         activeFilterTag === 'all'
-                          ? 'bg-purple-600 text-white shadow-2xs'
-                          : 'bg-white/80 dark:bg-card/80 text-muted-foreground hover:text-foreground border border-white/80'
+                          ? 'btn-gradient-primary text-white shadow-xs'
+                          : 'bg-card text-muted-foreground hover:text-foreground border border-border'
                       )}
                     >
                       All
@@ -630,8 +630,8 @@ function MessagesContent() {
                       className={cn(
                         'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1',
                         activeFilterTag === 'offers'
-                          ? 'bg-purple-600 text-white shadow-2xs'
-                          : 'bg-white/80 dark:bg-card/80 text-muted-foreground hover:text-foreground border border-white/80'
+                          ? 'btn-gradient-primary text-white shadow-xs'
+                          : 'bg-card text-muted-foreground hover:text-foreground border border-border'
                       )}
                     >
                       <span>🤝 Offers</span>
@@ -644,7 +644,7 @@ function MessagesContent() {
               <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-2 sm:space-y-2.5 scrollbar-thin">
                 {filteredConversations.length === 0 ? (
                   <div className="p-8 text-center space-y-3 text-muted-foreground my-auto">
-                    <div className="h-14 w-14 rounded-3xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto">
+                    <div className="h-14 w-14 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
                       <MessageSquare className="h-7 w-7" />
                     </div>
                     <p className="text-sm font-bold text-foreground">No conversations yet</p>
@@ -668,8 +668,8 @@ function MessagesContent() {
                         className={cn(
                           'group relative w-full rounded-2xl sm:rounded-3xl flex items-center transition-all border',
                           isSelected
-                            ? 'bg-white dark:bg-card border-purple-500/30 shadow-md ring-2 ring-purple-500/10'
-                            : 'bg-white/70 dark:bg-card/70 border-white/60 dark:border-border/50 hover:bg-white/90 dark:hover:bg-card/90 shadow-2xs hover:scale-[1.01]'
+                            ? 'bg-card border-primary/40 shadow-md ring-2 ring-primary/10'
+                            : 'bg-card/75 dark:bg-card/60 border-border/80 hover:bg-card shadow-xs hover:scale-[1.01]'
                         )}
                       >
                         <button
@@ -739,7 +739,7 @@ function MessagesContent() {
                         type="button"
                         onClick={() => setMobileView('list')}
                         aria-label="Back to conversations list"
-                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                       >
                         <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[2.2]" />
                       </button>
@@ -761,7 +761,7 @@ function MessagesContent() {
                         <button
                           type="button"
                           aria-label="Chat Settings & Options"
-                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-white/90 dark:bg-card/90 border border-white/80 dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                         >
                           <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                         </button>
@@ -805,7 +805,7 @@ function MessagesContent() {
                   >
                     {/* Centered Date Pill Separator */}
                     <div className="flex justify-center my-1">
-                      <div className="rounded-full px-4 py-0.5 sm:py-1 bg-white/80 dark:bg-card/80 border border-white/80 dark:border-border/60 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-2xs">
+                      <div className="rounded-full px-4 py-0.5 sm:py-1 bg-card border border-border/80 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-xs">
                         Today
                       </div>
                     </div>
@@ -831,9 +831,9 @@ function MessagesContent() {
                           >
                             {/* Incoming Avatar on Left */}
                             {!isMe && (
-                              <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                              <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
                                 <AvatarImage src={otherParticipant.avatar} alt={otherParticipant.name} />
-                                <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+                                <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary">
                                   {otherParticipant.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
@@ -844,10 +844,10 @@ function MessagesContent() {
                               {/* Bubble */}
                               <div
                                 className={cn(
-                                  'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-sm w-fit inline-block font-medium',
+                                  'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-xs w-fit inline-block font-medium',
                                   isMe
-                                    ? 'bg-[#a855f7] dark:bg-purple-600 text-white rounded-br-[4px]'
-                                    : 'bg-white dark:bg-card text-foreground border border-slate-200/80 dark:border-border/80 rounded-bl-[4px] shadow-2xs'
+                                    ? 'btn-gradient-primary text-white rounded-br-[4px]'
+                                    : 'bg-card text-foreground border border-border rounded-bl-[4px] shadow-xs'
                                 )}
                                 style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                               >

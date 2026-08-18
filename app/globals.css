@@ -178,14 +178,7 @@
   }
   .btn-gradient-primary:hover {
     background: linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%);
-    box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.35);
-  }
-  .btn-gradient-primary:active {
-    transform: scale(0.97);
-  }
-  .btn-gradient-primary:hover {
-    background: linear-gradient(135deg, #184ECC 0%, #3238A8 100%);
-    box-shadow: 0 6px 22px 0 rgba(29, 91, 241, 0.38);
+    box-shadow: 0 6px 22px 0 rgba(37, 99, 235, 0.35);
   }
   .btn-gradient-primary:active {
     transform: scale(0.97);
@@ -194,12 +187,12 @@
   /* Soft Background Washes */
   .bg-radial-wash {
     background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(29, 91, 241, 0.10) 0%, rgba(59, 66, 196, 0.06) 45%, transparent 75%);
+      radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.10) 0%, rgba(79, 70, 229, 0.06) 45%, transparent 75%);
   }
 
   .dark .bg-radial-wash {
     background-image: 
-      radial-gradient(ellipse at 50% 0%, rgba(29, 91, 241, 0.16) 0%, rgba(59, 66, 196, 0.08) 45%, transparent 75%);
+      radial-gradient(ellipse at 50% 0%, rgba(37, 99, 235, 0.16) 0%, rgba(79, 70, 229, 0.08) 45%, transparent 75%);
   }
 
   /* Mobile-optimized touch targets (44px min) */
@@ -286,9 +279,9 @@
 .shimmer-placeholder {
   background: linear-gradient(
     90deg,
-    rgba(226, 228, 246, 0.3) 0%,
-    rgba(245, 255, 250, 0.7) 50%,
-    rgba(226, 228, 246, 0.3) 100%
+    rgba(226, 232, 240, 0.4) 0%,
+    rgba(248, 250, 252, 0.8) 50%,
+    rgba(226, 232, 240, 0.4) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite linear;
@@ -297,9 +290,9 @@
 .dark .shimmer-placeholder {
   background: linear-gradient(
     90deg,
-    rgba(15, 23, 42, 0.4) 0%,
-    rgba(30, 41, 59, 0.7) 50%,
-    rgba(15, 23, 42, 0.4) 100%
+    rgba(15, 23, 42, 0.5) 0%,
+    rgba(30, 41, 59, 0.8) 50%,
+    rgba(15, 23, 42, 0.5) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite linear;

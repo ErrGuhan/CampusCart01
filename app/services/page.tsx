@@ -355,7 +355,7 @@ export default function ServicesPage() {
                     className={cn(
                       'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-bold whitespace-nowrap transition-all select-none shadow-2xs border',
                       active
-                        ? 'bg-gradient-to-r from-primary to-cyan-500 text-white border-transparent shadow-xs'
+                        ? 'btn-gradient-primary text-white border-transparent shadow-xs'
                         : 'bg-card border-border/80 text-foreground/80 hover:text-foreground'
                     )}
                   >

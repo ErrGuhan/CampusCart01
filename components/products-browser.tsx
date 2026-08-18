@@ -301,7 +301,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 placeholder="Search products by title, category, or creator..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 pr-8 h-11 rounded-2xl bg-white/80 dark:bg-card/80 backdrop-blur-xl text-xs border-white/80 dark:border-border/80 shadow-xs placeholder:text-muted-foreground/70 font-medium"
+                className="pl-10 pr-8 h-11 rounded-2xl bg-card/90 dark:bg-card/75 backdrop-blur-xl text-xs border-border/80 shadow-xs placeholder:text-muted-foreground/70 font-medium text-foreground"
               />
               {search && (
                 <button
@@ -320,7 +320,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                 <Button
                   variant="outline"
                   size="sm"
-                  className="lg:hidden h-11 px-3.5 rounded-2xl gap-1.5 text-xs font-bold shrink-0 min-h-[44px] bg-white/80 dark:bg-card/80 backdrop-blur-xl border-white/80 dark:border-border/80"
+                  className="lg:hidden h-11 px-3.5 rounded-2xl gap-1.5 text-xs font-bold shrink-0 min-h-[44px] bg-card/90 dark:bg-card/75 backdrop-blur-xl border-border/80"
                 >
                   <SlidersHorizontal className="h-4 w-4 text-primary" />
                   <span>Filters</span>
@@ -351,7 +351,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
 
             {/* Sort Dropdown */}
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[140px] sm:w-[170px] h-11 rounded-2xl text-xs font-bold shrink-0 bg-white/80 dark:bg-card/80 backdrop-blur-xl border-white/80 dark:border-border/80 shadow-xs">
+              <SelectTrigger className="w-[140px] sm:w-[170px] h-11 rounded-2xl text-xs font-bold shrink-0 bg-card/90 dark:bg-card/75 backdrop-blur-xl border-border/80 shadow-xs">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl">
@@ -372,8 +372,8 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
               className={cn(
                 'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-extrabold shrink-0 transition-all select-none shadow-2xs border active:scale-95',
                 selectedCategories.length === 0
-                  ? 'bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 text-white border-transparent shadow-md scale-102'
-                  : 'bg-white/80 dark:bg-card/80 backdrop-blur-md border-white/80 dark:border-border/80 text-foreground/80 hover:bg-white/95 dark:hover:bg-card/95 hover:text-foreground'
+                  ? 'btn-gradient-primary text-white border-transparent shadow-sm'
+                  : 'bg-card/85 dark:bg-card/75 backdrop-blur-md border-border/80 text-muted-foreground hover:text-foreground hover:bg-secondary/70'
               )}
             >
               All Items
@@ -388,8 +388,8 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
                   className={cn(
                     'px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-extrabold shrink-0 transition-all select-none flex items-center gap-1.5 shadow-2xs border active:scale-95',
                     isSelected
-                      ? 'bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 text-white border-transparent shadow-md scale-102'
-                      : 'bg-white/80 dark:bg-card/80 backdrop-blur-md border-white/80 dark:border-border/80 text-foreground/80 hover:bg-white/95 dark:hover:bg-card/95 hover:text-foreground'
+                      ? 'btn-gradient-primary text-white border-transparent shadow-sm'
+                      : 'bg-card/85 dark:bg-card/75 backdrop-blur-md border-border/80 text-muted-foreground hover:text-foreground hover:bg-secondary/70'
                   )}
                 >
                   <span>{cat.name}</span>
