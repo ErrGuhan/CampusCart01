@@ -71,8 +71,9 @@ export function ProductCard({ product, className, priority = false }: ProductCar
   return (
     <Link
       href={`/products/${product.slug}`}
+      prefetch={true}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-[22px] sm:rounded-3xl border border-[#E2E4F6]/80 dark:border-border/80 bg-[#F5FFFA]/85 dark:bg-card/80 backdrop-blur-md shadow-2xs transition-all duration-300 hover:shadow-xl hover:border-[#1D5BF1]/40 hover:-translate-y-1 active:scale-[0.98]',
+        'group relative flex flex-col overflow-hidden rounded-[20px] sm:rounded-3xl border border-[#E2E4F6]/80 dark:border-border/80 bg-[#F5FFFA]/85 dark:bg-card/80 backdrop-blur-md shadow-2xs transition-all duration-300 hover:shadow-xl hover:border-[#1D5BF1]/40 hover:-translate-y-1 active:scale-[0.98]',
         className
       )}
     >
@@ -89,6 +90,11 @@ export function ProductCard({ product, className, priority = false }: ProductCar
 
         {/* Condition & Discount Badges */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start z-10">
+          {product.status === 'pending_approval' && (
+            <span className="rounded-xl bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs border border-white/20">
+              ⏳ In Review
+            </span>
+          )}
           {product.isUsed && (
             <span className="rounded-xl bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs capitalize border border-white/20">
               {product.condition ? product.condition.replace('_', ' ') : 'Used'}
@@ -111,7 +117,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
           type="button"
           aria-label="Add to wishlist"
           onClick={toggleWishlist}
-          className="absolute top-2.5 right-2.5 flex h-9 w-9 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[#F5FFFA]/90 dark:bg-card/90 text-foreground/80 shadow-2xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10 border border-[#E2E4F6]/80 dark:border-border/60"
+          className="absolute top-2.5 right-2.5 flex h-8.5 w-8.5 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[#F5FFFA]/90 dark:bg-card/90 text-foreground/80 shadow-2xs backdrop-blur-md transition-all hover:text-destructive hover:scale-110 active:scale-90 z-10 border border-[#E2E4F6]/80 dark:border-border/60"
         >
           <Heart className={cn('h-4 w-4', isWishlisted && 'fill-destructive text-destructive')} />
         </button>

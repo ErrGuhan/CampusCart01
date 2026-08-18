@@ -7,7 +7,8 @@ export const metadata = {
   description: 'Explore campus textbooks, electronics, engineering tools, and handmade supplies.',
 };
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function ProductsPage() {
   const [products, categories] = await Promise.all([

@@ -40,6 +40,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
         {/* Freelancer Header */}
         <Link
           href={`/seller/${sellerUsername}`}
+          prefetch={true}
           className="flex items-center gap-2.5 mb-1.5 group/seller"
         >
           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 ring-1 ring-border shrink-0">
@@ -66,7 +67,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
         </Link>
 
         {/* Title */}
-        <Link href={`/services/${gig.slug}`} className="flex-1">
+        <Link href={`/services/${gig.slug}`} prefetch={true} className="flex-1">
           <h3 className="font-display text-xs sm:text-sm font-extrabold leading-snug line-clamp-2 text-foreground group-hover:text-[#3B42C4] transition-colors min-h-[2rem]">
             {gig.title}
           </h3>

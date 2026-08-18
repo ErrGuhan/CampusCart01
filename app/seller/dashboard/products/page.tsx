@@ -39,10 +39,18 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { getAllProductsAdmin, getMyProducts, getCategories } from '@/lib/firebase-queries';
+import {
+  getAllProductsAdmin,
+  getMyProducts,
+  getCategories,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from '@/lib/firebase-queries';
 import type { Category, Product, ProductStatus } from '@/lib/types';
 
 type SellerProduct = Product & { _editing?: boolean };
@@ -66,291 +74,224 @@ export type ProductFormData = {
 export default function SellerProductsPage() {
   const { user, profile, isAdmin, loading } = useAuth();
   const { toast } = useToast();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  const [sellerProducts, setSellerProducts] = useState<SellerProduct[]>([]);
-
-  const loadSellerProducts = () => {
-    if (user?.uid) {
-      getAllProductsAdmin().then((all) => {
-        const username = profile?.username?.toLowerCase() || '';
-        const isGuhan = username.includes('guhan') || user?.email?.toLowerCase().includes('guhan');
-        const myProds = all.filter(
-          (p) =>
-            p.seller?.id === user.uid ||
-            p.seller?.username?.toLowerCase() === username ||
-            (isGuhan && (p.seller?.username === 'guhan' || p.seller?.id === 'seller-guhan'))
-        );
-        setSellerProducts(myProds);
-      });
-    }
-  };
-
-  useEffect(() => {
-    loadSellerProducts();
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('campuscart_product_updated', loadSellerProducts);
-      window.addEventListener('storage', loadSellerProducts);
-      window.addEventListener('focus', loadSellerProducts);
-
-      return () => {
-        window.removeEventListener('campuscart_product_updated', loadSellerProducts);
-        window.removeEventListener('storage', loadSellerProducts);
-        window.removeEventListener('focus', loadSellerProducts);
-      };
-    }
-  }, [user?.uid, profile?.username]);
-
-  useEffect(() => {
-    getCategories().then(setCategories);
-  }, []);
-
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-8">
-          <div className="h-96 animate-pulse rounded-xl bg-secondary" />
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  if (!user) {
-    return (
-      <>
-        <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-16">
-          <div className="flex flex-col items-center justify-center text-center py-16">
-            <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
-            <h1 className="font-display text-2xl font-bold tracking-tight">Sign in required</h1>
-            <p className="mt-2 text-muted-foreground">Sign in to manage your products.</p>
-            <Button className="mt-6" asChild><Link href="/login">Sign In</Link></Button>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  if (!profile?.is_seller) {
-    return (
-      <>
-        <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-16">
-          <div className="flex flex-col items-center justify-center text-center py-16">
-            <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
-            <h1 className="font-display text-2xl font-bold tracking-tight">Access restricted to sellers</h1>
-            <p className="mt-2 text-muted-foreground max-w-md">
-              Only student sellers can manage listings. Buyers can continue exploring and purchasing products.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <Button asChild><Link href="/products">Browse Products</Link></Button>
-              <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  const filtered = sellerProducts.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  async function handleSave(formData: ProductFormData) {
-    if (!user) {
-      toast({
-        title: 'Sign in required',
-        description: 'Please sign in to upload or edit products.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const sellerDisplayName = profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Campus Seller';
-      const sellerUsername = profile?.username || user.email?.split('@')[0] || 'seller';
-      const sellerAvatar = profile?.avatar_url || '';
-      const sellerDepartment = profile?.department || 'SVCET Student';
-      const sellerYear = profile?.year || 'Student';
-
-      const slug = editProduct?.slug || (
-        formData.name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '')
-          .slice(0, 40) + '-' + Math.floor(1000 + Math.random() * 9000)
-      );
-
-      const calculatedStatus: ProductStatus = isAdmin
-        ? (formData.status || 'active')
-        : (editProduct ? (editProduct.status === 'active' ? 'active' : 'pending_approval') : 'pending_approval');
-
-      const isProductVerified = isAdmin ? true : (editProduct?.isVerified || false);
-
-      const productPayload = {
-        seller_id: user.uid,
-        sellerName: sellerDisplayName,
-        sellerUsername: sellerUsername,
-        sellerAvatar: sellerAvatar,
-        sellerDepartment: sellerDepartment,
-        sellerYear: sellerYear,
-        name: formData.name,
-        slug,
-        description: formData.description,
-        price: formData.price,
-        discount_price: formData.discountPrice ?? null,
-        category: formData.category,
-        inventory: formData.inventory,
-        tags: formData.tags,
-        status: calculatedStatus,
-        pickup_available: formData.pickup,
-        delivery_available: formData.delivery,
-        is_digital: formData.isDigital || false,
-        digital_file_url: formData.digitalFileUrl || '',
-        images: [formData.imageUrl || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'],
-        rating: editProduct?.rating ?? 5.0,
-        review_count: editProduct?.reviewCount ?? 0,
-        is_verified: isProductVerified,
-        updated_at: new Date().toISOString(),
-      };
-
-      const localProduct: SellerProduct = {
-        id: editProduct?.id || ('prod_' + Date.now()),
-        seller: {
-          id: user.uid,
-          username: sellerUsername,
-          displayName: sellerDisplayName,
-          avatar: sellerAvatar,
-          department: sellerDepartment,
-          year: sellerYear,
-          bio: profile?.bio || '',
-          skills: profile?.skills || [],
-          rating: editProduct?.rating ?? 5.0,
-          productCount: 1,
-          joinedAt: new Date().toISOString(),
-        },
-        name: formData.name,
-        slug,
-        description: formData.description,
-        price: formData.price,
-        discountPrice: formData.discountPrice,
-        category: formData.category,
-        inventory: formData.inventory,
-        tags: formData.tags,
-        status: calculatedStatus,
-        pickupAvailable: formData.pickup,
-        deliveryAvailable: formData.delivery,
-        isDigital: formData.isDigital || false,
-        digitalFileUrl: formData.digitalFileUrl || '',
-        images: [formData.imageUrl || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'],
-        rating: editProduct?.rating ?? 5.0,
-        reviewCount: editProduct?.reviewCount ?? 0,
-        isVerified: isProductVerified,
-        createdAt: editProduct?.createdAt || new Date().toISOString(),
-      };
-
-      if (editProduct) {
-        setSellerProducts((prev) => prev.map((p) => (p.id === editProduct.id ? localProduct : p)));
-        
-        if (typeof window !== 'undefined') {
-          try {
-            const raw = localStorage.getItem('campuscart_products');
-            let list = raw ? JSON.parse(raw) : [];
-            list = list.map((p: any) => (p.id === editProduct.id ? localProduct : p));
-            localStorage.setItem('campuscart_products', JSON.stringify(list));
-            window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
-          } catch {}
-        }
-
-        try {
-          await setDoc(doc(db, 'products', editProduct.id), productPayload, { merge: true });
-        } catch (err) {
-          console.warn('Firestore update product notice:', err);
-        }
-        toast({
-          title: isAdmin ? 'Product updated! 🎉' : 'Updated & Submitted for Review! ⏳',
-          description: isAdmin ? `"${formData.name}" has been updated.` : `"${formData.name}" updated. Sent to Admin for review.`,
-        });
-      } else {
-        setSellerProducts((prev) => [localProduct, ...prev]);
-
-        if (typeof window !== 'undefined') {
-          try {
-            const raw = localStorage.getItem('campuscart_products');
-            const list = raw ? JSON.parse(raw) : [];
-            list.unshift(localProduct);
-            localStorage.setItem('campuscart_products', JSON.stringify(list));
-            window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
-          } catch {}
-        }
-
-        try {
-          await addDoc(collection(db, 'products'), {
-            ...productPayload,
-            created_at: new Date().toISOString(),
-          });
-        } catch (err) {
-          console.warn('Firestore add product notice:', err);
-        }
-        toast({
-          title: isAdmin ? 'Product created & Live! 🎉' : 'Submitted for Approval! ⏳',
-          description: isAdmin
-            ? `"${formData.name}" is now live on CampusCart.`
-            : `"${formData.name}" submitted to Admin (Guhan M) for originality verification.`,
+    const router = useRouter();
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editProduct, setEditProduct] = useState<Product | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+  
+    const [sellerProducts, setSellerProducts] = useState<SellerProduct[]>([]);
+  
+    const loadSellerProducts = () => {
+      if (user?.uid) {
+        getAllProductsAdmin().then((all) => {
+          const username = profile?.username?.toLowerCase() || '';
+          const isGuhan = username.includes('guhan') || user?.email?.toLowerCase().includes('guhan');
+          const myProds = all.filter(
+            (p) =>
+              p.seller?.id === user.uid ||
+              p.seller?.username?.toLowerCase() === username ||
+              (isGuhan && (p.seller?.username === 'guhan' || p.seller?.id === 'seller-guhan'))
+          );
+          setSellerProducts(myProds);
         });
       }
-
-      setDialogOpen(false);
-      setEditProduct(null);
-    } catch (err: any) {
-      console.warn('Product save notice:', err);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    try {
+    };
+  
+    useEffect(() => {
+      loadSellerProducts();
+  
       if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem('campuscart_products');
-          let list = raw ? JSON.parse(raw) : [];
-          list = list.filter((p: any) => p.id !== deleteTarget.id);
-          localStorage.setItem('campuscart_products', JSON.stringify(list));
-          window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
-        } catch {}
+        window.addEventListener('campuscart_product_updated', loadSellerProducts);
+        window.addEventListener('storage', loadSellerProducts);
+        window.addEventListener('focus', loadSellerProducts);
+  
+        return () => {
+          window.removeEventListener('campuscart_product_updated', loadSellerProducts);
+          window.removeEventListener('storage', loadSellerProducts);
+          window.removeEventListener('focus', loadSellerProducts);
+        };
       }
-
-      await deleteDoc(doc(db, 'products', deleteTarget.id));
-
-      setSellerProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-      toast({ title: 'Product deleted', description: deleteTarget.name });
-    } catch (err: any) {
-      console.error('Error deleting product from Firestore:', err);
-      toast({
-        title: 'Could not delete product',
-        description: err.message || 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setDeleteTarget(null);
+    }, [user?.uid, profile?.username]);
+  
+    useEffect(() => {
+      getCategories().then(setCategories);
+    }, []);
+  
+    if (loading) {
+      return (
+        <>
+          <Navbar />
+          <main className="container-px mx-auto max-w-7xl py-8">
+            <div className="h-96 animate-pulse rounded-xl bg-secondary" />
+          </main>
+          <Footer />
+        </>
+      );
     }
-  }
+  
+    if (!user) {
+      return (
+        <>
+          <Navbar />
+          <main className="container-px mx-auto max-w-7xl py-16">
+            <div className="flex flex-col items-center justify-center text-center py-16">
+              <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
+              <h1 className="font-display text-2xl font-bold tracking-tight">Sign in required</h1>
+              <p className="mt-2 text-muted-foreground">Sign in to manage your products.</p>
+              <Button className="mt-6" asChild><Link href="/login">Sign In</Link></Button>
+            </div>
+          </main>
+          <Footer />
+        </>
+      );
+    }
+  
+    if (!profile?.is_seller) {
+      return (
+        <>
+          <Navbar />
+          <main className="container-px mx-auto max-w-7xl py-16">
+            <div className="flex flex-col items-center justify-center text-center py-16">
+              <Package className="h-16 w-16 text-muted-foreground/40 mb-4" />
+              <h1 className="font-display text-2xl font-bold tracking-tight">Access restricted to sellers</h1>
+              <p className="mt-2 text-muted-foreground max-w-md">
+                Only student sellers can manage listings. Buyers can continue exploring and purchasing products.
+              </p>
+              <div className="mt-6 flex gap-3">
+                <Button asChild><Link href="/products">Browse Products</Link></Button>
+                <Button variant="outline" asChild><Link href="/account/settings">Become a Seller</Link></Button>
+              </div>
+            </div>
+          </main>
+          <Footer />
+        </>
+      );
+    }
+  
+    const filtered = sellerProducts.filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  
+    async function handleSave(formData: ProductFormData) {
+      if (!user) {
+        toast({
+          title: 'Sign in required',
+          description: 'Please sign in to upload or edit products.',
+          variant: 'destructive',
+        });
+        return;
+      }
+  
+      setSaving(true);
+      try {
+        const sellerDisplayName = profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Campus Seller';
+        const sellerUsername = profile?.username || user.email?.split('@')[0] || 'seller';
+        const sellerAvatar = profile?.avatar_url || '';
+        const sellerDepartment = profile?.department || 'SVCET Student';
+        const sellerYear = profile?.year || 'Student';
+  
+        const slug = editProduct?.slug || (
+          formData.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '')
+            .slice(0, 40) + '-' + Math.floor(1000 + Math.random() * 9000)
+        );
+  
+        const calculatedStatus: ProductStatus = isAdmin
+          ? (formData.status || 'active')
+          : (editProduct ? (editProduct.status === 'active' ? 'active' : 'pending_approval') : 'pending_approval');
+  
+        const isProductVerified = isAdmin ? true : (editProduct?.isVerified || false);
+  
+        const localProduct: SellerProduct = {
+          id: editProduct?.id || ('prod_' + Date.now()),
+          seller: {
+            id: user.uid,
+            username: sellerUsername,
+            displayName: sellerDisplayName,
+            avatar: sellerAvatar,
+            department: sellerDepartment,
+            year: sellerYear,
+            bio: profile?.bio || '',
+            skills: profile?.skills || [],
+            rating: editProduct?.rating ?? 5.0,
+            productCount: 1,
+            joinedAt: new Date().toISOString(),
+          },
+          name: formData.name,
+          slug,
+          description: formData.description,
+          price: formData.price,
+          discountPrice: formData.discountPrice,
+          category: formData.category,
+          inventory: formData.inventory,
+          tags: formData.tags,
+          status: calculatedStatus,
+          pickupAvailable: formData.pickup,
+          deliveryAvailable: formData.delivery,
+          isDigital: formData.isDigital || false,
+          digitalFileUrl: formData.digitalFileUrl || '',
+          images: [formData.imageUrl || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'],
+          rating: editProduct?.rating ?? 5.0,
+          reviewCount: editProduct?.reviewCount ?? 0,
+          isVerified: isProductVerified,
+          createdAt: editProduct?.createdAt || new Date().toISOString(),
+        };
+  
+        if (editProduct) {
+          setSellerProducts((prev) => prev.map((p) => (p.id === editProduct.id ? localProduct : p)));
+          await updateProduct(editProduct.id, localProduct);
+          router.refresh();
+          toast({
+            title: isAdmin ? 'Product updated! 🎉' : 'Updated & Submitted for Review! ⏳',
+            description: isAdmin ? `"${formData.name}" has been updated.` : `"${formData.name}" updated. Sent to Admin for review.`,
+          });
+        } else {
+          setSellerProducts((prev) => [localProduct, ...prev]);
+          await createProduct(localProduct);
+          router.refresh();
+          toast({
+            title: isAdmin ? 'Product created & Live! 🎉' : 'Submitted for Approval! ⏳',
+            description: isAdmin
+              ? `"${formData.name}" is now live on CampusCart.`
+              : `"${formData.name}" submitted to Admin (Guhan M) for originality verification.`,
+          });
+        }
+  
+        setDialogOpen(false);
+        setEditProduct(null);
+      } catch (err: any) {
+        console.warn('Product save notice:', err);
+      } finally {
+        setSaving(false);
+      }
+    }
+  
+    async function handleDelete() {
+      if (!deleteTarget) return;
+      try {
+        await deleteProduct(deleteTarget.id);
+        setSellerProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+        router.refresh();
+        toast({ title: 'Product deleted', description: deleteTarget.name });
+      } catch (err: any) {
+        console.error('Error deleting product:', err);
+        toast({
+          title: 'Could not delete product',
+          description: err.message || 'Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setDeleteTarget(null);
+      }
+    }
 
   function openEdit(product: Product) {
     setEditProduct(product);

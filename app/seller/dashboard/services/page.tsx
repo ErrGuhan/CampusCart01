@@ -38,13 +38,15 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { getMyGigs, GIG_CATEGORIES } from '@/lib/firebase-queries';
+import { getMyGigs, GIG_CATEGORIES, createGig, updateGig, deleteGig } from '@/lib/firebase-queries';
 import type { ServiceGig, GigStatus } from '@/lib/types';
 
 export default function SellerServicesPage() {
+  const router = useRouter();
   const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
 
@@ -154,29 +156,6 @@ export default function SellerServicesPage() {
 
       const isGigVerified: boolean = isAdmin ? true : (editGig?.isVerified || false);
 
-      const gigPayload = {
-        seller_id: user.uid,
-        sellerName: sellerDisplayName,
-        sellerUsername: sellerUsername,
-        sellerAvatar: sellerAvatar,
-        sellerDepartment: sellerDepartment,
-        sellerYear: sellerYear,
-        title: title.trim(),
-        slug,
-        description: description.trim(),
-        category,
-        starting_price: priceNum,
-        delivery_time_days: parseInt(deliveryDays, 10) || 2,
-        revisions: parseInt(revisions, 10) || 2,
-        tags: tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean),
-        cover_image: coverImage || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-        status: calculatedStatus,
-        rating: editGig?.rating ?? 5.0,
-        review_count: editGig?.reviewCount ?? 0,
-        is_verified: isGigVerified,
-        updated_at: new Date().toISOString(),
-      };
-
       const localGig: ServiceGig = {
         id: editGig?.id || ('gig_' + Date.now()),
         sellerId: user.uid,
@@ -211,44 +190,13 @@ export default function SellerServicesPage() {
 
       if (editGig) {
         setGigs((prev) => prev.map((g) => (g.id === editGig.id ? localGig : g)));
-
-        if (typeof window !== 'undefined') {
-          try {
-            const raw = localStorage.getItem('campuscart_gigs');
-            let list = raw ? JSON.parse(raw) : [];
-            list = list.map((g: any) => (g.id === editGig.id ? localGig : g));
-            localStorage.setItem('campuscart_gigs', JSON.stringify(list));
-            window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
-          } catch {}
-        }
-
-        try {
-          await setDoc(doc(db, 'gigs', editGig.id), gigPayload, { merge: true });
-        } catch (err) {
-          console.warn('Firestore update gig notice:', err);
-        }
+        await updateGig(editGig.id, localGig);
+        router.refresh();
         toast({ title: 'Gig updated! 🎉', description: `"${title}" has been saved.` });
       } else {
         setGigs((prev) => [localGig, ...prev]);
-
-        if (typeof window !== 'undefined') {
-          try {
-            const raw = localStorage.getItem('campuscart_gigs');
-            const list = raw ? JSON.parse(raw) : [];
-            list.unshift(localGig);
-            localStorage.setItem('campuscart_gigs', JSON.stringify(list));
-            window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
-          } catch {}
-        }
-
-        try {
-          await addDoc(collection(db, 'gigs'), {
-            ...gigPayload,
-            created_at: new Date().toISOString(),
-          });
-        } catch (err) {
-          console.warn('Firestore add gig notice:', err);
-        }
+        await createGig(localGig);
+        router.refresh();
         toast({ title: 'Gig created! 🎉', description: `"${title}" is now live on Campus Freelance.` });
       }
 
@@ -263,17 +211,8 @@ export default function SellerServicesPage() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem('campuscart_gigs');
-          let list = raw ? JSON.parse(raw) : [];
-          list = list.filter((g: any) => g.id !== deleteTarget.id);
-          localStorage.setItem('campuscart_gigs', JSON.stringify(list));
-          window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
-        } catch {}
-      }
-
-      await deleteDoc(doc(db, 'gigs', deleteTarget.id));
+      await deleteGig(deleteTarget.id);
+      router.refresh();
       toast({ title: 'Gig deleted', description: deleteTarget.title });
       setDeleteTarget(null);
       loadGigs();

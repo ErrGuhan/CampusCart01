@@ -8,13 +8,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { getCategories, getProductsByCategory, DEFAULT_CATEGORIES } from '@/lib/firebase-queries';
 
-export const revalidate = 60;
-
-export function generateStaticParams() {
-  return DEFAULT_CATEGORIES.map((category) => ({
-    slug: category.slug,
-  }));
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 type Props = { params: { slug: string } | Promise<{ slug: string }> };
 

@@ -7,7 +7,8 @@ export const metadata = {
   description: 'Browse, buy, and discover textbooks, electronics, notes, project kits, and digital materials created by fellow college students.',
 };
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function MarketplacePage() {
   const [products, categories] = await Promise.all([

@@ -57,8 +57,10 @@ export function BottomNav() {
 
   const handleNavClick = (e: React.MouseEvent, panelIndex: number) => {
     if (isSwipeActive && window.innerWidth <= 768) {
-      e.preventDefault();
-      swipe?.scrollToPanel(panelIndex, true);
+      if (panelIndex === 2) {
+        e.preventDefault();
+        swipe?.scrollToPanel(2, true);
+      }
     }
   };
 
@@ -82,6 +84,7 @@ export function BottomNav() {
             <Link
               key={item.label}
               href={item.href}
+              prefetch={true}
               onClick={(e) => handleNavClick(e, item.panelIndex)}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-2xl transition-all relative select-none active:scale-95',

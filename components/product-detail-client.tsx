@@ -179,6 +179,16 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
           <span className="text-foreground font-semibold truncate">{product.name}</span>
         </nav>
 
+        {product.status === 'pending_approval' && (
+          <div className="mb-6 rounded-2xl bg-amber-500/10 border border-amber-500/25 p-4 flex items-center gap-3 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-semibold shadow-2xs">
+            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+            <div>
+              <span className="font-extrabold block">Listing Under Admin Review</span>
+              This item was submitted by the student seller and is awaiting verification by the CampusCart Admin before appearing on public category listings.
+            </div>
+          </div>
+        )}
+
         {/* Main Product Layout */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 items-start">
           
@@ -751,6 +761,35 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
           </div>
         )}
       </main>
+
+      {/* Mobile Floating Sticky Action Bar */}
+      <div className="fixed bottom-16 left-0 right-0 z-30 px-4 py-3 bg-[#F5FFFA]/95 dark:bg-card/95 backdrop-blur-xl border-t border-border/80 md:hidden flex items-center justify-between gap-3 shadow-lg">
+        <div className="flex flex-col min-w-0">
+          <span className="text-[10px] text-muted-foreground font-semibold">Total Price</span>
+          <span className="text-base font-black text-foreground">₹{displayPrice}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-1 max-w-[240px]">
+          <Button
+            size="sm"
+            onClick={handleAddToCart}
+            disabled={product.inventory === 0}
+            className="flex-1 rounded-xl h-10 text-xs font-bold gap-1.5 shadow-2xs"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span>Add</span>
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleBuyNow}
+            disabled={product.inventory === 0}
+            variant="outline"
+            className="flex-1 rounded-xl h-10 text-xs font-bold gap-1.5 border-primary/30 text-primary bg-primary/5 shadow-2xs"
+          >
+            <Zap className="h-4 w-4" />
+            <span>Buy</span>
+          </Button>
+        </div>
+      </div>
 
       <Footer />
 

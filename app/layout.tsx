@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, Sora } from 'next/font/google';
@@ -6,6 +7,7 @@ import { CartProvider } from '@/components/cart-provider';
 import { SwipeProvider } from '@/components/layout/swipe-context';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { CampusCartAIAssistant } from '@/components/ai-assistant';
+import { NavigationProgressBar } from '@/components/layout/progress-bar';
 import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({
@@ -60,7 +62,10 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
         />
       </head>
-      <body className="font-sans antialiased pb-16 md:pb-0 min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden">
+      <body className="font-sans antialiased pb-20 md:pb-0 min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden">
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         <AuthProvider>
           <CartProvider>
             <SwipeProvider>

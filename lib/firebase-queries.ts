@@ -594,6 +594,242 @@ export async function getAllProducts(): Promise<Product[]> {
   return all.filter((p) => p.status === 'active' || p.status === 'out_of_stock');
 }
 
+export async function createProduct(product: Product): Promise<Product> {
+  const prodId = product.id || ('prod_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+  const fullProduct: Product = {
+    ...product,
+    id: prodId,
+    createdAt: product.createdAt || new Date().toISOString(),
+  };
+
+  // 1. Immediate client storage update
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_products');
+      const list: Product[] = raw ? JSON.parse(raw) : [];
+      const updatedList = [fullProduct, ...list.filter((p) => p.id !== prodId && p.slug !== fullProduct.slug)];
+      localStorage.setItem('campuscart_products', JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+      window.dispatchEvent(new CustomEvent('campuscart_product_created', { detail: fullProduct }));
+    } catch {}
+  }
+
+  // 2. Firestore write with exact same ID
+  try {
+    const firestorePayload = {
+      seller_id: fullProduct.seller?.id || 'seller',
+      sellerName: fullProduct.seller?.displayName || 'Campus Creator',
+      sellerUsername: fullProduct.seller?.username || 'creator',
+      sellerAvatar: fullProduct.seller?.avatar || '',
+      sellerDepartment: fullProduct.seller?.department || '',
+      sellerYear: fullProduct.seller?.year || '',
+      sellerBio: fullProduct.seller?.bio || '',
+      name: fullProduct.name,
+      slug: fullProduct.slug,
+      description: fullProduct.description,
+      price: fullProduct.price,
+      discount_price: fullProduct.discountPrice ?? null,
+      category: fullProduct.category,
+      inventory: fullProduct.inventory,
+      tags: fullProduct.tags || [],
+      status: fullProduct.status || 'active',
+      pickup_available: fullProduct.pickupAvailable ?? true,
+      delivery_available: fullProduct.deliveryAvailable ?? false,
+      is_digital: fullProduct.isDigital || false,
+      digital_file_url: fullProduct.digitalFileUrl || '',
+      images: fullProduct.images && fullProduct.images.length > 0
+        ? fullProduct.images
+        : ['https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'],
+      rating: fullProduct.rating || 5.0,
+      review_count: fullProduct.reviewCount || 0,
+      is_verified: fullProduct.isVerified ?? false,
+      rejection_reason: fullProduct.rejectionReason || null,
+      created_at: fullProduct.createdAt,
+      updated_at: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, 'products', prodId), firestorePayload, { merge: true });
+  } catch (err) {
+    console.warn('Firestore createProduct notice:', err);
+  }
+
+  return fullProduct;
+}
+
+export async function updateProduct(productId: string, updates: Partial<Product>): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_products');
+      if (raw) {
+        let list: Product[] = JSON.parse(raw);
+        list = list.map((p) => (p.id === productId ? { ...p, ...updates } : p));
+        localStorage.setItem('campuscart_products', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+    } catch {}
+  }
+
+  try {
+    const firestoreUpdates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.name !== undefined) firestoreUpdates.name = updates.name;
+    if (updates.description !== undefined) firestoreUpdates.description = updates.description;
+    if (updates.price !== undefined) firestoreUpdates.price = updates.price;
+    if (updates.discountPrice !== undefined) firestoreUpdates.discount_price = updates.discountPrice;
+    if (updates.category !== undefined) firestoreUpdates.category = updates.category;
+    if (updates.inventory !== undefined) firestoreUpdates.inventory = updates.inventory;
+    if (updates.tags !== undefined) firestoreUpdates.tags = updates.tags;
+    if (updates.status !== undefined) firestoreUpdates.status = updates.status;
+    if (updates.pickupAvailable !== undefined) firestoreUpdates.pickup_available = updates.pickupAvailable;
+    if (updates.deliveryAvailable !== undefined) firestoreUpdates.delivery_available = updates.deliveryAvailable;
+    if (updates.isDigital !== undefined) firestoreUpdates.is_digital = updates.isDigital;
+    if (updates.digitalFileUrl !== undefined) firestoreUpdates.digital_file_url = updates.digitalFileUrl;
+    if (updates.images !== undefined) firestoreUpdates.images = updates.images;
+    if (updates.isVerified !== undefined) firestoreUpdates.is_verified = updates.isVerified;
+    if (updates.rejectionReason !== undefined) firestoreUpdates.rejection_reason = updates.rejectionReason;
+
+    await setDoc(doc(db, 'products', productId), firestoreUpdates, { merge: true });
+  } catch (err) {
+    console.warn('Firestore updateProduct notice:', err);
+  }
+
+  return true;
+}
+
+export async function deleteProduct(productId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_products');
+      if (raw) {
+        let list: Product[] = JSON.parse(raw);
+        list = list.filter((p) => p.id !== productId);
+        localStorage.setItem('campuscart_products', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_product_updated'));
+    } catch {}
+  }
+
+  try {
+    await deleteDoc(doc(db, 'products', productId));
+  } catch (err) {
+    console.warn('Firestore deleteProduct notice:', err);
+  }
+
+  return true;
+}
+
+export async function createGig(gig: ServiceGig): Promise<ServiceGig> {
+  const gigId = gig.id || ('gig_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+  const fullGig: ServiceGig = {
+    ...gig,
+    id: gigId,
+    createdAt: gig.createdAt || new Date().toISOString(),
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_gigs');
+      const list: ServiceGig[] = raw ? JSON.parse(raw) : [];
+      const updatedList = [fullGig, ...list.filter((g) => g.id !== gigId && g.slug !== fullGig.slug)];
+      localStorage.setItem('campuscart_gigs', JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+    } catch {}
+  }
+
+  try {
+    const firestorePayload = {
+      seller_id: fullGig.sellerId || fullGig.seller?.id || 'seller',
+      sellerName: fullGig.seller?.displayName || 'Campus Creator',
+      sellerUsername: fullGig.seller?.username || 'creator',
+      sellerAvatar: fullGig.seller?.avatar || '',
+      sellerDepartment: fullGig.seller?.department || '',
+      sellerYear: fullGig.seller?.year || '',
+      title: fullGig.title,
+      slug: fullGig.slug,
+      description: fullGig.description,
+      category: fullGig.category,
+      starting_price: fullGig.startingPrice,
+      delivery_time_days: fullGig.deliveryTimeDays,
+      revisions: fullGig.revisions,
+      tags: fullGig.tags || [],
+      cover_image: fullGig.coverImage || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg',
+      status: fullGig.status || 'active',
+      rating: fullGig.rating || 5.0,
+      review_count: fullGig.reviewCount || 0,
+      is_verified: fullGig.isVerified ?? false,
+      rejection_reason: fullGig.rejectionReason || null,
+      created_at: fullGig.createdAt,
+      updated_at: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, 'gigs', gigId), firestorePayload, { merge: true });
+  } catch (err) {
+    console.warn('Firestore createGig notice:', err);
+  }
+
+  return fullGig;
+}
+
+export async function updateGig(gigId: string, updates: Partial<ServiceGig>): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_gigs');
+      if (raw) {
+        let list: ServiceGig[] = JSON.parse(raw);
+        list = list.map((g) => (g.id === gigId ? { ...g, ...updates } : g));
+        localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+    } catch {}
+  }
+
+  try {
+    const firestoreUpdates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.title !== undefined) firestoreUpdates.title = updates.title;
+    if (updates.description !== undefined) firestoreUpdates.description = updates.description;
+    if (updates.startingPrice !== undefined) firestoreUpdates.starting_price = updates.startingPrice;
+    if (updates.category !== undefined) firestoreUpdates.category = updates.category;
+    if (updates.deliveryTimeDays !== undefined) firestoreUpdates.delivery_time_days = updates.deliveryTimeDays;
+    if (updates.revisions !== undefined) firestoreUpdates.revisions = updates.revisions;
+    if (updates.tags !== undefined) firestoreUpdates.tags = updates.tags;
+    if (updates.coverImage !== undefined) firestoreUpdates.cover_image = updates.coverImage;
+    if (updates.status !== undefined) firestoreUpdates.status = updates.status;
+    if (updates.isVerified !== undefined) firestoreUpdates.is_verified = updates.isVerified;
+    if (updates.rejectionReason !== undefined) firestoreUpdates.rejection_reason = updates.rejectionReason;
+
+    await setDoc(doc(db, 'gigs', gigId), firestoreUpdates, { merge: true });
+  } catch (err) {
+    console.warn('Firestore updateGig notice:', err);
+  }
+
+  return true;
+}
+
+export async function deleteGig(gigId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('campuscart_gigs');
+      if (raw) {
+        let list: ServiceGig[] = JSON.parse(raw);
+        list = list.filter((g) => g.id !== gigId);
+        localStorage.setItem('campuscart_gigs', JSON.stringify(list));
+      }
+      window.dispatchEvent(new CustomEvent('campuscart_gig_updated'));
+    } catch {}
+  }
+
+  try {
+    await deleteDoc(doc(db, 'gigs', gigId));
+  } catch (err) {
+    console.warn('Firestore deleteGig notice:', err);
+  }
+
+  return true;
+}
+
 export async function approveProduct(productId: string): Promise<boolean> {
   if (typeof window !== 'undefined') {
     try {
@@ -743,7 +979,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
 }
 
 export async function getProductsBySeller(username: string): Promise<Product[]> {
-  const all = await getAllProducts();
+  const all = await getAllProductsAdmin();
   const cleanU = (username || '').toLowerCase().trim();
   return all.filter((p) => {
     const pU = (p.seller?.username || '').toLowerCase().trim();
@@ -753,8 +989,9 @@ export async function getProductsBySeller(username: string): Promise<Product[]> 
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
-  const all = await getAllProducts();
-  const prod = all.find((p) => p.slug === slug || p.id === slug);
+  const all = await getAllProductsAdmin();
+  const cleanSlug = (slug || '').toLowerCase().trim();
+  const prod = all.find((p) => (p.slug || '').toLowerCase().trim() === cleanSlug || (p.id || '').toLowerCase().trim() === cleanSlug);
   if (prod) {
     const reviews = await getProductReviews(prod.id);
     if (reviews.length > 0) {
@@ -762,8 +999,8 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
       const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
       prod.rating = Number((sum / reviews.length).toFixed(1));
     } else {
-      prod.reviewCount = 0;
-      prod.rating = 0;
+      prod.reviewCount = prod.reviewCount || 0;
+      prod.rating = prod.rating || 5.0;
     }
   }
   return prod;
