@@ -7,7 +7,7 @@ import {
   Search, ShoppingCart, Heart, Menu, Store, User,
   LayoutDashboard, Package, LogOut, Settings, ShieldCheck, Shield,
   MessageSquare, Bell, Sparkles, HelpCircle, ArrowRight, Plus,
-  ShoppingBag, Tag, Recycle, Zap, X, ChevronDown,
+  ShoppingBag, Tag, Recycle, Zap, X, ChevronDown, Download, Smartphone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 import { useCart } from '@/components/cart-provider';
+import { usePWAContext } from '@/components/pwa-provider';
+import { ThemeToggle, ThemeSegmentedToggle } from '@/components/theme-toggle';
 import { SearchCommand } from '@/components/search-command';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -57,6 +59,7 @@ export function Navbar() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const { user, profile, isAdmin, loading, signOut } = useAuth();
   const { totalItems } = useCart();
+  const { isInstallable, isInstalled, isIOS, promptInstall, openInstallDialog } = usePWAContext();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -255,6 +258,43 @@ export function Navbar() {
                         </Link>
                       );
                     })}
+                    {/* PWA Install Trigger in Mobile Sheet */}
+                    {!isInstalled && (
+                      <div className="pt-1 pb-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            if (isIOS) openInstallDialog();
+                            else promptInstall();
+                          }}
+                          className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-primary/15 to-cyan-500/10 border border-primary/25 text-foreground hover:bg-primary/20 transition-all text-left group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold shadow-xs">
+                              <Download className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                                Install CampusCart App
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">Fast, offline mode & native feel</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                            {isIOS ? 'Guide' : 'Install'}
+                          </span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Theme Appearance in Mobile Sheet */}
+                    <div className="pt-2 pb-1 space-y-1.5">
+                      <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+                        Appearance
+                      </div>
+                      <ThemeSegmentedToggle />
+                    </div>
                   </div>
 
                   <div className="h-px bg-border my-2" />
@@ -453,6 +493,21 @@ export function Navbar() {
             </button>
 
             {/* Quick Access: Admin Approval Center & Sell Item (Desktop) */}
+            {!isInstalled && (isInstallable || isIOS) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (isIOS) openInstallDialog();
+                  else promptInstall();
+                }}
+                className="hidden xl:inline-flex rounded-xl text-xs font-bold border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 h-9 px-3 gap-1.5 shadow-2xs animate-in fade-in"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Install App</span>
+              </Button>
+            )}
+
             {isAdmin && (
               <Button
                 variant="outline"
@@ -507,6 +562,11 @@ export function Navbar() {
                 <Heart className="h-5 w-5" />
               </Link>
             </Button>
+
+            {/* Desktop Theme Switcher */}
+            <div className="hidden sm:flex items-center">
+              <ThemeToggle variant="button" />
+            </div>
 
             {/* Cart Button with Counter */}
             <Link
@@ -691,6 +751,38 @@ export function Navbar() {
                       </DropdownMenuItem>
                     </>
                   )}
+
+                  {!isInstalled && (
+                    <>
+                      <DropdownMenuSeparator className="my-1.5" />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (isIOS) openInstallDialog();
+                          else promptInstall();
+                        }}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10 active:scale-[0.98] transition-all cursor-pointer"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                          <Download className="h-4.5 w-4.5" />
+                        </div>
+                        <div className="flex items-center justify-between flex-1">
+                          <span>Install CampusCart</span>
+                          <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                            App
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  {/* Theme Selector inside Dropdown */}
+                  <DropdownMenuSeparator className="my-1.5" />
+                  <div className="px-2 py-1.5">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 px-1">
+                      Theme
+                    </p>
+                    <ThemeSegmentedToggle />
+                  </div>
 
                   <DropdownMenuSeparator className="my-1.5" />
                   <DropdownMenuItem

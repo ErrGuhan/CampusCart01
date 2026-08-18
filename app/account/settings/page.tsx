@@ -7,8 +7,9 @@ import {
   User, Mail, Building2, GraduationCap, Save,
   Store, Loader2, Shield, Bell, Camera, Upload,
   Sparkles, Trash2, Check, ExternalLink, HelpCircle,
-  MessageSquare, FileText,
+  MessageSquare, FileText, Sun, Moon, Laptop, Palette,
 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { AccountSidebar } from '@/components/account-sidebar';
@@ -51,6 +52,7 @@ const AVATAR_PRESETS = [
 export default function AccountSettingsPage() {
   const router = useRouter();
   const { user, profile, loading, signOut, updateUserProfile } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -553,7 +555,92 @@ export default function AccountSettingsPage() {
               </div>
             </div>
 
-            {/* 4. Notification Preferences */}
+            {/* 4. Appearance & Theme Selection */}
+            <div className="rounded-3xl border border-border/80 bg-card p-5 sm:p-7 shadow-xs">
+              <h2 className="font-display text-lg font-bold mb-1 flex items-center gap-2">
+                <Palette className="h-5 w-5 text-primary" />
+                Appearance & Theme
+              </h2>
+              <p className="text-xs text-muted-foreground mb-5">
+                Customize how CampusCart appears on this device
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Light Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme('light')}
+                  className={`group relative flex flex-col items-center gap-3 p-4 rounded-2xl border text-left transition-all ${
+                    theme === 'light'
+                      ? 'border-primary ring-2 ring-primary/30 bg-primary/5 shadow-xs'
+                      : 'border-border/80 bg-secondary/40 hover:border-border hover:bg-secondary/70'
+                  }`}
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
+                    <Sun className="h-6 w-6" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-foreground">Light Mode</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Bright mint & lavender</p>
+                  </div>
+                  {theme === 'light' && (
+                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                      <Check className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                </button>
+
+                {/* Dark Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme('dark')}
+                  className={`group relative flex flex-col items-center gap-3 p-4 rounded-2xl border text-left transition-all ${
+                    theme === 'dark'
+                      ? 'border-primary ring-2 ring-primary/30 bg-primary/5 shadow-xs'
+                      : 'border-border/80 bg-secondary/40 hover:border-border hover:bg-secondary/70'
+                  }`}
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                    <Moon className="h-6 w-6" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-foreground">Dark Mode</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Sleek obsidian night</p>
+                  </div>
+                  {theme === 'dark' && (
+                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                      <Check className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                </button>
+
+                {/* System Mode Card */}
+                <button
+                  type="button"
+                  onClick={() => setTheme('system')}
+                  className={`group relative flex flex-col items-center gap-3 p-4 rounded-2xl border text-left transition-all ${
+                    theme === 'system'
+                      ? 'border-primary ring-2 ring-primary/30 bg-primary/5 shadow-xs'
+                      : 'border-border/80 bg-secondary/40 hover:border-border hover:bg-secondary/70'
+                  }`}
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <Laptop className="h-6 w-6" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-foreground">System Default</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Sync with device OS</p>
+                  </div>
+                  {theme === 'system' && (
+                    <span className="absolute top-2.5 right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+                      <Check className="h-2.5 w-2.5" />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* 5. Notification Preferences */}
             <div className="rounded-3xl border border-border/80 bg-card p-5 sm:p-7 shadow-xs">
               <h2 className="font-display text-lg font-bold mb-1 flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Store, Instagram, Twitter, Linkedin, Mail, ShieldCheck, Heart, MapPin } from 'lucide-react';
 import { useAuth } from '@/components/auth-provider';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export function Footer() {
   const { profile, user } = useAuth();
@@ -167,7 +168,7 @@ export function Footer() {
           <p className="text-xs text-muted-foreground text-center sm:text-left font-medium">
             © {new Date().getFullYear()} CampusCart · Built by students for students at SVCET.
           </p>
-          <div className="flex items-center gap-5 flex-wrap justify-center text-xs text-muted-foreground font-semibold">
+          <div className="flex items-center gap-4 sm:gap-5 flex-wrap justify-center text-xs text-muted-foreground font-semibold">
             <Link href="/how-it-works" className="hover:text-primary transition-colors">
               How It Works
             </Link>
@@ -177,6 +178,11 @@ export function Footer() {
             <a href="mailto:campuscartsvcet@gmail.com" className="hover:text-primary transition-colors">
               Contact Support
             </a>
+            <div className="h-4 w-px bg-border hidden sm:block" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground/80 hidden md:inline">Theme:</span>
+              <ThemeToggle variant="button" className="h-8 w-8" />
+            </div>
           </div>
         </div>
       </div>

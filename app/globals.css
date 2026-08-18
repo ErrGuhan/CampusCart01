@@ -88,8 +88,11 @@
     background: linear-gradient(180deg, #E2E4F6 0%, #EEF0FA 30%, #F5FFFA 100%);
     background-attachment: fixed;
     min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
-  .dark body {
+  .dark body,
+  html.dark body,
+  body.dark {
     background: linear-gradient(180deg, #090d16 0%, #0d1322 40%, #111827 100%);
     background-attachment: fixed;
     min-height: 100vh;
