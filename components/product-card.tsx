@@ -57,7 +57,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      image: product.images?.[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg',
+      image: product.images?.[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg',
       sellerId: product.seller?.id,
       sellerName: product.seller?.displayName || 'Campus Creator',
       sellerUsername: product.seller?.username || 'seller',
@@ -80,7 +80,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       {/* Optimized Product Image Container with zero CLS layout reservation */}
       <div className="relative aspect-square w-full overflow-hidden shimmer-placeholder select-none">
         <Image
-          src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
+          src={product.images[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'}
           alt={product.name}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

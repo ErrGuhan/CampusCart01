@@ -609,7 +609,7 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
                               <Image
                                 src={
                                   p.images[0] ||
-                                  'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'
+                                  'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'
                                 }
                                 alt={p.name}
                                 fill

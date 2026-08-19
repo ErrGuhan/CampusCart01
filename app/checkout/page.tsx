@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/components/auth-provider';
 import { db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { useCart } from '@/components/cart-provider';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -196,6 +196,26 @@ export default function CheckoutPage() {
     }
 
     // Automatically update product stock in real time
+    for (const item of orderItems) {
+      if (item.productId) {
+        try {
+          const pRef = doc(db, 'products', item.productId);
+          const pSnap = await getDoc(pRef);
+          if (pSnap.exists()) {
+            const currentInv = Number(pSnap.data().inventory) || 1;
+            const newInv = Math.max(0, currentInv - item.quantity);
+            await updateDoc(pRef, {
+              inventory: newInv,
+              status: newInv === 0 ? 'out_of_stock' : (pSnap.data().status || 'active'),
+              updated_at: new Date().toISOString(),
+            });
+          }
+        } catch (e) {
+          console.warn('Firestore stock decrement notice:', e);
+        }
+      }
+    }
+
     if (typeof window !== 'undefined') {
       try {
         const rawProds = localStorage.getItem('campuscart_products');

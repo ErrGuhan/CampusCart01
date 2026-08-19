@@ -75,7 +75,7 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.82): Promi
 
 // Quick fallback campus presets for sellers who need an immediate high-quality image
 const CAMPUS_PRESETS = [
-  { label: '📚 Textbook & Notes', url: 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },
+  { label: '📚 Textbook & Notes', url: 'https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },
   { label: '💻 Tech & Gadgets', url: 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },
   { label: '🎨 Art & Stationery', url: 'https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },
   { label: '⚡ Project Kit', url: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },

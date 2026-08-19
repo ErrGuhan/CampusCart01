@@ -58,7 +58,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     urlCategory ? [urlCategory] : []
   );
-  const [priceRange, setPriceRange] = useState<number[]>([0, 2000]);
+  const [priceRange, setPriceRange] = useState<number[]>([0, 100000]);
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState('relevance');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
@@ -180,7 +180,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
 
   function clearFilters() {
     setSelectedCategories([]);
-    setPriceRange([0, 2000]);
+    setPriceRange([0, 100000]);
     setMinRating(0);
     setSearch('');
   }
@@ -188,7 +188,7 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
   const activeFilterCount =
     selectedCategories.length +
     (minRating > 0 ? 1 : 0) +
-    (priceRange[0] !== 0 || priceRange[1] !== 2000 ? 1 : 0);
+    (priceRange[0] !== 0 || priceRange[1] < 50000 ? 1 : 0);
 
   const FilterContent = () => (
     <div className="space-y-6 text-xs">
@@ -222,13 +222,13 @@ export function ProductsBrowser({ products: initialProducts, categories }: Props
             value={priceRange}
             onValueChange={setPriceRange}
             min={0}
-            max={2000}
-            step={50}
+            max={50000}
+            step={100}
             className="mb-3"
           />
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>₹{priceRange[0]}</span>
-            <span>₹{priceRange[1]}</span>
+            <span>₹{priceRange[1] >= 50000 ? '50,000+' : priceRange[1]}</span>
           </div>
         </div>
       </div>

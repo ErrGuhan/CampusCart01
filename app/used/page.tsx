@@ -64,8 +64,8 @@ export default function UsedMarketplacePage() {
     return products.filter((p) => {
       const isUsedItem =
         p.isUsed ||
-        (p.tags && p.tags.some((t) => ['used', 'second-hand', 'preowned', 'secondhand', 'notes', 'drafter'].includes(t.toLowerCase()))) ||
-        p.price < 500;
+        (p.condition !== undefined && p.condition !== 'new') ||
+        (p.tags && p.tags.some((t) => ['used', 'second-hand', 'preowned', 'secondhand', 'pre-owned'].includes(t.toLowerCase())));
 
       const matchesSearch =
         !search ||

@@ -144,7 +144,23 @@ export async function addProductReview(
 
 // ---------- Freelance Gigs & Services ----------
 
-function mapDocToGig(data: any, id: string): ServiceGig {
+export function isValidGig(g: any): boolean {
+  if (!g) return false;
+  const title = typeof g.title === 'string' ? g.title.trim() : '';
+  const price = Number(g.startingPrice);
+  if (!title || title.length < 3) return false;
+  if (isNaN(price) || price <= 0) return false;
+  return true;
+}
+
+function mapDocToGig(data: any, id: string): ServiceGig | null {
+  if (!data) return null;
+  const title = typeof data.title === 'string' ? data.title.trim() : '';
+  const price = Number(data.starting_price ?? data.startingPrice);
+  if (!title || isNaN(price) || price <= 0) {
+    return null;
+  }
+
   const seller: Seller = {
     id: data.seller_id || data.sellerId || 'seller',
     username: data.sellerUsername || data.seller_username || 'creator',
@@ -163,11 +179,11 @@ function mapDocToGig(data: any, id: string): ServiceGig {
     id: id || data.id,
     sellerId: data.seller_id || data.sellerId,
     seller,
-    title: data.title || 'Student Freelance Service',
+    title: title,
     slug: data.slug || id,
     description: data.description || '',
     category: data.category || 'Design & Posters',
-    startingPrice: Number(data.starting_price ?? data.startingPrice) || 200,
+    startingPrice: price,
     deliveryTimeDays: Number(data.delivery_time_days ?? data.deliveryTimeDays) || 2,
     revisions: Number(data.revisions) || 2,
     tags: Array.isArray(data.tags) ? data.tags : [],
@@ -185,7 +201,7 @@ export async function getAllGigsAdmin(): Promise<ServiceGig[]> {
   const gigMap = new Map<string, ServiceGig>();
 
   // 1. Initial base gigs
-  DEFAULT_GIGS.forEach((g) => gigMap.set(g.id, g));
+  DEFAULT_GIGS.filter(isValidGig).forEach((g) => gigMap.set(g.id, g));
 
   // 2. Fetch from Firestore
   try {
@@ -193,7 +209,9 @@ export async function getAllGigsAdmin(): Promise<ServiceGig[]> {
     if (!snap.empty) {
       snap.forEach((docSnap) => {
         const gig = mapDocToGig(docSnap.data(), docSnap.id);
-        gigMap.set(gig.id, gig);
+        if (gig && isValidGig(gig)) {
+          gigMap.set(gig.id, gig);
+        }
       });
     }
   } catch (err) {
@@ -207,20 +225,24 @@ export async function getAllGigsAdmin(): Promise<ServiceGig[]> {
       if (localGigsStr) {
         const localGigs = JSON.parse(localGigsStr);
         if (Array.isArray(localGigs)) {
-          localGigs.forEach((g: ServiceGig) => {
+          const cleanedLocal = localGigs.filter(isValidGig);
+          cleanedLocal.forEach((g: ServiceGig) => {
             if (g.id) gigMap.set(g.id, g);
           });
+          if (cleanedLocal.length !== localGigs.length) {
+            localStorage.setItem('campuscart_gigs', JSON.stringify(cleanedLocal));
+          }
         }
       }
     } catch {}
   }
 
-  return Array.from(gigMap.values());
+  return Array.from(gigMap.values()).filter(isValidGig);
 }
 
 export async function getAllGigs(): Promise<ServiceGig[]> {
   const all = await getAllGigsAdmin();
-  return all.filter((g) => g.status === 'active');
+  return all.filter((g) => isValidGig(g) && (g.status === 'active' || g.status === 'pending_approval'));
 }
 
 export async function getFeaturedGigs(limitCount = 4): Promise<ServiceGig[]> {
@@ -364,14 +386,38 @@ export function mapDocToSeller(data: any, id: string, stats?: { rating?: number;
   };
 }
 
-function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product {
-  const images = Array.isArray(data.images)
-    ? data.images
+export function isValidProduct(p: any): boolean {
+  if (!p) return false;
+  const name = typeof p.name === 'string' ? p.name.trim() : '';
+  const price = Number(p.price);
+
+  // Must have a genuine non-empty name (at least 2 chars, not a placeholder "Product" with 0 price)
+  if (!name || name.length < 2) return false;
+  if (name.toLowerCase() === 'product' && (isNaN(price) || price <= 0)) return false;
+
+  // Must have a valid positive price
+  if (isNaN(price) || price <= 0) return false;
+
+  return true;
+}
+
+function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product | null {
+  if (!data) return null;
+  const name = typeof data.name === 'string' ? data.name.trim() : '';
+  const price = Number(data.price);
+
+  // If essential product fields are missing or price is 0/NaN, reject as fake/incomplete record
+  if (!name || isNaN(price) || price <= 0) {
+    return null;
+  }
+
+  const images = Array.isArray(data.images) && data.images.length > 0
+    ? data.images.filter((img: any) => typeof img === 'string' && img.trim().length > 0)
     : data.imageUrl
     ? [data.imageUrl]
     : data.image
     ? [data.image]
-    : ['https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'];
+    : [];
 
   const rawSeller = data.seller || {};
   const sellerId = rawSeller.id || data.seller_id || data.sellerId || 'seller';
@@ -399,13 +445,13 @@ function mapDocToProduct(data: any, id: string, sellerData?: Seller): Product {
   return {
     id: id || data.id,
     slug: data.slug || id,
-    name: data.name || 'Product',
+    name: name,
     description: data.description || '',
-    price: Number(data.price) || 0,
+    price: price,
     discountPrice: data.discount_price != null ? Number(data.discount_price) : data.discountPrice != null ? Number(data.discountPrice) : undefined,
     category: data.category || 'Other',
     tags: Array.isArray(data.tags) ? data.tags : [],
-    images,
+    images: images.length > 0 ? images : ['https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'],
     inventory: Number(data.inventory) || 0,
     status: data.status || 'active',
     rating: Number(data.rating) || 5.0,
@@ -480,7 +526,7 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
   const prodMap = new Map<string, Product>();
 
   // 1. Base verified catalog
-  DEFAULT_PRODUCTS.forEach((p) => prodMap.set(p.id, { ...p }));
+  DEFAULT_PRODUCTS.filter(isValidProduct).forEach((p) => prodMap.set(p.id, { ...p }));
 
   // 2. Fetch from Firestore
   try {
@@ -488,7 +534,9 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
     if (!snap.empty) {
       snap.forEach((docSnap) => {
         const prod = mapDocToProduct(docSnap.data(), docSnap.id);
-        prodMap.set(prod.id, prod);
+        if (prod && isValidProduct(prod)) {
+          prodMap.set(prod.id, prod);
+        }
       });
     }
   } catch (err) {
@@ -502,15 +550,19 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
       if (localProdsStr) {
         const localProds = JSON.parse(localProdsStr);
         if (Array.isArray(localProds)) {
-          localProds.forEach((p: Product) => {
+          const cleanedLocal = localProds.filter(isValidProduct);
+          cleanedLocal.forEach((p: Product) => {
             if (p.id) prodMap.set(p.id, p);
           });
+          if (cleanedLocal.length !== localProds.length) {
+            localStorage.setItem('campuscart_products', JSON.stringify(cleanedLocal));
+          }
         }
       }
     } catch {}
   }
 
-  const products = Array.from(prodMap.values());
+  const products = Array.from(prodMap.values()).filter(isValidProduct);
 
   // 4. Enrich & synchronize seller details with live profiles from Firestore and local cache
   try {
@@ -591,7 +643,7 @@ export async function getAllProductsAdmin(): Promise<Product[]> {
 
 export async function getAllProducts(): Promise<Product[]> {
   const all = await getAllProductsAdmin();
-  return all.filter((p) => p.status === 'active' || p.status === 'out_of_stock');
+  return all.filter((p) => isValidProduct(p) && (p.status === 'active' || p.status === 'out_of_stock'));
 }
 
 export async function createProduct(product: Product): Promise<Product> {
@@ -639,7 +691,7 @@ export async function createProduct(product: Product): Promise<Product> {
       digital_file_url: fullProduct.digitalFileUrl || '',
       images: fullProduct.images && fullProduct.images.length > 0
         ? fullProduct.images
-        : ['https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'],
+        : ['https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'],
       rating: fullProduct.rating || 5.0,
       review_count: fullProduct.reviewCount || 0,
       is_verified: fullProduct.isVerified ?? false,
@@ -966,16 +1018,32 @@ export async function getNewArrivals(limitCount = 4): Promise<Product[]> {
 
 export async function getDiscountedProducts(): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.filter((p) => p.discountPrice !== undefined);
+  return all.filter((p) => p.discountPrice !== undefined && p.discountPrice > 0 && p.discountPrice < p.price);
 }
 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const all = await getAllProducts();
-  return all.filter(
-    (p) =>
-      p.category.toLowerCase().replace(/[^a-z0-9]+/g, '-') ===
-      categorySlug.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const cleanTarget = (categorySlug || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  
+  const matchedCategory = DEFAULT_CATEGORIES.find(
+    (c) =>
+      c.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-') === cleanTarget ||
+      c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === cleanTarget ||
+      c.slug.toLowerCase() === (categorySlug || '').toLowerCase()
   );
+
+  return all.filter((p) => {
+    const pCatClean = (p.category || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const pCatRaw = (p.category || '').toLowerCase().trim();
+
+    if (pCatClean === cleanTarget) return true;
+    if (matchedCategory) {
+      if (pCatRaw === matchedCategory.name.toLowerCase().trim()) return true;
+      if (pCatClean === matchedCategory.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-')) return true;
+      if (pCatClean === matchedCategory.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')) return true;
+    }
+    return false;
+  });
 }
 
 export async function getProductsBySeller(username: string): Promise<Product[]> {

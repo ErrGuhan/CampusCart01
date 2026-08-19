@@ -8,7 +8,7 @@ import {
   ShieldCheck, ShieldAlert, CheckCircle2, XCircle, Clock,
   Package, Sparkles, Store, Users, ExternalLink, RefreshCw,
   Search, Eye, AlertCircle, Check, X, FileText, ArrowRight,
-  Filter, Tag, DollarSign, MapPin, Download, AlertTriangle,
+  Filter, Tag, DollarSign, MapPin, Download, AlertTriangle, Trash2,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -21,6 +21,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -31,6 +35,8 @@ import {
   rejectProduct,
   approveGig,
   rejectGig,
+  deleteProduct,
+  deleteGig,
 } from '@/lib/firebase-queries';
 import type { Product, ServiceGig, Seller } from '@/lib/types';
 
@@ -60,6 +66,10 @@ export default function AdminDashboardPage() {
   const [selectedGig, setSelectedGig] = useState<ServiceGig | null>(null);
   const [rejectGigModalOpen, setRejectGigModalOpen] = useState(false);
   const [gigRejectReason, setGigRejectReason] = useState('');
+
+  // Delete Confirmation Dialogs
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [gigToDelete, setGigToDelete] = useState<ServiceGig | null>(null);
 
   const loadAdminData = useCallback(async () => {
     setDataLoading(true);
@@ -193,6 +203,50 @@ export default function AdminDashboardPage() {
       loadAdminData();
     } catch (err: any) {
       toast({ title: 'Rejection failed', variant: 'destructive' });
+      loadAdminData();
+    } finally {
+      setActionInProgress(false);
+    }
+  }
+
+  async function handleConfirmDeleteProduct() {
+    if (!productToDelete) return;
+    const targetId = productToDelete.id;
+    const targetName = productToDelete.name;
+    setProducts((prev) => prev.filter((p) => p.id !== targetId));
+    setProductToDelete(null);
+    setActionInProgress(true);
+    try {
+      await deleteProduct(targetId);
+      toast({
+        title: 'Listing Removed 🗑️',
+        description: `"${targetName}" has been permanently deleted.`,
+      });
+      loadAdminData();
+    } catch (err: any) {
+      toast({ title: 'Delete failed', variant: 'destructive' });
+      loadAdminData();
+    } finally {
+      setActionInProgress(false);
+    }
+  }
+
+  async function handleConfirmDeleteGig() {
+    if (!gigToDelete) return;
+    const targetId = gigToDelete.id;
+    const targetTitle = gigToDelete.title;
+    setGigs((prev) => prev.filter((g) => g.id !== targetId));
+    setGigToDelete(null);
+    setActionInProgress(true);
+    try {
+      await deleteGig(targetId);
+      toast({
+        title: 'Service Removed 🗑️',
+        description: `"${targetTitle}" has been permanently deleted.`,
+      });
+      loadAdminData();
+    } catch (err: any) {
+      toast({ title: 'Delete failed', variant: 'destructive' });
       loadAdminData();
     } finally {
       setActionInProgress(false);
@@ -465,7 +519,7 @@ export default function AdminDashboardPage() {
                           {/* Image */}
                           <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-secondary/50 border border-border">
                             <Image
-                              src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
+                              src={product.images[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'}
                               alt={product.name}
                               fill
                               sizes="128px"
@@ -624,6 +678,17 @@ export default function AdminDashboardPage() {
                                 Preview
                               </Link>
                             </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setProductToDelete(product)}
+                              disabled={actionInProgress}
+                              className="w-full text-destructive hover:bg-destructive/10 rounded-xl text-xs gap-1"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Delete
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -779,6 +844,17 @@ export default function AdminDashboardPage() {
                                 Preview
                               </Link>
                             </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setGigToDelete(gig)}
+                              disabled={actionInProgress}
+                              className="w-full text-destructive hover:bg-destructive/10 rounded-xl text-xs gap-1"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Delete
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -919,6 +995,48 @@ export default function AdminDashboardPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Product Confirmation Alert Dialog */}
+        <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-display">Permanently Delete Product?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to permanently remove <strong>&quot;{productToDelete?.name}&quot;</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl text-xs">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDeleteProduct}
+                className="rounded-xl text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Permanently
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Gig Confirmation Alert Dialog */}
+        <AlertDialog open={!!gigToDelete} onOpenChange={(open) => !open && setGigToDelete(null)}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-display">Permanently Delete Service Gig?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to permanently remove <strong>&quot;{gigToDelete?.title}&quot;</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl text-xs">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDeleteGig}
+                className="rounded-xl text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Permanently
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
       <Footer />
     </>

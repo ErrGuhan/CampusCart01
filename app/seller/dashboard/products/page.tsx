@@ -238,7 +238,7 @@ export default function SellerProductsPage() {
           deliveryAvailable: formData.delivery,
           isDigital: formData.isDigital || false,
           digitalFileUrl: formData.digitalFileUrl || '',
-          images: [formData.imageUrl || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940'],
+          images: [formData.imageUrl || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'],
           rating: editProduct?.rating ?? 5.0,
           reviewCount: editProduct?.reviewCount ?? 0,
           isVerified: isProductVerified,
@@ -537,24 +537,51 @@ function ProductForm({
   const [status, setStatus] = useState<ProductStatus>(product?.status || 'active');
 
   function handleSubmit() {
-    if (!name.trim()) {
+    if (!name.trim() || name.trim().length < 3) {
       toast({
         title: 'Product name required',
-        description: 'Please enter a name for the product.',
+        description: 'Please enter a valid descriptive title (minimum 3 characters).',
         variant: 'destructive',
       });
       return;
     }
     const parsedPrice = parseFloat(price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
       toast({
         title: 'Valid price required',
-        description: 'Please enter a valid product price.',
+        description: 'Please enter a valid price (minimum ₹1).',
         variant: 'destructive',
       });
       return;
     }
     const parsedDiscount = discountPrice.trim() ? parseFloat(discountPrice) : undefined;
+    if (parsedDiscount !== undefined && (isNaN(parsedDiscount) || parsedDiscount <= 0 || parsedDiscount >= parsedPrice)) {
+      toast({
+        title: 'Invalid discount price',
+        description: 'Discount price must be less than regular price and greater than ₹0.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!imageUrl.trim()) {
+      toast({
+        title: 'Product photo required',
+        description: 'Please upload a clear photo of the product.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isDigital && !digitalFileUrl.trim()) {
+      toast({
+        title: 'Digital link required',
+        description: 'Please provide the download link or Google Drive / GitHub URL.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const parsedInventory = parseInt(inventory, 10);
     const tagList = tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
 
@@ -563,10 +590,10 @@ function ProductForm({
       description: description.trim(),
       price: parsedPrice,
       discountPrice: parsedDiscount && !isNaN(parsedDiscount) ? parsedDiscount : undefined,
-      category: category || (categories[0]?.name ?? 'Other'),
-      inventory: isNaN(parsedInventory) || parsedInventory < 0 ? 0 : parsedInventory,
+      category: category || (categories[0]?.name ?? 'Hardware & Tools'),
+      inventory: isNaN(parsedInventory) || parsedInventory < 0 ? 1 : parsedInventory,
       tags: tagList,
-      imageUrl: imageUrl.trim() || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+      imageUrl: imageUrl.trim(),
       pickup,
       delivery,
       isDigital,

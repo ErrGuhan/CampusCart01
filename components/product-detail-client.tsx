@@ -124,7 +124,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      image: product.images?.[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg',
+      image: product.images?.[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg',
       sellerId: product.seller?.id,
       sellerName: product.seller?.displayName || 'Campus Creator',
       sellerUsername: product.seller?.username || 'seller',
@@ -145,7 +145,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       name: product.name,
       price: product.price,
       discountPrice: product.discountPrice,
-      image: product.images?.[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg',
+      image: product.images?.[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg',
       sellerId: product.seller?.id,
       sellerName: product.seller?.displayName || 'Campus Creator',
       sellerUsername: product.seller?.username || 'seller',
@@ -196,7 +196,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
           <div className="lg:col-span-5 space-y-4">
             <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-secondary/20 aspect-square shadow-sm group">
               <Image
-                src={product.images[selectedImage] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
+                src={product.images[selectedImage] || product.images[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'}
                 alt={product.name}
                 fill
                 priority

@@ -178,7 +178,7 @@ export default function OrderDetailPage() {
                         className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary/50"
                       >
                         <Image
-                          src={item.image || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
+                          src={item.image || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'}
                           alt={item.name}
                           fill
                           sizes="64px"

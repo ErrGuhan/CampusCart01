@@ -153,7 +153,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                 >
                   <div className="relative h-9 w-9 rounded-lg overflow-hidden bg-secondary/50 shrink-0 border border-border/60">
                     <Image
-                      src={product.images[0] || 'https://images.pexels.com/photos/28867382/pexels-photo-28867382.jpeg'}
+                      src={product.images[0] || 'https://images.pexels.com/photos/3182773/pexels-photo-3182773.jpeg'}
                       alt={product.name}
                       fill
                       sizes="36px"
