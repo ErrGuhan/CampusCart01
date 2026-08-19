@@ -137,20 +137,20 @@ export function Navbar() {
         'border-b border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-xl shadow-xs'
       )}
     >
-      <div className="px-2.5 sm:px-4 lg:px-6 mx-auto max-w-7xl w-full min-w-0">
+      <div className="px-3 sm:px-4 lg:px-6 mx-auto max-w-7xl w-full min-w-0">
         {/* Auto-Adjusting Responsive Header Bar for Every Screen */}
-        <div className="flex h-16 sm:h-18 items-center justify-between w-full gap-1.5 sm:gap-2 lg:gap-3 min-w-0">
+        <div className="flex h-15 xs:h-16 sm:h-18 items-center justify-between w-full gap-1.5 sm:gap-2 lg:gap-3 min-w-0">
           {/* Left: Mobile Menu + Blue Squircle Logo + Bold CampusCart text */}
-          <div className="flex items-center gap-2 xs:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 shrink-0 min-w-0">
             {/* Mobile Sheet Trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <button
                   type="button"
-                  className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+                  className="md:hidden flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 rounded-xl text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
                   aria-label="Open navigation menu"
                 >
-                  <Menu className="h-6 w-6 stroke-[2.2]" />
+                  <Menu className="h-5 w-5 xs:h-5.5 xs:w-5.5 stroke-[2.2]" />
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[88vw] max-w-sm p-0 flex flex-col bg-card/95 dark:bg-card/95 backdrop-blur-xl border-r border-border/80">
@@ -435,8 +435,8 @@ export function Navbar() {
             </Sheet>
 
             {/* Brand Logo */}
-            <Link href="/" className="flex items-center gap-2 xs:gap-2.5 shrink-0 group">
-              <div className="relative flex h-9.5 w-9.5 xs:h-10 xs:w-10 sm:h-11 sm:w-11 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 shrink-0 group min-w-0">
+              <div className="relative flex h-8.5 w-8.5 xs:h-9 xs:w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Image
                   src="/images/logo/logo-icon.png"
                   alt="CampusCart Logo"
@@ -446,7 +446,7 @@ export function Navbar() {
                   className="object-contain w-full h-full filter drop-shadow-xs"
                 />
               </div>
-              <span className="font-display text-lg xs:text-xl sm:text-2xl font-black tracking-tight text-foreground leading-none">
+              <span className="font-display text-base xs:text-lg sm:text-xl md:text-2xl font-black tracking-tight text-foreground leading-none">
                 Campus<span className="text-amber-500 dark:text-amber-400">Cart</span>
               </span>
             </Link>
@@ -513,15 +513,15 @@ export function Navbar() {
           </div>
 
           {/* Right Action Icons - Optimized responsive targets */}
-          <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 shrink-0">
+          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
             {/* Mobile Search Toggle */}
             <button
               type="button"
-              className="lg:hidden flex items-center justify-center h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="lg:hidden flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
               onClick={() => setSearchCommandOpen(true)}
               aria-label="Open campus search"
             >
-              <Search className="h-5 w-5 stroke-[2.2]" />
+              <Search className="h-4.5 w-4.5 xs:h-5 xs:w-5 stroke-[2.2]" />
             </button>
 
             {/* Quick Access: Admin Approval Center (Desktop 2xl) */}
@@ -590,11 +590,11 @@ export function Navbar() {
             <Link
               href="/cart"
               aria-label="Shopping Cart"
-              className="relative flex items-center justify-center h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="relative flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
             >
-              <ShoppingCart className="h-5 w-5 stroke-[1.8]" />
+              <ShoppingCart className="h-4.5 w-4.5 xs:h-5 xs:w-5 stroke-[1.8]" />
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-badge-pulse shadow-xs">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 xs:h-4.5 xs:min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[9px] xs:text-[10px] font-bold text-primary-foreground animate-badge-pulse shadow-xs">
                   {totalItems > 99 ? '99+' : totalItems}
                 </span>
               )}
@@ -602,16 +602,16 @@ export function Navbar() {
 
             {/* User Account / Profile dropdown or Login buttons - Always Visible */}
             {loading ? (
-              <div className="h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse shrink-0" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center justify-center h-9.5 w-9.5 sm:h-10 sm:w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0 overflow-hidden"
+                    className="flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0 overflow-hidden"
                     aria-label="Account menu"
                   >
-                    <Avatar className="h-8.5 w-8.5 sm:h-9 sm:w-9 ring-2 ring-primary/20 shrink-0 overflow-hidden">
+                    <Avatar className="h-8 w-8 xs:h-8.5 xs:w-8.5 sm:h-9 sm:w-9 ring-2 ring-primary/20 shrink-0 overflow-hidden">
                       {profile?.avatar_url && (
                         <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} className="h-full w-full object-cover" />
                       )}
@@ -815,13 +815,24 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-9 px-2.5 sm:px-3">
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button size="sm" asChild className="btn-gradient-primary rounded-xl text-xs h-9 px-3 sm:px-3.5 shadow-xs font-bold">
-                  <Link href="/register">Join Campus</Link>
-                </Button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Mobile User Icon shortcut for guests */}
+                <Link
+                  href="/login"
+                  aria-label="Sign in to your account"
+                  className="sm:hidden flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+                >
+                  <User className="h-4.5 w-4.5 xs:h-5 xs:w-5 stroke-[1.8]" />
+                </Link>
+                {/* Desktop Sign In / Join buttons */}
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-9 px-2.5 sm:px-3">
+                    <Link href="/login">Sign In</Link>
+                  </Button>
+                  <Button size="sm" asChild className="btn-gradient-primary rounded-xl text-xs h-9 px-3 sm:px-3.5 shadow-xs font-bold">
+                    <Link href="/register">Join Campus</Link>
+                  </Button>
+                </div>
               </div>
             )}
           </div>

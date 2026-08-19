@@ -23,11 +23,28 @@ export interface ApiResponse<T = any> {
   };
 }
 
+export function getApiBaseUrl(): string {
+  // If an explicit API URL is configured (e.g. deployed backend URL), use it
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+  }
+
+  // In the browser, only attempt localhost:5000 if the website is actually running on localhost/127.0.0.1
+  // This prevents Chrome's Private Network Access ("Access other apps and services") permission prompt on public domains
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+    return isLocalhost ? 'http://localhost:5000/api' : '/api';
+  }
+
+  return process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
+}
+
 export async function secureApiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const baseUrl = getApiBaseUrl();
   const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
   const headers = new Headers(options.headers || {});
@@ -52,11 +69,22 @@ export async function secureApiRequest<T = any>(
       credentials: 'include', // Transmit and receive HttpOnly cookies securely
     });
 
-    const data = await response.json();
+    let data: any;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: text || response.statusText };
+      }
+    }
 
     if (!response.ok) {
       // Check for token expiration and attempt auto-rotation
-      if (data.code === 'TOKEN_EXPIRED') {
+      if (data?.code === 'TOKEN_EXPIRED') {
         const refreshRes = await fetch(`${baseUrl}/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
@@ -69,7 +97,7 @@ export async function secureApiRequest<T = any>(
 
       return {
         success: false,
-        error: data.error || `HTTP error ${response.status}: ${response.statusText}`,
+        error: data?.error || `HTTP error ${response.status}: ${response.statusText}`,
       };
     }
 
