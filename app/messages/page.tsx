@@ -8,7 +8,7 @@ import {
   ChevronLeft, Loader2, Info, MapPin, Handshake, ShoppingBag,
   Settings, Bell, Plus, Mic, Copy, ThumbsUp, Volume2, RotateCcw,
   Check, X, Trash2, MoreVertical, BellRing, ExternalLink,
-  AlertTriangle,
+  Globe, Shield, MessageCircle, ExternalLink as LinkIcon, Radio
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -34,44 +34,32 @@ import {
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'next/navigation';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import {
-  getConversations,
-  getMessages,
-  sendChatMessage,
-  deleteConversation,
-  getNotifications,
-  markNotificationRead,
-} from '@/lib/firebase-queries';
-import type { Conversation, ChatMessage, NotificationItem } from '@/lib/types';
+import { useChatSocket, ChatSocketMessage, ProductContext } from '@/hooks/use-chat-socket';
+import { getConversations, getMessages, getNotifications, markNotificationRead, deleteConversation } from '@/lib/firebase-queries';
+import type { Conversation, NotificationItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-// Deduplicate message arrays by ID and prevent rapid duplicate bubbles
-function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
-  const map = new Map<string, ChatMessage>();
-  existing.forEach((m) => map.set(m.id, m));
-  incoming.forEach((m) => map.set(m.id, m));
+// Const ID for Global Campus Hub Room
+const GLOBAL_HUB_ID = 'campus_global_hub';
 
-  const sorted = Array.from(map.values()).sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
-
-  const deduplicated: ChatMessage[] = [];
-  for (const msg of sorted) {
-    const isDuplicate = deduplicated.some(
-      (prev) =>
-        prev.id === msg.id ||
-        (prev.senderId === msg.senderId &&
-          prev.text.trim() === msg.text.trim() &&
-          Math.abs(new Date(prev.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 3000)
-    );
-    if (!isDuplicate) {
-      deduplicated.push(msg);
-    }
+// Regex helper to extract product context from text format [Re: "Product Title"]
+function extractProductContext(text: string, contextObject?: ProductContext | null) {
+  if (contextObject && contextObject.title) {
+    return { product: contextObject, cleanText: text };
   }
 
-  return deduplicated;
+  const regex = /\[Re:\s*["']?([^"']+)["']?\]/i;
+  const match = text.match(regex);
+  if (match) {
+    const title = match[1].trim();
+    const cleanText = text.replace(regex, '').trim();
+    return {
+      product: { id: 'ctx_' + title, title, price: undefined },
+      cleanText: cleanText || text,
+    };
+  }
+
+  return { product: null, cleanText: text };
 }
 
 function MessagesContent() {
@@ -81,9 +69,21 @@ function MessagesContent() {
   const targetNameParam = searchParams.get('name');
   const { toast } = useToast();
 
+  // Socket.io Real-time Hook Integration (Phase 3)
+  const {
+    isConnected,
+    globalMessages: socketGlobalMessages,
+    directMessages: socketDirectMessages,
+    typingUsers,
+    joinDirectChat,
+    sendDirectMessage,
+    sendGlobalMessage,
+    emitTyping,
+  } = useChatSocket();
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConvId, setActiveConvId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string>(GLOBAL_HUB_ID);
+  const [messages, setMessages] = useState<ChatSocketMessage[]>([]);
   const [inputMsg, setInputMsg] = useState('');
   const [search, setSearch] = useState('');
   const [activeFilterTag, setActiveFilterTag] = useState<'all' | 'unread' | 'offers'>('all');
@@ -92,6 +92,9 @@ function MessagesContent() {
   const [sending, setSending] = useState(false);
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+
+  // Mobile sidebar touch gesture state (Phase 2 Requirement 1)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Notification Modal States
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
@@ -105,7 +108,7 @@ function MessagesContent() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chatScrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Smoothly scroll only the chat message list without jumping the window
+  // Smooth auto-scroll helper
   const scrollToBottom = useCallback((smooth = true) => {
     if (chatScrollContainerRef.current) {
       chatScrollContainerRef.current.scrollTo({
@@ -115,81 +118,60 @@ function MessagesContent() {
     }
   }, []);
 
-  // Load and merge real conversations for the authenticated user
+  // Sync real-time socket messages into local messages state for active chat
+  useEffect(() => {
+    if (activeConvId === GLOBAL_HUB_ID) {
+      setMessages((prev) => {
+        const map = new Map<string, ChatSocketMessage>();
+        prev.forEach((m) => map.set(m.id, m));
+        socketGlobalMessages.forEach((m) => map.set(m.id, m));
+        return Array.from(map.values()).sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+    } else if (activeConvId && socketDirectMessages[activeConvId]) {
+      const roomMsgs = socketDirectMessages[activeConvId];
+      setMessages((prev) => {
+        const map = new Map<string, ChatSocketMessage>();
+        prev.forEach((m) => map.set(m.id, m));
+        roomMsgs.forEach((m) => map.set(m.id, m));
+        return Array.from(map.values()).sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+    }
+    setTimeout(() => scrollToBottom(true), 40);
+  }, [activeConvId, socketGlobalMessages, socketDirectMessages, scrollToBottom]);
+
+  // Load user conversations
   const loadUserConversations = useCallback(async () => {
     if (!user) return;
-
     const convs = await getConversations(user.uid);
-
     const sorted = [...convs].sort((a, b) => {
       const timeA = new Date(a.lastMessageTimestamp).getTime() || 0;
       const timeB = new Date(b.lastMessageTimestamp).getTime() || 0;
       return timeB - timeA;
     });
-
-    setConversations((prev) => {
-      const map = new Map<string, Conversation>();
-      sorted.forEach((c) => map.set(c.id, c));
-      prev.forEach((c) => {
-        if (!map.has(c.id)) map.set(c.id, c);
-      });
-      return Array.from(map.values()).sort(
-        (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
-      );
-    });
-
-    if (!activeConvId && sorted.length > 0 && !targetUserParam) {
-      setActiveConvId(sorted[0].id);
-    }
-  }, [user, activeConvId, targetUserParam]);
-
-  // Load notifications for the bell icon
-  const loadUserNotifications = useCallback(async () => {
-    if (!user) return;
-    try {
-      const notifs = await getNotifications(user.uid);
-      setNotifications(notifs);
-    } catch {}
+    setConversations(sorted);
   }, [user]);
 
+  // Load notifications
   useEffect(() => {
-    loadUserNotifications();
-  }, [loadUserNotifications]);
-
-  // Real-time listener for ALL user conversations in Firestore
-  useEffect(() => {
-    if (!user) return;
-    loadUserConversations();
-
-    let unsubscribeChats = () => {};
-    try {
-      const q = query(
-        collection(db, 'chats'),
-        where('participants', 'array-contains', user.uid)
-      );
-      unsubscribeChats = onSnapshot(
-        q,
-        () => {
-          loadUserConversations();
-        },
-        (err) => {
-          console.warn('Firestore chats snapshot notice:', err);
-        }
-      );
-    } catch (err) {
-      console.warn('Firestore chats query notice:', err);
+    if (user) {
+      loadUserConversations();
+      getNotifications(user.uid).then(setNotifications).catch(() => {});
     }
-
-    return () => unsubscribeChats();
   }, [user, loadUserConversations]);
 
-  // Handle URL target user param
+  // Handle URL target user param for direct messages
   useEffect(() => {
     if (!user || !targetUserParam) return;
     const sorted = [user.uid, targetUserParam].sort();
     const computedId = `chat_${sorted[0]}_${sorted[1]}`;
     setActiveConvId(computedId);
     setMobileView('chat');
+
+    joinDirectChat(user.uid, targetUserParam);
 
     const draftConv: Conversation = {
       id: computedId,
@@ -211,175 +193,134 @@ function MessagesContent() {
       if (prev.some((c) => c.id === computedId)) return prev;
       return [draftConv, ...prev];
     });
-  }, [user, targetUserParam, targetNameParam, profile]);
+  }, [user, targetUserParam, targetNameParam, profile, joinDirectChat]);
 
-  // Real-time listener for active conversation
-  useEffect(() => {
-    if (!activeConvId) return;
-
-    getMessages(activeConvId).then((msgs) => {
-      setMessages((prev) => mergeMessages(prev, msgs));
-      setTimeout(() => scrollToBottom(false), 50);
-    });
-
-    let unsubscribe = () => {};
-    try {
-      const q = query(
-        collection(db, 'chats', activeConvId, 'messages'),
-        orderBy('createdAt', 'asc')
-      );
-      unsubscribe = onSnapshot(
-        q,
-        (snap) => {
-          if (!snap.empty) {
-            const incoming: ChatMessage[] = [];
-            snap.forEach((d) => {
-              const data = d.data();
-              incoming.push({
-                id: d.id,
-                conversationId: activeConvId,
-                senderId: data.senderId,
-                senderName: data.senderName,
-                senderAvatar: data.senderAvatar || '',
-                recipientId: data.recipientId || '',
-                text: data.text || '',
-                createdAt: typeof data.createdAt === 'string' ? data.createdAt : new Date().toISOString(),
-              });
-            });
-            setMessages((prev) => mergeMessages(prev, incoming));
-            setTimeout(() => scrollToBottom(true), 50);
-          }
-        },
-        (err) => {
-          console.warn('Firestore snapshot notice in MessagesPage:', err);
-        }
-      );
-    } catch (e) {
-      console.warn('Firestore listener setup notice:', e);
+  // Handle selecting a conversation
+  const handleSelectConversation = (id: string, otherId?: string) => {
+    setActiveConvId(id);
+    setMobileView('chat');
+    if (id !== GLOBAL_HUB_ID && user && otherId) {
+      joinDirectChat(user.uid, otherId);
     }
+  };
 
-    const handleSync = () => {
-      getMessages(activeConvId).then((msgs) => {
-        setMessages((prev) => mergeMessages(prev, msgs));
-        setTimeout(() => scrollToBottom(false), 50);
-      });
-      loadUserConversations();
-    };
+  // Touch-swipe handlers for smooth mobile sidebar transitions (Phase 2 Requirement 1)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('campuscart_message_sent', handleSync);
-      window.addEventListener('storage', handleSync);
-      return () => {
-        unsubscribe();
-        window.removeEventListener('campuscart_message_sent', handleSync);
-        window.removeEventListener('storage', handleSync);
-      };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchEndX - touchStartX;
+
+    // Swipe right opens sidebar list on mobile
+    if (diffX > 75 && mobileView === 'chat') {
+      setMobileView('list');
     }
+    // Swipe left closes sidebar list on mobile when chat selected
+    else if (diffX < -75 && mobileView === 'list' && activeConvId) {
+      setMobileView('chat');
+    }
+    setTouchStartX(null);
+  };
 
-    return () => unsubscribe();
-  }, [activeConvId, loadUserConversations, scrollToBottom]);
-
-  useEffect(() => {
-    scrollToBottom(true);
-  }, [messages.length, scrollToBottom]);
-
+  // Send message handler (supports both Global and DM real-time socket emitting)
   async function handleSend(e?: React.FormEvent, customText?: string) {
     if (e) e.preventDefault();
     const textToSend = (customText || inputMsg).trim();
     if (!user || !activeConvId || !textToSend) return;
 
-    const currentConv = conversations.find((c) => c.id === activeConvId);
-    const otherId = currentConv?.participantIds.find((id) => id !== user.uid) || targetUserParam;
-    if (!otherId) return;
+    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const createdAt = new Date().toISOString();
+    const senderName = profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Campus Student';
+    const senderAvatar = profile?.avatar_url || '';
 
-    const otherName = currentConv?.participantNames?.[otherId] || targetNameParam || 'Campus Student';
-    const otherAvatar = currentConv?.participantAvatars?.[otherId] || '';
+    // Check if text has product context tag [Re: "..."]
+    const { product } = extractProductContext(textToSend);
 
-    const exactMessageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-    const exactCreatedAt = new Date().toISOString();
-
-    const tempMsg: ChatMessage = {
-      id: exactMessageId,
-      conversationId: activeConvId,
-      senderId: user.uid,
-      senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
-      senderAvatar: profile?.avatar_url || '',
-      recipientId: otherId,
-      text: textToSend,
-      createdAt: exactCreatedAt,
-    };
-
-    setMessages((prev) => mergeMessages(prev, [tempMsg]));
-    setInputMsg('');
     setSending(true);
-    setTimeout(() => scrollToBottom(true), 30);
+    setInputMsg('');
 
-    setConversations((prev) => {
-      const map = new Map<string, Conversation>();
-      prev.forEach((c) => map.set(c.id, c));
-      const existing = map.get(activeConvId);
-      map.set(activeConvId, {
-        id: activeConvId,
-        participantIds: existing?.participantIds || [user.uid, otherId],
-        participantNames: {
-          ...(existing?.participantNames || {}),
-          [user.uid]: profile?.display_name || user.email?.split('@')[0] || 'Student',
-          [otherId]: otherName,
-        },
-        participantAvatars: {
-          ...(existing?.participantAvatars || {}),
-          [user.uid]: profile?.avatar_url || '',
-          [otherId]: otherAvatar,
-        },
-        lastMessage: tempMsg.text,
-        lastMessageTimestamp: tempMsg.createdAt,
-        unreadCount: existing?.unreadCount || {},
+    if (activeConvId === GLOBAL_HUB_ID) {
+      // 1. Global Message Real-Time Emission (Phase 1 & 3)
+      const newGlobalMsg: ChatSocketMessage = {
+        id: messageId,
+        chatType: 'GLOBAL',
+        senderId: user.uid,
+        senderName,
+        senderAvatar,
+        content: textToSend,
+        productContext: product,
+        status: 'DELIVERED',
+        createdAt,
+      };
+
+      sendGlobalMessage({
+        senderId: user.uid,
+        senderName,
+        senderAvatar,
+        content: textToSend,
+        productContext: product || undefined,
       });
-      return Array.from(map.values()).sort(
-        (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
-      );
-    });
 
-    try {
-      await sendChatMessage({
-        id: exactMessageId,
-        createdAt: exactCreatedAt,
+      setMessages((prev) => [...prev, newGlobalMsg]);
+    } else {
+      // 2. Direct Message Real-Time Emission (Phase 1 & 3)
+      const currentConv = conversations.find((c) => c.id === activeConvId);
+      const recipientId = currentConv?.participantIds.find((id) => id !== user.uid) || targetUserParam || '';
+
+      const newDirectMsg: ChatSocketMessage = {
+        id: messageId,
+        chatType: 'DIRECT',
         conversationId: activeConvId,
         senderId: user.uid,
-        senderName: profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Student',
-        senderAvatar: profile?.avatar_url || '',
-        recipientId: otherId,
-        recipientName: otherName,
-        recipientAvatar: otherAvatar,
-        text: textToSend,
+        recipientId,
+        senderName,
+        senderAvatar,
+        content: textToSend,
+        productContext: product,
+        status: 'DELIVERED', // State indicator
+        createdAt,
+      };
+
+      sendDirectMessage({
+        senderId: user.uid,
+        recipientId,
+        senderName,
+        senderAvatar,
+        content: textToSend,
+        productContext: product || undefined,
       });
-    } catch (err: any) {
-      toast({ title: 'Message delivery notice', description: err.message, variant: 'destructive' });
-    } finally {
-      setSending(false);
-      setTimeout(() => scrollToBottom(true), 50);
+
+      setMessages((prev) => [...prev, newDirectMsg]);
+
+      // Update sidebar preview
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === activeConvId
+            ? { ...c, lastMessage: textToSend, lastMessageTimestamp: createdAt }
+            : c
+        )
+      );
     }
+
+    setSending(false);
+    setTimeout(() => scrollToBottom(true), 30);
   }
 
   // Handle Delete Conversation
   async function handleConfirmDeleteConversation() {
     if (!user || !convToDelete) return;
     setIsDeleting(true);
-
     try {
       await deleteConversation(convToDelete.id, user.uid);
       setConversations((prev) => prev.filter((c) => c.id !== convToDelete.id));
-      
       if (activeConvId === convToDelete.id) {
-        setActiveConvId(null);
-        setMessages([]);
+        setActiveConvId(GLOBAL_HUB_ID);
         setMobileView('list');
       }
-
-      toast({
-        title: 'Conversation deleted 🗑️',
-        description: `Chat with ${convToDelete.name} has been removed.`,
-      });
+      toast({ title: 'Conversation deleted 🗑️', description: `Chat with ${convToDelete.name} has been removed.` });
     } catch (err: any) {
       toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -387,26 +328,6 @@ function MessagesContent() {
       setDeleteDialogOpen(false);
       setConvToDelete(null);
     }
-  }
-
-  // Handle Clear History
-  function handleClearChatHistory() {
-    if (!activeConvId) return;
-    setMessages([]);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(`campuscart_msgs_${activeConvId}`);
-      } catch {}
-    }
-    toast({ title: 'Chat history cleared' });
-  }
-
-  // Handle Mark Notifications Read
-  async function handleMarkAllNotificationsRead() {
-    if (!user) return;
-    notifications.forEach((n) => markNotificationRead(user.uid, n.id));
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    toast({ title: 'All notifications marked as read' });
   }
 
   function handleCopy(text: string, id: string) {
@@ -426,36 +347,27 @@ function MessagesContent() {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       window.speechSynthesis.speak(utterance);
-    } else {
-      toast({ title: 'Text-to-speech not supported on this browser' });
     }
   }
 
-  const unreadNotificationsCount = useMemo(() => {
-    return notifications.filter((n) => !n.isRead).length;
-  }, [notifications]);
+  const unreadNotificationsCount = useMemo(() => notifications.filter((n) => !n.isRead).length, [notifications]);
 
   const filteredConversations = useMemo(() => {
-    let list = conversations;
-
-    if (activeFilterTag === 'offers') {
-      list = list.filter((c) => (c.lastMessage || '').toLowerCase().includes('offer') || (c.lastMessage || '').includes('₹'));
-    }
-
-    if (!search.trim()) return list;
+    if (!search.trim()) return conversations;
     const q = search.toLowerCase().trim();
-    return list.filter((c) => {
+    return conversations.filter((c) => {
       const otherId = c.participantIds.find((id) => id !== user?.uid) || '';
       const otherName = (c.participantNames?.[otherId] || '').toLowerCase();
       const lastMsg = (c.lastMessage || '').toLowerCase();
       return otherName.includes(q) || lastMsg.includes(q);
     });
-  }, [conversations, search, activeFilterTag, user?.uid]);
+  }, [conversations, search, user?.uid]);
 
   const activeConv = useMemo(() => {
+    if (activeConvId === GLOBAL_HUB_ID) return null;
     const found = conversations.find((c) => c.id === activeConvId);
     if (found) return found;
-    if (activeConvId && user && targetUserParam) {
+    if (user && targetUserParam) {
       return {
         id: activeConvId,
         participantIds: [user.uid, targetUserParam],
@@ -485,11 +397,6 @@ function MessagesContent() {
       avatar: activeConv.participantAvatars?.[otherId] || '',
     };
   }, [activeConv, user, targetUserParam, targetNameParam]);
-
-  function handleSelectConversation(id: string) {
-    setActiveConvId(id);
-    setMobileView('chat');
-  }
 
   if (authLoading) {
     return (
@@ -529,52 +436,46 @@ function MessagesContent() {
   return (
     <>
       <Navbar />
-      {/* Ambient Pastel Gradient Wrapper with controlled bottom clearance */}
-      <main className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-[#F7F2FF] via-[#FAF7FF] to-[#FFF5ED] dark:from-[#150F22] dark:via-[#110C1B] dark:to-[#170E1B] py-2 sm:py-6 pb-24 md:pb-8">
+      {/* Main Container with smooth touch swipe support */}
+      <main
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-[#F7F2FF] via-[#FAF7FF] to-[#FFF5ED] dark:from-[#150F22] dark:via-[#110C1B] dark:to-[#170E1B] py-2 sm:py-6 pb-24 md:pb-8"
+      >
         <div className="container-px mx-auto max-w-5xl">
           
-          {/* Main Card Container with rock-solid fixed height to avoid layout jump */}
           <div className="rounded-[28px] sm:rounded-[32px] border border-white/80 dark:border-border/60 bg-white/75 dark:bg-card/75 backdrop-blur-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-135px)] md:h-[calc(100dvh-150px)] min-h-[500px] max-h-[820px]">
             
             {/* =========================================================================
-                LEFT PANEL: Chats List View (Reference Screen 2)
+                SIDEBAR NAVIGATION (Phase 2 Requirement 1)
                ========================================================================= */}
             <div
-              className={`md:col-span-5 lg:col-span-4 border-r border-white/60 dark:border-border/60 flex flex-col h-full min-h-0 bg-transparent ${
+              className={`md:col-span-5 lg:col-span-4 border-r border-white/60 dark:border-border/60 flex flex-col h-full min-h-0 bg-transparent transition-all duration-300 ${
                 mobileView === 'chat' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              {/* Chats Header: Title + Active Search/Bell Buttons */}
+              {/* Header */}
               <div className="p-3.5 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
-                  <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                    Chats
-                  </h1>
                   <div className="flex items-center gap-2">
-                    {/* Search Focus Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowFilterTags(!showFilterTags);
-                        searchInputRef.current?.focus();
-                      }}
-                      title="Search & filter chats"
-                      aria-label="Search"
+                    <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                      Chats
+                    </h1>
+                    {/* Live Socket Status Dot */}
+                    <span
+                      title={isConnected ? 'Real-time Socket Connected' : 'Connecting Socket...'}
                       className={cn(
-                        'h-9 w-9 sm:h-10 sm:w-10 rounded-2xl border shadow-xs flex items-center justify-center transition-all',
-                        showFilterTags
-                          ? 'btn-gradient-primary text-white border-transparent shadow-sm scale-105'
-                          : 'bg-card border-border text-foreground hover:scale-105 active:scale-95'
+                        'h-2.5 w-2.5 rounded-full animate-pulse mt-1',
+                        isConnected ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : 'bg-amber-500'
                       )}
-                    >
-                      <Search className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                    </button>
+                    />
+                  </div>
 
-                    {/* Notifications Button with Live Unread Dot */}
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setNotificationsModalOpen(true)}
-                      title="View campus notifications"
+                      title="Campus Notifications"
                       aria-label="Notifications"
                       className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
                     >
@@ -588,72 +489,76 @@ function MessagesContent() {
                   </div>
                 </div>
 
-                {/* Translucent Frosted Search Pill */}
+                {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
                     ref={searchInputRef}
-                    placeholder="Search Chats..."
+                    placeholder="Search Chats or Hub..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-card border border-border shadow-xs placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-primary/20 text-foreground"
+                    className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-card border border-border shadow-xs text-foreground"
                   />
                   {search && (
-                    <button
-                      type="button"
-                      onClick={() => setSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
-                    >
+                    <button type="button" onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
-
-                {/* Quick Filter Tag Chips (Toggled via Search button) */}
-                {showFilterTags && (
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 animate-in slide-in-from-top-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveFilterTag('all')}
-                      className={cn(
-                        'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all',
-                        activeFilterTag === 'all'
-                          ? 'btn-gradient-primary text-white shadow-xs'
-                          : 'bg-card text-muted-foreground hover:text-foreground border border-border'
-                      )}
-                    >
-                      All
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveFilterTag('offers')}
-                      className={cn(
-                        'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1',
-                        activeFilterTag === 'offers'
-                          ? 'btn-gradient-primary text-white shadow-xs'
-                          : 'bg-card text-muted-foreground hover:text-foreground border border-border'
-                      )}
-                    >
-                      <span>🤝 Offers</span>
-                    </button>
-                  </div>
-                )}
               </div>
 
-              {/* Chat Thread Cards List */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-2 sm:space-y-2.5 scrollbar-thin">
-                {filteredConversations.length === 0 ? (
-                  <div className="p-8 text-center space-y-3 text-muted-foreground my-auto">
-                    <div className="h-14 w-14 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                      <MessageSquare className="h-7 w-7" />
+              {/* Chat Thread Cards List with PINNED Global Campus Hub */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-2.5 scrollbar-thin">
+                
+                {/* -------------------------------------------------------------------------
+                    PINNED CAMPUS HUB ITEM (Phase 2 Requirement 1: Distinct Glassmorphism & Gradient Border)
+                   ------------------------------------------------------------------------- */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectConversation(GLOBAL_HUB_ID)}
+                  className={cn(
+                    'w-full rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 flex items-center gap-3.5 text-left transition-all relative overflow-hidden border',
+                    activeConvId === GLOBAL_HUB_ID
+                      ? 'bg-gradient-to-r from-purple-600/15 via-indigo-600/15 to-pink-600/15 border-purple-500/50 shadow-md ring-2 ring-purple-500/20 backdrop-blur-xl scale-[1.01]'
+                      : 'bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-pink-500/10 border-purple-500/30 hover:border-purple-500/50 hover:bg-white/80 dark:hover:bg-card/80 backdrop-blur-md shadow-xs'
+                  )}
+                >
+                  {/* Subtle ambient light highlight */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-indigo-500/5 to-transparent pointer-events-none" />
+
+                  {/* Gradient Avatar Icon */}
+                  <div className="h-11 w-11 sm:h-13 sm:w-13 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-2 ring-purple-400/30">
+                    <Globe className="h-5 w-5 sm:h-6 sm:w-6 animate-spin-slow" />
+                  </div>
+
+                  <div className="flex-1 min-w-0 z-10">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-xs sm:text-sm font-black text-foreground tracking-tight">Campus Hub</h4>
+                        <Badge className="bg-purple-600/90 text-white text-[9px] font-bold px-1.5 py-0 h-4 border-0">
+                          GLOBAL
+                        </Badge>
+                      </div>
+                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-extrabold flex items-center gap-1">
+                        <Radio className="h-2.5 w-2.5 animate-pulse text-emerald-500" />
+                        Live
+                      </span>
                     </div>
-                    <p className="text-sm font-bold text-foreground">No conversations yet</p>
-                    <p className="text-xs leading-relaxed max-w-[200px] mx-auto text-muted-foreground">
-                      Connect with students from the Marketplace or Requests board.
+                    <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
+                      Public campus feed • Open broadcast
                     </p>
-                    <Button asChild size="sm" className="btn-gradient-primary rounded-xl text-xs mt-2">
-                      <Link href="/marketplace">Explore Marketplace</Link>
-                    </Button>
+                  </div>
+                </button>
+
+                <div className="pt-1 pb-0.5 px-1 flex items-center justify-between text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
+                  <span>Direct Messages</span>
+                  <span className="text-[10px] font-semibold">{filteredConversations.length}</span>
+                </div>
+
+                {/* Direct Messages List */}
+                {filteredConversations.length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground">
+                    <p className="text-xs font-semibold">No direct messages yet.</p>
                   </div>
                 ) : (
                   filteredConversations.map((c) => {
@@ -673,18 +578,16 @@ function MessagesContent() {
                         )}
                       >
                         <button
-                          onClick={() => handleSelectConversation(c.id)}
+                          onClick={() => handleSelectConversation(c.id, otherId)}
                           className="flex-1 p-3 sm:p-4 flex items-center gap-3 sm:gap-3.5 text-left min-w-0"
                         >
-                          {/* Circular Avatar */}
-                          <Avatar className="h-11 w-11 sm:h-13 sm:w-13 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
+                          <Avatar className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
                             <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
                             <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black">
                               {otherName.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
 
-                          {/* Name & Subtitle Preview */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1">
                               <h4 className="text-xs sm:text-sm font-extrabold text-foreground truncate">{otherName}</h4>
@@ -692,13 +595,12 @@ function MessagesContent() {
                                 {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium flex items-center gap-1">
-                              <span>{c.lastMessage || 'Say hi'}</span>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
+                              {c.lastMessage || 'Say hi 👋'}
                             </p>
                           </div>
                         </button>
 
-                        {/* Direct Delete Quick Button */}
                         <div className="pr-3 flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
@@ -712,7 +614,6 @@ function MessagesContent() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 block" />
                         </div>
                       </div>
                     );
@@ -722,251 +623,268 @@ function MessagesContent() {
             </div>
 
             {/* =========================================================================
-                RIGHT PANEL: Active Chat Thread View (Reference Screen 1)
+                RIGHT PANEL: Active Chat Room (Global or DM)
                ========================================================================= */}
             <div
               className={`md:col-span-7 lg:col-span-8 flex flex-col h-full min-h-0 bg-white/40 dark:bg-card/40 backdrop-blur-xl ${
                 mobileView === 'list' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              {activeConv && otherParticipant ? (
-                <>
-                  {/* Top Bar: Back Button, Title, and Interactive Settings Dropdown */}
-                  <div className="p-3 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
-                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                      {/* Back Button */}
-                      <button
-                        type="button"
-                        onClick={() => setMobileView('list')}
-                        aria-label="Back to conversations list"
-                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
-                      >
-                        <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[2.2]" />
-                      </button>
-
-                      <div className="min-w-0">
-                        <h2 className="font-display text-sm sm:text-base md:text-lg font-black text-foreground truncate">
-                          {otherParticipant.name}
-                        </h2>
-                        <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          <span>Campus Peer • Verified</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Settings Dropdown with Delete & Clear options */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          aria-label="Chat Settings & Options"
-                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
-                        >
-                          <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-xl">
-                        <DropdownMenuItem asChild className="rounded-xl font-medium text-xs cursor-pointer">
-                          <Link href={`/seller/${encodeURIComponent(otherParticipant.name.toLowerCase().replace(/\s+/g, '-'))}`}>
-                            <Store className="h-4 w-4 mr-2 text-primary" />
-                            View Storefront
-                          </Link>
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem
-                          onClick={handleClearChatHistory}
-                          className="rounded-xl font-medium text-xs cursor-pointer"
-                        >
-                          <RotateCcw className="h-4 w-4 mr-2 text-muted-foreground" />
-                          Clear Chat History
-                        </DropdownMenuItem>
-
-                        <DropdownMenuSeparator className="my-1" />
-
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setConvToDelete({ id: activeConv.id, name: otherParticipant.name });
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="rounded-xl font-bold text-xs text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Conversation
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  {/* Messages Scroll Area with independent non-jumping overflow */}
-                  <div
-                    ref={chatScrollContainerRef}
-                    className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 scrollbar-thin overscroll-contain"
+              {/* Header */}
+              <div className="p-3 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView('list')}
+                    aria-label="Back to conversations"
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
                   >
-                    {/* Centered Date Pill Separator */}
-                    <div className="flex justify-center my-1">
-                      <div className="rounded-full px-4 py-0.5 sm:py-1 bg-card border border-border/80 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-xs">
-                        Today
-                      </div>
+                    <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[2.2]" />
+                  </button>
+
+                  <div className="min-w-0">
+                    <h2 className="font-display text-sm sm:text-base md:text-lg font-black text-foreground truncate flex items-center gap-2">
+                      {activeConvId === GLOBAL_HUB_ID ? (
+                        <>
+                          <span>Campus Hub</span>
+                          <Badge className="bg-purple-600 text-white text-[9px] font-extrabold px-2 py-0.5">
+                            GLOBAL CHAT
+                          </Badge>
+                        </>
+                      ) : (
+                        otherParticipant?.name || 'Direct Message'
+                      )}
+                    </h2>
+                    <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span>{activeConvId === GLOBAL_HUB_ID ? 'Public Campus Room • Socket Broadcast' : 'Direct Message • Encrypted'}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Chat Options"
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                    >
+                      <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-xl">
+                    {otherParticipant && (
+                      <DropdownMenuItem asChild className="rounded-xl font-medium text-xs cursor-pointer">
+                        <Link href={`/seller/${encodeURIComponent(otherParticipant.name.toLowerCase().replace(/\s+/g, '-'))}`}>
+                          <Store className="h-4 w-4 mr-2 text-primary" />
+                          View Storefront
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => setMessages([])} className="rounded-xl font-medium text-xs cursor-pointer">
+                      <RotateCcw className="h-4 w-4 mr-2 text-muted-foreground" />
+                      Clear Chat History
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Messages Scroll Area */}
+              <div
+                ref={chatScrollContainerRef}
+                className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 scrollbar-thin overscroll-contain"
+              >
+                <div className="flex justify-center my-1">
+                  <div className="rounded-full px-4 py-0.5 sm:py-1 bg-card border border-border/80 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-xs">
+                    Today
+                  </div>
+                </div>
+
+                {messages.length === 0 ? (
+                  <div className="text-center py-10 space-y-2 text-muted-foreground">
+                    <div className="h-12 w-12 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto">
+                      <MessageCircle className="h-6 w-6" />
                     </div>
+                    <p className="text-sm font-bold text-foreground">
+                      {activeConvId === GLOBAL_HUB_ID ? 'Welcome to Global Campus Hub! 🚀' : `Say hi to ${otherParticipant?.name || 'peer'} 👋`}
+                    </p>
+                    <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                      {activeConvId === GLOBAL_HUB_ID
+                        ? 'Broadcast messages, questions, and requests to all students on campus.'
+                        : 'Agree on meetup points, negotiate prices, or ask about listings.'}
+                    </p>
+                  </div>
+                ) : (
+                  messages.map((m) => {
+                    const isMe = m.senderId === user.uid;
+                    const isLiked = likedMessages[m.id];
+                    const isCopied = copiedMessageId === m.id;
+                    const isGlobalRoom = activeConvId === GLOBAL_HUB_ID;
 
-                    {messages.length === 0 ? (
-                      <div className="text-center py-10 space-y-2 text-muted-foreground">
-                        <p className="text-sm font-bold text-foreground">Say hello to {otherParticipant.name} 👋</p>
-                        <p className="text-xs">Ask questions, agree on meetup points, or discuss deals.</p>
-                      </div>
-                    ) : (
-                      messages.map((m) => {
-                        const isMe = m.senderId === user.uid;
-                        const isLiked = likedMessages[m.id];
-                        const isCopied = copiedMessageId === m.id;
+                    // Extract product context for Mini-Card (Phase 2 Requirement 2)
+                    const { product, cleanText } = extractProductContext(m.content, m.productContext);
 
-                        return (
-                          <div
-                            key={m.id}
-                            className={cn(
-                              'flex items-end gap-2 sm:gap-2.5 w-full',
-                              isMe ? 'justify-end' : 'justify-start'
-                            )}
-                          >
-                            {/* Incoming Avatar on Left */}
-                            {!isMe && (
-                              <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
-                                <AvatarImage src={otherParticipant.avatar} alt={otherParticipant.name} />
-                                <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary">
-                                  {otherParticipant.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                            )}
+                    return (
+                      <div
+                        key={m.id}
+                        className={cn(
+                          'flex items-end gap-2 sm:gap-2.5 w-full',
+                          isMe ? 'justify-end' : 'justify-start'
+                        )}
+                      >
+                        {/* =========================================================================
+                            AVATAR LOGIC (Phase 2 Requirement 3)
+                            - Global room: Avatar + Name for incoming messages
+                            - DM room: Avatar ONLY for incoming messages
+                           ========================================================================= */}
+                        {!isMe && (
+                          <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
+                            <AvatarImage src={m.senderAvatar || (isGlobalRoom ? undefined : otherParticipant?.avatar)} alt={m.senderName} />
+                            <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary">
+                              {(m.senderName || 'C').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
 
-                            {/* Message Bubble Block */}
-                            <div className={cn('flex flex-col gap-1 max-w-[82%] sm:max-w-[75%] min-w-0', isMe ? 'items-end' : 'items-start')}>
-                              {/* Bubble */}
-                              <div
-                                className={cn(
-                                  'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-xs w-fit inline-block font-medium',
-                                  isMe
-                                    ? 'btn-gradient-primary text-white rounded-br-[4px]'
-                                    : 'bg-card text-foreground border border-border rounded-bl-[4px] shadow-xs'
-                                )}
-                                style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                        <div className={cn('flex flex-col gap-1 max-w-[85%] sm:max-w-[78%] min-w-0', isMe ? 'items-end' : 'items-start')}>
+                          
+                          {/* SENDER NAME (Phase 2 Requirement 3: Rendered in Global Chat for incoming) */}
+                          {!isMe && isGlobalRoom && (
+                            <span className="text-[11px] font-extrabold text-purple-700 dark:text-purple-300 px-1">
+                              {m.senderName || 'Campus Peer'}
+                            </span>
+                          )}
+
+                          {/* =========================================================================
+                              RICH CONTEXT MINI-CARD (Phase 2 Requirement 2)
+                              Clickable mini-card rendered above message bubble when product context exists
+                             ========================================================================= */}
+                          {product && (
+                            <div className="w-full mb-1">
+                              <Link
+                                href={`/marketplace`}
+                                className="group/card block rounded-2xl border border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20 p-2.5 sm:p-3 hover:bg-purple-500/20 transition-all shadow-xs"
                               >
-                                <p className="whitespace-pre-wrap">{m.text}</p>
-                              </div>
-
-                              {/* Action Toolbar on Incoming Messages */}
-                              {!isMe && (
-                                <div className="flex items-center gap-1.5 sm:gap-2 px-1 pt-0.5 text-muted-foreground">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleCopy(m.text, m.id)}
-                                    title="Copy text"
-                                    className="p-1 rounded-lg hover:bg-white dark:hover:bg-card hover:text-foreground transition-colors"
-                                  >
-                                    {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleLike(m.id)}
-                                    title="Like message"
-                                    className={cn(
-                                      'p-1 rounded-lg hover:bg-white dark:hover:bg-card transition-colors',
-                                      isLiked ? 'text-purple-600 font-bold' : 'hover:text-foreground'
-                                    )}
-                                  >
-                                    <ThumbsUp className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleSpeak(m.text)}
-                                    title="Listen to message"
-                                    className="p-1 rounded-lg hover:bg-white dark:hover:bg-card hover:text-foreground transition-colors"
-                                  >
-                                    <Volume2 className="h-3.5 w-3.5" />
-                                  </button>
+                                <div className="flex items-center gap-2.5">
+                                  <div className="h-9 w-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
+                                    <ShoppingBag className="h-4.5 w-4.5" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-300 block">
+                                      Referenced Product
+                                    </span>
+                                    <h5 className="text-xs font-extrabold text-foreground truncate group-hover/card:text-purple-600 transition-colors">
+                                      {product.title}
+                                    </h5>
+                                  </div>
+                                  <LinkIcon className="h-3.5 w-3.5 text-muted-foreground group-hover/card:translate-x-0.5 transition-transform" />
                                 </div>
-                              )}
+                              </Link>
                             </div>
+                          )}
 
-                            {/* Outgoing Avatar on Right */}
+                          {/* =========================================================================
+                              MESSAGE BUBBLE & DELIVERY STATE (Phase 2 Requirement 3)
+                             ========================================================================= */}
+                          <div
+                            className={cn(
+                              'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-xs relative inline-block font-medium',
+                              isMe
+                                ? 'btn-gradient-primary text-white rounded-br-[4px]'
+                                : 'bg-card text-foreground border border-border rounded-bl-[4px]'
+                            )}
+                            style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                          >
+                            <p className="whitespace-pre-wrap">{cleanText}</p>
+
+                            {/* DELIVERY STATE INDICATORS (Phase 2 Requirement 3: ✓ sent, ✓✓ delivered) */}
                             {isMe && (
-                              <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
-                                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
-                                <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-[#9333ea] text-white">
-                                  {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
+                              <div className="flex items-center justify-end gap-1 mt-1 text-[10px] opacity-90 font-bold text-white/90">
+                                <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                {m.status === 'DELIVERED' ? (
+                                  <span title="Delivered"><CheckCheck className="h-3.5 w-3.5 text-white stroke-[2.5]" /></span>
+                                ) : (
+                                  <span title="Sent"><Check className="h-3.5 w-3.5 text-white/80 stroke-[2.5]" /></span>
+                                )}
+                              </div>
                             )}
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
 
-                  {/* =========================================================================
-                      FLOATING INPUT DOCK (Reference Image 1 Bottom Bar)
-                     ========================================================================= */}
-                  <div className="p-2.5 sm:p-4 bg-transparent shrink-0">
-                    <form onSubmit={handleSend} className="flex items-center gap-2 max-w-3xl mx-auto">
-                      {/* Floating Pill Input Box */}
-                      <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
-                        {/* Left '+' Attachment / Options Button */}
-                        <button
-                          type="button"
-                          onClick={() => setInputMsg((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
-                          title="Add campus location"
-                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-secondary/80 hover:bg-secondary flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
-                        >
-                          <Plus className="h-4 w-4 stroke-[2.5]" />
-                        </button>
-
-                        {/* Main Text Input */}
-                        <input
-                          value={inputMsg}
-                          onChange={(e) => setInputMsg(e.target.value)}
-                          placeholder="Type your message..."
-                          className="flex-1 bg-transparent border-0 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none px-1"
-                        />
-
-                        {/* Black Squircle Send Button */}
-                        <button
-                          type="submit"
-                          disabled={!inputMsg.trim() || sending}
-                          className="h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
-                        >
-                          {sending ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Send className="h-3.5 w-3.5 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />
+                          {/* Quick Toolbar */}
+                          {!isMe && (
+                            <div className="flex items-center gap-1.5 px-1 text-muted-foreground">
+                              <button type="button" onClick={() => handleCopy(cleanText, m.id)} className="p-1 hover:text-foreground">
+                                {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                              </button>
+                              <button type="button" onClick={() => toggleLike(m.id)} className={cn('p-1', isLiked && 'text-purple-600')}>
+                                <ThumbsUp className="h-3.5 w-3.5" />
+                              </button>
+                              <button type="button" onClick={() => handleSpeak(cleanText)} className="p-1 hover:text-foreground">
+                                <Volume2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           )}
-                        </button>
-                      </div>
+                        </div>
 
-                      {/* Right Round Voice / Mic Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          toast({ title: 'Microphone Voice Notes enabled! 🎙️', description: 'Speak your message into the microphone.' });
-                        }}
-                        aria-label="Voice Message"
-                        className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
-                      >
-                        <Mic className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-                      </button>
-                    </form>
+                        {isMe && (
+                          <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
+                            <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-[#9333ea] text-white">
+                              {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Floating Input Dock */}
+              <div className="p-2.5 sm:p-4 bg-transparent shrink-0">
+                <form onSubmit={handleSend} className="flex items-center gap-2 max-w-3xl mx-auto">
+                  <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+                    <button
+                      type="button"
+                      onClick={() => setInputMsg((prev) => (prev ? `${prev} [Re: "Calculus Textbook"]` : '[Re: "Calculus Textbook"] '))}
+                      title="Attach Product Context"
+                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 flex items-center justify-center transition-all shrink-0"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                    </button>
+
+                    <input
+                      value={inputMsg}
+                      onChange={(e) => {
+                        setInputMsg(e.target.value);
+                        if (activeConvId && user) {
+                          emitTyping(activeConvId, user.uid, e.target.value.length > 0);
+                        }
+                      }}
+                      placeholder={activeConvId === GLOBAL_HUB_ID ? 'Broadcast to Campus Hub...' : 'Type direct message...'}
+                      className="flex-1 bg-transparent border-0 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none px-1"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={!inputMsg.trim() || sending}
+                      className="h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+                    >
+                      {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />}
+                    </button>
                   </div>
-                </>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3 my-auto">
-                  <div className="h-16 w-16 rounded-3xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto shadow-xs">
-                    <MessageSquare className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground">Select a chat to begin</h3>
-                  <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-                    Choose a conversation from the list to message campus buyers and sellers.
-                  </p>
-                </div>
-              )}
+
+                  <button
+                    type="button"
+                    onClick={() => toast({ title: 'Microphone Voice Notes ready 🎙️' })}
+                    aria-label="Voice Message"
+                    className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                  >
+                    <Mic className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                  </button>
+                </form>
+              </div>
+
             </div>
 
           </div>
@@ -974,9 +892,7 @@ function MessagesContent() {
       </main>
       <Footer />
 
-      {/* =========================================================================
-          NOTIFICATIONS SLIDE-OVER / MODAL (Triggered via Bell Icon)
-         ========================================================================= */}
+      {/* Notifications Modal */}
       <Dialog open={notificationsModalOpen} onOpenChange={setNotificationsModalOpen}>
         <DialogContent className="max-w-md rounded-3xl p-5 sm:p-6 bg-white/95 dark:bg-card/95 backdrop-blur-2xl">
           <DialogHeader>
@@ -987,17 +903,6 @@ function MessagesContent() {
                 </div>
                 <DialogTitle className="font-display font-black text-lg">Notifications</DialogTitle>
               </div>
-              {notifications.some((n) => !n.isRead) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleMarkAllNotificationsRead}
-                  className="text-xs text-purple-600 hover:text-purple-700 h-8 font-bold"
-                >
-                  <CheckCheck className="h-3.5 w-3.5 mr-1" />
-                  Mark all read
-                </Button>
-              )}
             </div>
             <DialogDescription className="text-xs text-muted-foreground">
               Direct messages, order milestones, and campus offers.
@@ -1012,75 +917,41 @@ function MessagesContent() {
               </div>
             ) : (
               notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={cn(
-                    'p-3 rounded-2xl border transition-all text-left flex items-start gap-3',
-                    !n.isRead
-                      ? 'bg-purple-500/5 border-purple-500/20'
-                      : 'bg-secondary/40 border-border/60'
-                  )}
-                >
+                <div key={n.id} className="p-3 rounded-2xl border bg-secondary/40 border-border/60 flex items-start gap-3">
                   <div className="h-7 w-7 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
                     <MessageSquare className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h5 className="font-bold text-xs text-foreground truncate">{n.title}</h5>
                     <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{n.message}</p>
-                    <span className="text-[9px] text-muted-foreground mt-1 block">
-                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
                   </div>
                 </div>
               ))
             )}
           </div>
-
-          <DialogFooter className="pt-2">
-            <Button asChild variant="outline" className="w-full rounded-xl text-xs font-bold">
-              <Link href="/notifications" onClick={() => setNotificationsModalOpen(false)}>
-                View Full Notifications Center
-                <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-              </Link>
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* =========================================================================
-          CONFIRM DELETE CONVERSATION DIALOG
-         ========================================================================= */}
+      {/* Delete Conversation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="max-w-sm rounded-3xl p-6 bg-white dark:bg-card">
-          <DialogHeader className="text-center sm:text-center">
+          <DialogHeader className="text-center">
             <div className="h-12 w-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-2">
               <Trash2 className="h-6 w-6" />
             </div>
             <DialogTitle className="font-display font-black text-lg">Delete Conversation?</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground pt-1">
-              Are you sure you want to delete your conversation with <strong className="text-foreground">{convToDelete?.name}</strong>? All message history will be removed.
+              Are you sure you want to delete your conversation with <strong className="text-foreground">{convToDelete?.name}</strong>?
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="flex sm:flex-row gap-2 pt-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setConvToDelete(null);
-              }}
-              className="flex-1 rounded-xl"
-            >
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="flex-1 rounded-xl">
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDeleteConversation}
-              disabled={isDeleting}
-              className="flex-1 rounded-xl font-bold"
-            >
+            <Button variant="destructive" onClick={handleConfirmDeleteConversation} disabled={isDeleting} className="flex-1 rounded-xl font-bold">
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
-              Delete Chat
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
