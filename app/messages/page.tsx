@@ -40,10 +40,9 @@ import {
   getMessages,
   sendChatMessage,
   getNotifications,
-  markNotificationRead,
   deleteConversation
 } from '@/lib/firebase-queries';
-import type { Conversation, NotificationItem, ChatMessage } from '@/lib/types';
+import type { Conversation, NotificationItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 // Constant ID for Global Campus Hub Room
@@ -77,11 +76,24 @@ function extractProductContext(text: string, contextObject?: ProductContext | nu
   return { product: null, cleanText: text };
 }
 
-// Deduplicate and merge chat message arrays
+// Phase 3 Deduplication Helper: Merges messages avoiding duplicate client or broadcast bubbles
 function mergeAndSortMessages(existing: ChatSocketMessage[], incoming: ChatSocketMessage[]): ChatSocketMessage[] {
   const map = new Map<string, ChatSocketMessage>();
   existing.forEach((m) => map.set(m.id, m));
-  incoming.forEach((m) => map.set(m.id, m));
+
+  incoming.forEach((msg) => {
+    const isDuplicate = Array.from(map.values()).some(
+      (ex) =>
+        ex.id === msg.id ||
+        (ex.senderId === msg.senderId &&
+          ex.content.trim() === msg.content.trim() &&
+          Math.abs(new Date(ex.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 3000)
+    );
+
+    if (!isDuplicate) {
+      map.set(msg.id, msg);
+    }
+  });
 
   return Array.from(map.values()).sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -95,7 +107,7 @@ function MessagesContent() {
   const targetNameParam = searchParams.get('name');
   const { toast } = useToast();
 
-  // Socket.io Real-time Hook Integration
+  // Socket.io Real-Time Connection with receive_global_message listener
   const {
     isConnected,
     globalMessages: socketGlobalMessages,
@@ -116,9 +128,8 @@ function MessagesContent() {
   const [sending, setSending] = useState(false);
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [showLocationMenu, setShowLocationMenu] = useState(false);
 
-  // Mobile sidebar touch gesture state
+  // Touch gesture state for mobile drawer
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // Notification & Delete Dialog States
@@ -141,27 +152,57 @@ function MessagesContent() {
     }
   }, []);
 
-  // Load and merge stored messages for active conversation
+  // Phase 2 Persistence Check: Load global chat history from GET /api/chat/global and Firestore fallback
   const loadActiveMessages = useCallback(async (convId: string) => {
     try {
-      const msgs = await getMessages(convId);
-      const formatted: ChatSocketMessage[] = msgs.map((m) => ({
-        id: m.id,
-        chatType: convId === GLOBAL_HUB_ID ? 'GLOBAL' : 'DIRECT',
-        conversationId: convId,
-        senderId: m.senderId,
-        recipientId: m.recipientId,
-        senderName: m.senderName,
-        senderAvatar: m.senderAvatar || '',
-        content: m.text,
-        status: 'DELIVERED',
-        createdAt: m.createdAt,
-      }));
+      let historical: ChatSocketMessage[] = [];
 
-      setMessages((prev) => mergeAndSortMessages(prev, formatted));
+      if (convId === GLOBAL_HUB_ID) {
+        // Fetch REST history endpoint GET /api/chat/global
+        try {
+          const res = await fetch('/api/chat/global');
+          const data = await res.json();
+          if (data.success && Array.isArray(data.messages)) {
+            historical = data.messages;
+          }
+        } catch {}
+
+        // Fallback to local storage / Firestore queries
+        const localMsgs = await getMessages(convId);
+        const formattedLocal: ChatSocketMessage[] = localMsgs.map((m) => ({
+          id: m.id,
+          chatType: 'GLOBAL',
+          conversationId: convId,
+          senderId: m.senderId,
+          recipientId: 'global',
+          senderName: m.senderName,
+          senderAvatar: m.senderAvatar || '',
+          content: m.text,
+          status: 'DELIVERED',
+          createdAt: m.createdAt,
+        }));
+
+        historical = mergeAndSortMessages(historical, formattedLocal);
+      } else {
+        const msgs = await getMessages(convId);
+        historical = msgs.map((m) => ({
+          id: m.id,
+          chatType: 'DIRECT',
+          conversationId: convId,
+          senderId: m.senderId,
+          recipientId: m.recipientId,
+          senderName: m.senderName,
+          senderAvatar: m.senderAvatar || '',
+          content: m.text,
+          status: 'DELIVERED',
+          createdAt: m.createdAt,
+        }));
+      }
+
+      setMessages((prev) => mergeAndSortMessages(prev, historical));
       setTimeout(() => scrollToBottom(false), 50);
     } catch (err) {
-      console.warn('Error loading active messages:', err);
+      console.warn('Error loading active chat messages:', err);
     }
   }, [scrollToBottom]);
 
@@ -177,13 +218,13 @@ function MessagesContent() {
     setConversations(sorted);
   }, [user]);
 
-  // Handle active conversation selection & load stored messages
+  // Load chat messages when active conversation changes
   useEffect(() => {
     if (!activeConvId) return;
     loadActiveMessages(activeConvId);
   }, [activeConvId, loadActiveMessages]);
 
-  // Sync real-time socket messages into local messages state
+  // Phase 3 Real-Time Socket Listener Sync: Updates setMessages upon receive_global_message broadcast
   useEffect(() => {
     if (activeConvId === GLOBAL_HUB_ID && socketGlobalMessages.length > 0) {
       setMessages((prev) => mergeAndSortMessages(prev, socketGlobalMessages));
@@ -195,13 +236,13 @@ function MessagesContent() {
     }
   }, [activeConvId, socketGlobalMessages, socketDirectMessages, scrollToBottom]);
 
-  // Real-time synchronization event listener (Resolves message receiving issue across tabs/windows)
+  // Event listener sync across open tabs and windows
   useEffect(() => {
     if (!user) return;
     loadUserConversations();
     getNotifications(user.uid).then(setNotifications).catch(() => {});
 
-    const handleMessageSync = (e?: Event) => {
+    const handleMessageSync = () => {
       if (activeConvId) {
         loadActiveMessages(activeConvId);
       }
@@ -250,7 +291,6 @@ function MessagesContent() {
     });
   }, [user, targetUserParam, targetNameParam, profile, joinDirectChat]);
 
-  // Handle selecting a conversation
   const handleSelectConversation = (id: string, otherId?: string) => {
     setActiveConvId(id);
     setMobileView('chat');
@@ -259,7 +299,6 @@ function MessagesContent() {
     }
   };
 
-  // Touch-swipe handlers for smooth mobile sidebar transitions
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
   };
@@ -277,7 +316,7 @@ function MessagesContent() {
     setTouchStartX(null);
   };
 
-  // Send message handler (Supports both 1-Tap Quick Messages, Global Broadcasts, and DMs)
+  // Send message handler with optimistic UI and server room broadcast
   async function handleSend(e?: React.FormEvent, customText?: string) {
     if (e) e.preventDefault();
     const textToSend = (customText || inputMsg).trim();
@@ -288,15 +327,13 @@ function MessagesContent() {
     const senderName = profile?.display_name || user.displayName || user.email?.split('@')[0] || 'Campus Student';
     const senderAvatar = profile?.avatar_url || '';
 
-    // Parse product context if included in text
     const { product } = extractProductContext(textToSend);
 
     setSending(true);
     setInputMsg('');
-    setShowLocationMenu(false);
 
     if (activeConvId === GLOBAL_HUB_ID) {
-      // 1. Global Campus Hub Message Handling
+      // 1. Global Campus Hub Message Handling (Optimistic UI + Server Room Broadcast)
       const newGlobalMsg: ChatSocketMessage = {
         id: messageId,
         chatType: 'GLOBAL',
@@ -310,7 +347,10 @@ function MessagesContent() {
         createdAt,
       };
 
-      // Persist to local storage & Firestore queries
+      // Optimistically append message locally
+      setMessages((prev) => mergeAndSortMessages(prev, [newGlobalMsg]));
+
+      // Persist to local storage & REST / Firestore queries
       try {
         await sendChatMessage({
           id: messageId,
@@ -322,9 +362,22 @@ function MessagesContent() {
           recipientId: 'global',
           text: textToSend,
         });
+
+        // Also post to REST endpoint POST /api/chat/global
+        fetch('/api/chat/global', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderId: user.uid,
+            senderName,
+            senderAvatar,
+            content: textToSend,
+            productContext: product,
+          }),
+        }).catch(() => {});
       } catch {}
 
-      // Emit via Socket.io
+      // Broadcast to room via Socket.io (Phase 1 Fix)
       sendGlobalMessage({
         senderId: user.uid,
         senderName,
@@ -332,8 +385,6 @@ function MessagesContent() {
         content: textToSend,
         productContext: product || undefined,
       });
-
-      setMessages((prev) => mergeAndSortMessages(prev, [newGlobalMsg]));
     } else {
       // 2. Direct Message Handling
       const currentConv = conversations.find((c) => c.id === activeConvId);
@@ -355,7 +406,8 @@ function MessagesContent() {
         createdAt,
       };
 
-      // Persist to local storage & Firestore queries
+      setMessages((prev) => mergeAndSortMessages(prev, [newDirectMsg]));
+
       try {
         await sendChatMessage({
           id: messageId,
@@ -371,7 +423,6 @@ function MessagesContent() {
         });
       } catch {}
 
-      // Emit via Socket.io
       sendDirectMessage({
         senderId: user.uid,
         recipientId,
@@ -381,9 +432,6 @@ function MessagesContent() {
         productContext: product || undefined,
       });
 
-      setMessages((prev) => mergeAndSortMessages(prev, [newDirectMsg]));
-
-      // Update sidebar preview
       setConversations((prev) =>
         prev.map((c) =>
           c.id === activeConvId
@@ -531,18 +579,14 @@ function MessagesContent() {
       >
         <div className="container-px mx-auto max-w-5xl">
           
-          {/* Main Container Card */}
           <div className="rounded-[28px] sm:rounded-[32px] border border-white/80 dark:border-border/60 bg-white/75 dark:bg-card/75 backdrop-blur-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-135px)] md:h-[calc(100dvh-150px)] min-h-[520px] max-h-[840px]">
             
-            {/* =========================================================================
-                LEFT PANEL: SIDEBAR NAVIGATION
-               ========================================================================= */}
+            {/* SIDEBAR NAVIGATION */}
             <div
               className={`md:col-span-5 lg:col-span-4 border-r border-white/60 dark:border-border/60 flex flex-col h-full min-h-0 bg-transparent transition-all duration-300 ${
                 mobileView === 'chat' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              {/* Header */}
               <div className="p-3.5 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -576,7 +620,6 @@ function MessagesContent() {
                   </div>
                 </div>
 
-                {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
@@ -594,7 +637,6 @@ function MessagesContent() {
                 </div>
               </div>
 
-              {/* Chat Thread Cards List with PINNED Global Campus Hub */}
               <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-2.5 scrollbar-thin">
                 
                 {/* PINNED GLOBAL CAMPUS HUB */}
@@ -626,7 +668,7 @@ function MessagesContent() {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
-                      Public campus feed • Open broadcast
+                      Public campus feed • Real-time broadcast
                     </p>
                   </div>
                 </button>
@@ -636,7 +678,6 @@ function MessagesContent() {
                   <span className="text-[10px] font-semibold">{filteredConversations.length}</span>
                 </div>
 
-                {/* Direct Messages List */}
                 {filteredConversations.length === 0 ? (
                   <div className="p-6 text-center text-muted-foreground">
                     <p className="text-xs font-semibold">No direct messages yet.</p>
@@ -703,15 +744,12 @@ function MessagesContent() {
               </div>
             </div>
 
-            {/* =========================================================================
-                RIGHT PANEL: ACTIVE CHAT THREAD VIEW
-               ========================================================================= */}
+            {/* RIGHT PANEL: ACTIVE CHAT THREAD */}
             <div
               className={`md:col-span-7 lg:col-span-8 flex flex-col h-full min-h-0 bg-white/40 dark:bg-card/40 backdrop-blur-xl ${
                 mobileView === 'list' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              {/* Active Chat Header */}
               <div className="p-3 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <button
@@ -770,7 +808,7 @@ function MessagesContent() {
                 </DropdownMenu>
               </div>
 
-              {/* Messages Scroll Body */}
+              {/* Messages Body */}
               <div
                 ref={chatScrollContainerRef}
                 className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 scrollbar-thin overscroll-contain"
@@ -802,7 +840,6 @@ function MessagesContent() {
                     const isCopied = copiedMessageId === m.id;
                     const isGlobalRoom = activeConvId === GLOBAL_HUB_ID;
 
-                    // Extract product context mini-card
                     const { product, cleanText } = extractProductContext(m.content, m.productContext);
 
                     return (
@@ -813,7 +850,6 @@ function MessagesContent() {
                           isMe ? 'justify-end' : 'justify-start'
                         )}
                       >
-                        {/* INCOMING AVATAR LOGIC */}
                         {!isMe && (
                           <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
                             <AvatarImage src={m.senderAvatar || (isGlobalRoom ? undefined : otherParticipant?.avatar)} alt={m.senderName} />
@@ -825,14 +861,12 @@ function MessagesContent() {
 
                         <div className={cn('flex flex-col gap-1 max-w-[85%] sm:max-w-[78%] min-w-0', isMe ? 'items-end' : 'items-start')}>
                           
-                          {/* SENDER NAME IN GLOBAL CHAT FOR INCOMING MESSAGES */}
                           {!isMe && isGlobalRoom && (
                             <span className="text-[11px] font-extrabold text-purple-700 dark:text-purple-300 px-1">
                               {m.senderName || 'Campus Peer'}
                             </span>
                           )}
 
-                          {/* RICH CONTEXT MINI-CARD */}
                           {product && (
                             <div className="w-full mb-1">
                               <Link
@@ -857,7 +891,6 @@ function MessagesContent() {
                             </div>
                           )}
 
-                          {/* MESSAGE BUBBLE */}
                           <div
                             className={cn(
                               'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-xs relative inline-block font-medium',
@@ -869,7 +902,6 @@ function MessagesContent() {
                           >
                             <p className="whitespace-pre-wrap">{cleanText}</p>
 
-                            {/* DELIVERY STATE INDICATOR (✓ sent, ✓✓ delivered) */}
                             {isMe && (
                               <div className="flex items-center justify-end gap-1 mt-1 text-[10px] opacity-90 font-bold text-white/90">
                                 <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -882,7 +914,6 @@ function MessagesContent() {
                             )}
                           </div>
 
-                          {/* Incoming Action Toolbar */}
                           {!isMe && (
                             <div className="flex items-center gap-1.5 px-1 text-muted-foreground">
                               <button type="button" onClick={() => handleCopy(cleanText, m.id)} className="p-1 hover:text-foreground">
@@ -898,7 +929,6 @@ function MessagesContent() {
                           )}
                         </div>
 
-                        {/* OUTGOING AVATAR */}
                         {isMe && (
                           <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
                             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
@@ -913,12 +943,8 @@ function MessagesContent() {
                 )}
               </div>
 
-              {/* =========================================================================
-                  INPUT DOCK & 1-TAP QUICK ACTION CHIPS
-                 ========================================================================= */}
+              {/* INPUT DOCK */}
               <div className="p-2.5 sm:p-4 bg-transparent shrink-0 space-y-2">
-                
-                {/* 1-Tap Quick Reply Chips */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none px-1">
                   <span className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 shrink-0 flex items-center gap-1">
                     <Zap className="h-3 w-3 fill-purple-600" />
@@ -936,15 +962,12 @@ function MessagesContent() {
                   ))}
                 </div>
 
-                {/* Main Floating Input Form */}
                 <form onSubmit={handleSend} className="flex items-center gap-2 max-w-4xl mx-auto w-full">
                   <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
-                    
-                    {/* '+' Quick Location / Context Button */}
                     <button
                       type="button"
                       onClick={() => handleSend(undefined, '🤝 Let\'s meet at Central Library')}
-                      title="Send Central Library Meetup Location"
+                      title="Send Central Library Location"
                       className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 flex items-center justify-center transition-all shrink-0"
                     >
                       <MapPin className="h-4 w-4" />

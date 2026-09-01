@@ -6,6 +6,7 @@ import escrowRoutes from './escrow.routes';
 import trustRoutes from './trust.routes';
 import mlRoutes from './ml.routes';
 import userRoutes from './users.routes';
+import chatRoutes from './chat.routes';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/escrow', escrowRoutes);
 router.use('/trust', trustRoutes);
 router.use('/analytics', mlRoutes);
 router.use('/users', userRoutes);
+router.use('/chat', chatRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

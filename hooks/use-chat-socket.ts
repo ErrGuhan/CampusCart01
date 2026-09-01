@@ -41,6 +41,31 @@ export interface ChatSocketMessage {
   createdAt: string;
 }
 
+// Helper to deduplicate messages by ID or identical sender + text + timestamp
+function deduplicateMessages(existing: ChatSocketMessage[], incoming: ChatSocketMessage[]): ChatSocketMessage[] {
+  const map = new Map<string, ChatSocketMessage>();
+  existing.forEach((m) => map.set(m.id, m));
+
+  incoming.forEach((msg) => {
+    // Check if duplicate exists by ID or by matching senderId, text, and timestamp window
+    const exists = Array.from(map.values()).some(
+      (ex) =>
+        ex.id === msg.id ||
+        (ex.senderId === msg.senderId &&
+          ex.content.trim() === msg.content.trim() &&
+          Math.abs(new Date(ex.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 3000)
+    );
+
+    if (!exists) {
+      map.set(msg.id, msg);
+    }
+  });
+
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+}
+
 export function useChatSocket(customServerUrl?: string) {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -49,7 +74,6 @@ export function useChatSocket(customServerUrl?: string) {
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Dynamic Socket URL detection (Fallback to current hostname on port 3001)
     const getSocketUrl = () => {
       if (customServerUrl) return customServerUrl;
       if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL;
@@ -85,7 +109,7 @@ export function useChatSocket(customServerUrl?: string) {
       });
 
       socket.on('connect_error', (err) => {
-        console.warn('⚡ [Socket.io] Socket connection fallback notice:', err.message);
+        console.warn('⚡ [Socket.io] Connection notice:', err.message);
         setIsConnected(false);
       });
 
@@ -93,26 +117,28 @@ export function useChatSocket(customServerUrl?: string) {
         setIsConnected(false);
       });
 
-      // Listen for incoming global messages
-      socket.on('new_global_message', (msg: ChatSocketMessage) => {
-        setGlobalMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg];
-        });
-      });
+      // Phase 3 Listeners: Active listeners for receive_global_message AND new_global_message
+      const handleIncomingGlobalMessage = (msg: ChatSocketMessage) => {
+        setGlobalMessages((prev) => deduplicateMessages(prev, [msg]));
+      };
 
-      // Listen for incoming direct messages
-      socket.on('new_direct_message', (msg: ChatSocketMessage) => {
+      socket.on('receive_global_message', handleIncomingGlobalMessage);
+      socket.on('new_global_message', handleIncomingGlobalMessage);
+
+      // Listeners for direct messages
+      const handleIncomingDirectMessage = (msg: ChatSocketMessage) => {
         if (!msg.conversationId) return;
         setDirectMessages((prev) => {
           const roomMsgs = prev[msg.conversationId!] || [];
-          if (roomMsgs.some((m) => m.id === msg.id)) return prev;
           return {
             ...prev,
-            [msg.conversationId!]: [...roomMsgs, msg],
+            [msg.conversationId!]: deduplicateMessages(roomMsgs, [msg]),
           };
         });
-      });
+      };
+
+      socket.on('receive_direct_message', handleIncomingDirectMessage);
+      socket.on('new_direct_message', handleIncomingDirectMessage);
 
       socket.on('user_typing', ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
         setTypingUsers((prev) => ({ ...prev, [senderId]: isTyping }));

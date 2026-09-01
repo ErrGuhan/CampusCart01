@@ -68,7 +68,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   /**
-   * Connection logic: Automatically subscribes connected user to the 'campus_global' room
+   * Phase 1 Fix: Every connecting client explicitly joins the 'campus_global' room
    */
   async handleConnection(client: Socket) {
     try {
@@ -78,9 +78,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.logger.log(`Client connecting to CampusCart Gateway: ${client.id}`);
 
-      // Subscribe user to Global Campus Hub room automatically
+      // Explicitly subscribe client to Global Campus Hub room
       await client.join('campus_global');
-      this.logger.log(`Client ${client.id} automatically subscribed to 'campus_global' room`);
+      this.logger.log(`Client ${client.id} joined shared room: 'campus_global'`);
 
       client.emit('connected', {
         status: 'success',
@@ -141,19 +141,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderAvatar: payload.senderAvatar || '',
       content: payload.content.trim(),
       productContext: payload.productContext || null,
-      status: 'DELIVERED', // Delivery state indicator
+      status: 'DELIVERED',
       createdAt: timestamp,
     };
 
     // Emit real-time message to DM room (both sender and recipient)
     this.server.to(room).emit('new_direct_message', formattedMessage);
+    this.server.to(room).emit('receive_direct_message', formattedMessage);
     this.logger.log(`Direct message sent in room [${room}] by [${payload.senderId}]`);
 
-    return { status: 'sent', messageId, conversationId: room };
+    return { status: 'sent', messageId, conversationId: room, message: formattedMessage };
   }
 
   /**
-   * Event Listener: Send Global Message
+   * Phase 1 Broadcast Fix: Send Global Message Handler
+   * Broadcasts to ALL connected users in 'campus_global' room via receive_global_message & new_global_message
    */
   @SubscribeMessage('send_global_message')
   async handleSendGlobalMessage(
@@ -167,22 +169,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const messageId = `global_msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const timestamp = new Date().toISOString();
 
-    const formattedMessage = {
+    const savedMessage = {
       id: messageId,
       chatType: ChatType.GLOBAL,
+      conversationId: 'campus_global_hub',
       senderId: payload.senderId,
       senderName: payload.senderName || 'Campus Peer',
       senderAvatar: payload.senderAvatar || '',
       content: payload.content.trim(),
       productContext: payload.productContext || null,
+      status: 'DELIVERED',
       createdAt: timestamp,
     };
 
-    // Broadcast message to all clients in 'campus_global' room
-    this.server.to('campus_global').emit('new_global_message', formattedMessage);
-    this.logger.log(`Global message broadcast from [${payload.senderName}]`);
+    // CRITICAL BROADCAST FIX:
+    // Broadcasts to the ENTIRE 'campus_global' room so all connected users receive the message simultaneously
+    this.server.to('campus_global').emit('receive_global_message', savedMessage);
+    this.server.to('campus_global').emit('new_global_message', savedMessage);
 
-    return { status: 'sent', messageId };
+    this.logger.log(`Global message broadcasted to room 'campus_global' from [${payload.senderName}]`);
+
+    return { status: 'sent', messageId, message: savedMessage };
   }
 
   /**
@@ -195,7 +202,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     if (!payload?.room || !payload?.senderId) return;
 
-    // Broadcast typing indicator to all clients in the room except the sender
     client.to(payload.room).emit('user_typing', {
       senderId: payload.senderId,
       room: payload.room,
