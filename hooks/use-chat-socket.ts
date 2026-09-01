@@ -41,7 +41,7 @@ export interface ChatSocketMessage {
   createdAt: string;
 }
 
-export function useChatSocket(serverUrl = 'http://localhost:3001/chat') {
+export function useChatSocket(customServerUrl?: string) {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [globalMessages, setGlobalMessages] = useState<ChatSocketMessage[]>([]);
@@ -49,93 +49,111 @@ export function useChatSocket(serverUrl = 'http://localhost:3001/chat') {
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Pass JWT token from localStorage for authentication as specified in Phase 3
+    // Dynamic Socket URL detection (Fallback to current hostname on port 3001)
+    const getSocketUrl = () => {
+      if (customServerUrl) return customServerUrl;
+      if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL;
+      if (typeof window !== 'undefined') {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname || 'localhost';
+        return `${protocol}//${hostname}:3001/chat`;
+      }
+      return 'http://localhost:3001/chat';
+    };
+
+    const targetUrl = getSocketUrl();
     const token =
       typeof window !== 'undefined'
         ? localStorage.getItem('auth_token') || localStorage.getItem('campuscart_auth_token') || ''
         : '';
 
-    const socket: Socket = io(serverUrl, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      autoConnect: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      console.log('⚡ [Socket.io] Connected to Chat Gateway:', socket.id);
-      setIsConnected(true);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('⚡ [Socket.io] Disconnected from Chat Gateway');
-      setIsConnected(false);
-    });
-
-    // Listen for incoming global messages in campus_global room
-    socket.on('new_global_message', (msg: ChatSocketMessage) => {
-      setGlobalMessages((prev) => {
-        if (prev.some((m) => m.id === msg.id)) return prev;
-        return [...prev, msg];
+    let socket: Socket;
+    try {
+      socket = io(targetUrl, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        autoConnect: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 5000,
       });
-    });
+      socketRef.current = socket;
 
-    // Listen for incoming direct messages in active DM rooms
-    socket.on('new_direct_message', (msg: ChatSocketMessage) => {
-      if (!msg.conversationId) return;
-      setDirectMessages((prev) => {
-        const roomMsgs = prev[msg.conversationId!] || [];
-        if (roomMsgs.some((m) => m.id === msg.id)) return prev;
-        return {
-          ...prev,
-          [msg.conversationId!]: [...roomMsgs, msg],
-        };
+      socket.on('connect', () => {
+        console.log('⚡ [Socket.io] Connected to Chat Gateway:', socket.id);
+        setIsConnected(true);
       });
-    });
 
-    // Listen for typing events
-    socket.on('user_typing', ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
-      setTypingUsers((prev) => ({ ...prev, [senderId]: isTyping }));
-    });
+      socket.on('connect_error', (err) => {
+        console.warn('⚡ [Socket.io] Socket connection fallback notice:', err.message);
+        setIsConnected(false);
+      });
+
+      socket.on('disconnect', () => {
+        setIsConnected(false);
+      });
+
+      // Listen for incoming global messages
+      socket.on('new_global_message', (msg: ChatSocketMessage) => {
+        setGlobalMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      });
+
+      // Listen for incoming direct messages
+      socket.on('new_direct_message', (msg: ChatSocketMessage) => {
+        if (!msg.conversationId) return;
+        setDirectMessages((prev) => {
+          const roomMsgs = prev[msg.conversationId!] || [];
+          if (roomMsgs.some((m) => m.id === msg.id)) return prev;
+          return {
+            ...prev,
+            [msg.conversationId!]: [...roomMsgs, msg],
+          };
+        });
+      });
+
+      socket.on('user_typing', ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
+        setTypingUsers((prev) => ({ ...prev, [senderId]: isTyping }));
+      });
+    } catch (err) {
+      console.warn('Socket initialization notice:', err);
+    }
 
     return () => {
-      socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
-  }, [serverUrl]);
+  }, [customServerUrl]);
 
-  /**
-   * Helper to join a specific 1-on-1 DM room dynamically
-   */
   const joinDirectChat = useCallback((senderId: string, recipientId: string) => {
     if (!socketRef.current || !senderId || !recipientId) return;
-    socketRef.current.emit('join_direct_chat', { senderId, recipientId });
+    try {
+      socketRef.current.emit('join_direct_chat', { senderId, recipientId });
+    } catch {}
   }, []);
 
-  /**
-   * Helper to send direct message
-   */
   const sendDirectMessage = useCallback((payload: DirectMessagePayload) => {
     if (!socketRef.current) return;
-    socketRef.current.emit('send_direct_message', payload);
+    try {
+      socketRef.current.emit('send_direct_message', payload);
+    } catch {}
   }, []);
 
-  /**
-   * Helper to send global campus hub message
-   */
   const sendGlobalMessage = useCallback((payload: GlobalMessagePayload) => {
     if (!socketRef.current) return;
-    socketRef.current.emit('send_global_message', payload);
+    try {
+      socketRef.current.emit('send_global_message', payload);
+    } catch {}
   }, []);
 
-  /**
-   * Helper to emit typing state to room
-   */
   const emitTyping = useCallback((room: string, senderId: string, isTyping: boolean) => {
     if (!socketRef.current) return;
-    socketRef.current.emit('user_typing', { room, senderId, isTyping });
+    try {
+      socketRef.current.emit('user_typing', { room, senderId, isTyping });
+    } catch {}
   }, []);
 
   return {

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Package, IndianRupee, ShoppingBag, Star, ArrowRight,
   Plus, Settings, KeyRound, MapPin, Sparkles, CheckCircle2,
-  Check, Loader2, Tag, ChevronRight, X, AlertCircle,
+  Check, Loader2, Tag, ChevronRight, X, AlertCircle, Users,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/components/auth-provider';
 import { useToast } from '@/hooks/use-toast';
@@ -44,6 +44,9 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
   // Modal States
   const [listModalOpen, setListModalOpen] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [studentsModalOpen, setStudentsModalOpen] = useState(false);
+  const [buyersList, setBuyersList] = useState<any[]>([]);
+  const [loadingBuyers, setLoadingBuyers] = useState(false);
   const [selectedOrderForPin, setSelectedOrderForPin] = useState<Order | null>(null);
   const [inputPin, setInputPin] = useState('');
   const [verifyingPin, setVerifyingPin] = useState(false);
@@ -174,6 +177,61 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
     });
     return buyerSet.size;
   }, [sellerOrders]);
+
+  // Fetch seller buyers list when Students Helped modal opens
+  useEffect(() => {
+    if (studentsModalOpen) {
+      setLoadingBuyers(true);
+      const sellerId = user?.uid || 'seller-guhan';
+      fetch(`/api/users/${sellerId}/buyers`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.buyers)) {
+            setBuyersList(data.buyers);
+          } else {
+            // Fallback calculation from seller orders
+            const map = new Map();
+            sellerOrders.forEach((o) => {
+              const key = (o.buyerId || o.buyerEmail || o.buyerName || 'student').toLowerCase();
+              if (!map.has(key)) {
+                map.set(key, {
+                  id: key,
+                  name: o.buyerName || 'Campus Student',
+                  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+                  department: 'CSE',
+                  year: '3rd Year',
+                  purchasedItemsCount: 1,
+                  lastPurchaseDate: o.createdAt,
+                });
+              } else {
+                const existing = map.get(key);
+                existing.purchasedItemsCount += 1;
+              }
+            });
+            setBuyersList(Array.from(map.values()));
+          }
+        })
+        .catch(() => {
+          const map = new Map();
+          sellerOrders.forEach((o) => {
+            const key = (o.buyerId || o.buyerEmail || o.buyerName || 'student').toLowerCase();
+            if (!map.has(key)) {
+              map.set(key, {
+                id: key,
+                name: o.buyerName || 'Campus Student',
+                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+                department: 'CSE',
+                year: '3rd Year',
+                purchasedItemsCount: 1,
+                lastPurchaseDate: o.createdAt,
+              });
+            }
+          });
+          setBuyersList(Array.from(map.values()));
+        })
+        .finally(() => setLoadingBuyers(false));
+    }
+  }, [studentsModalOpen, user?.uid, sellerOrders]);
 
   // Real Count of Active Listings (Products + Gigs)
   const activeListingsCount = useMemo(() => {
@@ -432,16 +490,38 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
                 </div>
               </div>
 
-              {/* 3 Clean Real-Time Dynamic Stats Pills */}
+              {/* 3 Clean Real-Time Interactive Dynamic Stats Pills */}
               <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center">
-                  <span className="text-[11px] text-muted-foreground font-semibold block leading-tight">Students Helped</span>
-                  <span className="font-extrabold text-base sm:text-lg text-foreground mt-0.5 block">{studentsHelpedCount}</span>
-                </div>
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center">
-                  <span className="text-[11px] text-muted-foreground font-semibold block leading-tight">Active Listings</span>
-                  <span className="font-extrabold text-base sm:text-lg text-foreground mt-0.5 block">{activeListingsCount}</span>
-                </div>
+                {/* 1. Students Helped Stat Card (Phase 3: Interactive Radix Dialog Modal Trigger) */}
+                <button
+                  type="button"
+                  onClick={() => setStudentsModalOpen(true)}
+                  className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center hover:bg-purple-500/10 hover:border-purple-500/40 hover:scale-[1.03] transition-all cursor-pointer shadow-xs group"
+                >
+                  <span className="text-[11px] text-muted-foreground font-semibold block leading-tight group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                    Students Helped
+                  </span>
+                  <span className="font-extrabold text-base sm:text-lg text-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 mt-0.5 block flex items-center justify-center gap-1">
+                    {studentsHelpedCount}
+                    <Users className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 opacity-80 group-hover:scale-110 transition-transform" />
+                  </span>
+                </button>
+
+                {/* 2. Active Listings Stat Card (Phase 2: Interactive Next.js Link Navigation) */}
+                <Link
+                  href="/seller/dashboard/products"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center hover:bg-primary/10 hover:border-primary/40 hover:scale-[1.03] transition-all cursor-pointer shadow-xs group block"
+                >
+                  <span className="text-[11px] text-muted-foreground font-semibold block leading-tight group-hover:text-primary">
+                    Active Listings
+                  </span>
+                  <span className="font-extrabold text-base sm:text-lg text-foreground group-hover:text-primary mt-0.5 block flex items-center justify-center gap-1">
+                    {activeListingsCount}
+                    <ChevronRight className="h-3.5 w-3.5 text-primary opacity-80 group-hover:translate-x-0.5 transition-transform" />
+                  </span>
+                </Link>
+
+                {/* 3. Creator Rating Stat Card */}
                 <div className="p-3 sm:p-3.5 rounded-2xl bg-secondary/50 border border-border/50 text-center">
                   <span className="text-[11px] text-muted-foreground font-semibold block leading-tight">Creator Rating</span>
                   <span className="font-extrabold text-base sm:text-lg text-amber-600 dark:text-amber-400 mt-0.5 block">★ {avgRating}</span>
@@ -863,6 +943,77 @@ export function SellerDashboardContent({ isEmbedded = false }: { isEmbedded?: bo
                   Verify & Hand Over
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL 3: Students Helped Buyers List (Phase 3: Glassmorphic Design & Real-Time Buyers List) */}
+      <Dialog open={studentsModalOpen} onOpenChange={setStudentsModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl p-6 bg-card/90 backdrop-blur-xl border border-white/80 dark:border-border/60 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display font-black text-lg flex items-center gap-2">
+              <div className="h-9 w-9 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Users className="h-5 w-5" />
+              </div>
+              <span>Students Helped ({buyersList.length})</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              List of campus peers who have purchased items or ordered services from your studio.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-80 overflow-y-auto space-y-2.5 py-3 pr-1 scrollbar-thin">
+            {loadingBuyers ? (
+              <div className="py-10 text-center space-y-2">
+                <Loader2 className="h-6 w-6 animate-spin text-purple-600 mx-auto" />
+                <p className="text-xs text-muted-foreground font-semibold">Loading student buyers list...</p>
+              </div>
+            ) : buyersList.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground space-y-2">
+                <Users className="h-8 w-8 mx-auto opacity-30" />
+                <p className="text-xs font-semibold text-foreground">No campus buyers recorded yet</p>
+                <p className="text-[11px] max-w-xs mx-auto">
+                  When students complete orders with your store, their profile will appear here.
+                </p>
+              </div>
+            ) : (
+              buyersList.map((buyer) => (
+                <div
+                  key={buyer.id}
+                  className="p-3.5 rounded-2xl border border-border/80 bg-secondary/40 flex items-center justify-between gap-3 hover:bg-secondary/70 transition-all shadow-2xs"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-10 w-10 border-2 border-purple-500/20 shrink-0">
+                      <AvatarImage src={buyer.avatar} alt={buyer.name} />
+                      <AvatarFallback className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black text-xs">
+                        {buyer.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <h5 className="font-extrabold text-xs sm:text-sm text-foreground truncate">{buyer.name}</h5>
+                      <p className="text-[11px] text-muted-foreground truncate font-medium mt-0.5">
+                        {buyer.department || 'CSE'} • {buyer.year || '3rd Year'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20 text-[10px] font-bold px-2 py-0.5 shrink-0">
+                    {buyer.purchasedItemsCount || 1} {buyer.purchasedItemsCount === 1 ? 'Order' : 'Orders'}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStudentsModalOpen(false)}
+              className="w-full rounded-xl text-xs font-bold"
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

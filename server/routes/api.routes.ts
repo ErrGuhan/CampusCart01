@@ -5,6 +5,7 @@ import uploadRoutes from './upload.routes';
 import escrowRoutes from './escrow.routes';
 import trustRoutes from './trust.routes';
 import mlRoutes from './ml.routes';
+import userRoutes from './users.routes';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use('/upload', uploadRoutes);
 router.use('/escrow', escrowRoutes);
 router.use('/trust', trustRoutes);
 router.use('/analytics', mlRoutes);
+router.use('/users', userRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {
