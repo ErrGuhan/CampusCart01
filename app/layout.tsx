@@ -87,6 +87,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { RealtimeProvider } from '@/components/realtime-provider';
+
 export default function RootLayout({
   children,
 }: {
@@ -119,17 +121,19 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <AuthProvider>
-            <CartProvider>
-              <SwipeProvider>
-                <PWAProvider>
-                  {children}
-                  <BottomNav />
-                  <ScrollToTop />
-                  <CampusCartAIAssistant />
-                  <Toaster />
-                </PWAProvider>
-              </SwipeProvider>
-            </CartProvider>
+            <RealtimeProvider>
+              <CartProvider>
+                <SwipeProvider>
+                  <PWAProvider>
+                    {children}
+                    <BottomNav />
+                    <ScrollToTop />
+                    <CampusCartAIAssistant />
+                    <Toaster />
+                  </PWAProvider>
+                </SwipeProvider>
+              </CartProvider>
+            </RealtimeProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

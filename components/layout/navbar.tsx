@@ -49,6 +49,8 @@ const navItems = [
 ];
 
 
+import { useRealtimeSync } from '@/components/realtime-provider';
+
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -61,6 +63,7 @@ export function Navbar() {
   const { user, profile, isAdmin, loading, signOut } = useAuth();
   const { totalItems } = useCart();
   const { isInstallable, isInstalled, isIOS, promptInstall, openInstallDialog } = usePWAContext();
+  const { isConnected, unreadCount } = useRealtimeSync();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
