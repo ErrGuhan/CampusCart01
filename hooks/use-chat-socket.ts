@@ -41,13 +41,16 @@ export interface ChatSocketMessage {
   createdAt: string;
 }
 
-// Helper to deduplicate messages by ID or identical sender + text + timestamp
-function deduplicateMessages(existing: ChatSocketMessage[], incoming: ChatSocketMessage[]): ChatSocketMessage[] {
+// Helper to deduplicate messages by ID or identical sender + text + timestamp window
+export function deduplicateMessages(
+  existing: ChatSocketMessage[],
+  incoming: ChatSocketMessage[]
+): ChatSocketMessage[] {
   const map = new Map<string, ChatSocketMessage>();
   existing.forEach((m) => map.set(m.id, m));
 
   incoming.forEach((msg) => {
-    // Check if duplicate exists by ID or by matching senderId, text, and timestamp window
+    // Check if duplicate exists by ID or by matching senderId, text, and timestamp window (within 3s)
     const exists = Array.from(map.values()).some(
       (ex) =>
         ex.id === msg.id ||
@@ -80,9 +83,9 @@ export function useChatSocket(customServerUrl?: string) {
       if (typeof window !== 'undefined') {
         const protocol = window.location.protocol;
         const hostname = window.location.hostname || 'localhost';
-        return `${protocol}//${hostname}:3001/chat`;
+        return `${protocol}//${hostname}:5000`;
       }
-      return 'http://localhost:3001/chat';
+      return 'http://localhost:5000';
     };
 
     const targetUrl = getSocketUrl();
@@ -94,22 +97,22 @@ export function useChatSocket(customServerUrl?: string) {
     let socket: Socket;
     try {
       socket = io(targetUrl, {
+        path: '/socket.io',
         auth: { token },
         transports: ['websocket', 'polling'],
         autoConnect: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        timeout: 5000,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 2000,
+        timeout: 4000,
       });
       socketRef.current = socket;
 
       socket.on('connect', () => {
-        console.log('⚡ [Socket.io] Connected to Chat Gateway:', socket.id);
         setIsConnected(true);
       });
 
-      socket.on('connect_error', (err) => {
-        console.warn('⚡ [Socket.io] Connection notice:', err.message);
+      socket.on('connect_error', () => {
+        // Quietly mark as disconnected; Firestore real-time onSnapshot handles messaging seamlessly
         setIsConnected(false);
       });
 
@@ -117,7 +120,7 @@ export function useChatSocket(customServerUrl?: string) {
         setIsConnected(false);
       });
 
-      // Phase 3 Listeners: Active listeners for receive_global_message AND new_global_message
+      // Active listeners for global messages
       const handleIncomingGlobalMessage = (msg: ChatSocketMessage) => {
         setGlobalMessages((prev) => deduplicateMessages(prev, [msg]));
       };
@@ -125,7 +128,7 @@ export function useChatSocket(customServerUrl?: string) {
       socket.on('receive_global_message', handleIncomingGlobalMessage);
       socket.on('new_global_message', handleIncomingGlobalMessage);
 
-      // Listeners for direct messages
+      // Active listeners for direct messages
       const handleIncomingDirectMessage = (msg: ChatSocketMessage) => {
         if (!msg.conversationId) return;
         setDirectMessages((prev) => {
@@ -143,8 +146,8 @@ export function useChatSocket(customServerUrl?: string) {
       socket.on('user_typing', ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
         setTypingUsers((prev) => ({ ...prev, [senderId]: isTyping }));
       });
-    } catch (err) {
-      console.warn('Socket initialization notice:', err);
+    } catch {
+      // Graceful fallback to Firestore
     }
 
     return () => {
@@ -157,7 +160,10 @@ export function useChatSocket(customServerUrl?: string) {
   const joinDirectChat = useCallback((senderId: string, recipientId: string) => {
     if (!socketRef.current || !senderId || !recipientId) return;
     try {
-      socketRef.current.emit('join_direct_chat', { senderId, recipientId });
+      const sorted = [senderId, recipientId].sort();
+      const roomName = `chat_${sorted[0]}_${sorted[1]}`;
+      socketRef.current.emit('join_direct', { senderId, recipientId });
+      socketRef.current.emit('join_room', { room: roomName });
     } catch {}
   }, []);
 
@@ -178,7 +184,7 @@ export function useChatSocket(customServerUrl?: string) {
   const emitTyping = useCallback((room: string, senderId: string, isTyping: boolean) => {
     if (!socketRef.current) return;
     try {
-      socketRef.current.emit('user_typing', { room, senderId, isTyping });
+      socketRef.current.emit('typing', { room, senderId, isTyping });
     } catch {}
   }, []);
 

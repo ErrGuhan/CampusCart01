@@ -8,8 +8,20 @@ import {
   ChevronLeft, Loader2, Info, MapPin, Handshake, ShoppingBag,
   Settings, Bell, Plus, Mic, Copy, ThumbsUp, Volume2, RotateCcw,
   Check, X, Trash2, MoreVertical, BellRing, ExternalLink,
-  Globe, Shield, MessageCircle, ExternalLink as LinkIcon, Radio, Zap
+  Globe, Shield, MessageCircle, ExternalLink as LinkIcon, Radio, Zap,
+  Filter, CheckCircle2, MessageCircleQuestion
 } from 'lucide-react';
+import {
+  collection,
+  doc,
+  setDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  where,
+  limit,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
@@ -40,7 +52,7 @@ import {
   getMessages,
   sendChatMessage,
   getNotifications,
-  deleteConversation
+  deleteConversation,
 } from '@/lib/firebase-queries';
 import type { Conversation, NotificationItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -50,10 +62,11 @@ const GLOBAL_HUB_ID = 'campus_global_hub';
 
 // Preset Quick Reply Chips for 1-Tap Message Sending
 const QUICK_REPLY_CHIPS = [
-  '👋 Hey! Is this available?',
+  '👋 Hey! Is this still available?',
   '🤝 Let\'s meet at Central Library',
-  '📍 What is your hostel/location?',
   '💰 Is the price negotiable?',
+  '📍 What is your hostel/room number?',
+  '📦 Can we meet at the Canteen?',
 ];
 
 // Helper to extract product context from text format [Re: "Product Title"]
@@ -76,7 +89,7 @@ function extractProductContext(text: string, contextObject?: ProductContext | nu
   return { product: null, cleanText: text };
 }
 
-// Phase 3 Deduplication Helper: Merges messages avoiding duplicate client or broadcast bubbles
+// Deduplication Helper: Merges messages avoiding duplicate client or broadcast bubbles
 function mergeAndSortMessages(existing: ChatSocketMessage[], incoming: ChatSocketMessage[]): ChatSocketMessage[] {
   const map = new Map<string, ChatSocketMessage>();
   existing.forEach((m) => map.set(m.id, m));
@@ -105,9 +118,10 @@ function MessagesContent() {
   const searchParams = useSearchParams();
   const targetUserParam = searchParams.get('user');
   const targetNameParam = searchParams.get('name');
+  const targetProductParam = searchParams.get('product');
   const { toast } = useToast();
 
-  // Socket.io Real-Time Connection with receive_global_message listener
+  // Socket.io Real-Time Connection
   const {
     isConnected,
     globalMessages: socketGlobalMessages,
@@ -124,6 +138,7 @@ function MessagesContent() {
   const [messages, setMessages] = useState<ChatSocketMessage[]>([]);
   const [inputMsg, setInputMsg] = useState('');
   const [search, setSearch] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'direct' | 'hub'>('all');
   const [mobileView, setMobileView] = useState<'list' | 'chat'>(targetUserParam ? 'chat' : 'list');
   const [sending, setSending] = useState(false);
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
@@ -141,6 +156,10 @@ function MessagesContent() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chatScrollContainerRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Broadcast channel for zero-latency cross-tab communication
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Smooth scroll container to bottom
   const scrollToBottom = useCallback((smooth = true) => {
@@ -152,79 +171,126 @@ function MessagesContent() {
     }
   }, []);
 
-  // Phase 2 Persistence Check: Load global chat history from GET /api/chat/global and Firestore fallback
-  const loadActiveMessages = useCallback(async (convId: string) => {
-    try {
-      let historical: ChatSocketMessage[] = [];
+  // 1. Inter-tab BroadcastChannel setup
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      const channel = new BroadcastChannel('campuscart_chat_channel');
+      broadcastChannelRef.current = channel;
 
-      if (convId === GLOBAL_HUB_ID) {
-        // Fetch REST history endpoint GET /api/chat/global
-        try {
-          const res = await fetch('/api/chat/global');
-          const data = await res.json();
-          if (data.success && Array.isArray(data.messages)) {
-            historical = data.messages;
+      channel.onmessage = (event) => {
+        const { type, conversationId, message } = event.data || {};
+        if (type === 'NEW_MESSAGE' && message) {
+          if (conversationId === activeConvId) {
+            setMessages((prev) => mergeAndSortMessages(prev, [message]));
+            setTimeout(() => scrollToBottom(true), 30);
           }
-        } catch {}
+        }
+      };
 
-        // Fallback to local storage / Firestore queries
-        const localMsgs = await getMessages(convId);
-        const formattedLocal: ChatSocketMessage[] = localMsgs.map((m) => ({
-          id: m.id,
-          chatType: 'GLOBAL',
-          conversationId: convId,
-          senderId: m.senderId,
-          recipientId: 'global',
-          senderName: m.senderName,
-          senderAvatar: m.senderAvatar || '',
-          content: m.text,
-          status: 'DELIVERED',
-          createdAt: m.createdAt,
-        }));
-
-        historical = mergeAndSortMessages(historical, formattedLocal);
-      } else {
-        const msgs = await getMessages(convId);
-        historical = msgs.map((m) => ({
-          id: m.id,
-          chatType: 'DIRECT',
-          conversationId: convId,
-          senderId: m.senderId,
-          recipientId: m.recipientId,
-          senderName: m.senderName,
-          senderAvatar: m.senderAvatar || '',
-          content: m.text,
-          status: 'DELIVERED',
-          createdAt: m.createdAt,
-        }));
-      }
-
-      setMessages((prev) => mergeAndSortMessages(prev, historical));
-      setTimeout(() => scrollToBottom(false), 50);
-    } catch (err) {
-      console.warn('Error loading active chat messages:', err);
+      return () => {
+        channel.close();
+      };
     }
-  }, [scrollToBottom]);
+  }, [activeConvId, scrollToBottom]);
 
-  // Load user conversations
+  // 2. Load conversations for the user
   const loadUserConversations = useCallback(async () => {
     if (!user) return;
-    const convs = await getConversations(user.uid);
-    const sorted = [...convs].sort((a, b) => {
-      const timeA = new Date(a.lastMessageTimestamp).getTime() || 0;
-      const timeB = new Date(b.lastMessageTimestamp).getTime() || 0;
-      return timeB - timeA;
-    });
-    setConversations(sorted);
+    try {
+      const convs = await getConversations(user.uid);
+      const sorted = [...convs].sort((a, b) => {
+        const timeA = new Date(a.lastMessageTimestamp).getTime() || 0;
+        const timeB = new Date(b.lastMessageTimestamp).getTime() || 0;
+        return timeB - timeA;
+      });
+      setConversations(sorted);
+    } catch (err) {
+      console.warn('Error loading conversations:', err);
+    }
   }, [user]);
 
-  // Load chat messages when active conversation changes
+  // 3. Real-Time Firestore Snapshot Listener for Active Conversation Messages
   useEffect(() => {
     if (!activeConvId) return;
-    loadActiveMessages(activeConvId);
-  }, [activeConvId, loadActiveMessages]);
 
-  // Phase 3 Real-Time Socket Listener Sync: Updates setMessages upon receive_global_message broadcast
+    let unsubscribe = () => {};
+
+    try {
+      const msgsRef = collection(db, 'chats', activeConvId, 'messages');
+      const q = query(msgsRef, orderBy('createdAt', 'asc'), limit(100));
+
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const liveMsgs: ChatSocketMessage[] = [];
+            snapshot.forEach((docSnap) => {
+              const d = docSnap.data();
+              liveMsgs.push({
+                id: docSnap.id,
+                chatType: activeConvId === GLOBAL_HUB_ID ? 'GLOBAL' : 'DIRECT',
+                conversationId: activeConvId,
+                senderId: d.senderId,
+                recipientId: d.recipientId || (activeConvId === GLOBAL_HUB_ID ? 'global' : ''),
+                senderName: d.senderName || 'Campus Student',
+                senderAvatar: d.senderAvatar || '',
+                content: d.text || d.content || '',
+                productContext: d.productContext || null,
+                status: 'DELIVERED',
+                createdAt: d.createdAt || new Date().toISOString(),
+              });
+            });
+
+            setMessages((prev) => mergeAndSortMessages(prev, liveMsgs));
+            setTimeout(() => scrollToBottom(true), 50);
+          }
+        },
+        (err) => {
+          console.warn('Firestore onSnapshot listener notice:', err);
+        }
+      );
+    } catch (err) {
+      console.warn('Chat listener setup notice:', err);
+    }
+
+    // Also fetch initial/cached messages from local storage / REST fallback
+    (async () => {
+      try {
+        if (activeConvId === GLOBAL_HUB_ID) {
+          try {
+            const res = await fetch('/api/chat/global');
+            const data = await res.json();
+            if (data.success && Array.isArray(data.messages)) {
+              setMessages((prev) => mergeAndSortMessages(prev, data.messages));
+            }
+          } catch {}
+        }
+        const cached = await getMessages(activeConvId);
+        if (cached.length > 0) {
+          const formatted: ChatSocketMessage[] = cached.map((m) => ({
+            id: m.id,
+            chatType: activeConvId === GLOBAL_HUB_ID ? 'GLOBAL' : 'DIRECT',
+            conversationId: activeConvId,
+            senderId: m.senderId,
+            recipientId: m.recipientId,
+            senderName: m.senderName,
+            senderAvatar: m.senderAvatar || '',
+            content: m.text,
+            status: 'DELIVERED',
+            createdAt: m.createdAt,
+          }));
+          setMessages((prev) => mergeAndSortMessages(prev, formatted));
+          setTimeout(() => scrollToBottom(false), 30);
+        }
+      } catch {}
+    })();
+
+    return () => {
+      unsubscribe();
+    };
+  }, [activeConvId, scrollToBottom]);
+
+  // 4. Socket.io Real-Time Listener Sync
   useEffect(() => {
     if (activeConvId === GLOBAL_HUB_ID && socketGlobalMessages.length > 0) {
       setMessages((prev) => mergeAndSortMessages(prev, socketGlobalMessages));
@@ -236,16 +302,53 @@ function MessagesContent() {
     }
   }, [activeConvId, socketGlobalMessages, socketDirectMessages, scrollToBottom]);
 
-  // Event listener sync across open tabs and windows
+  // 5. Real-Time Firestore Snapshot Listener for Conversations List
   useEffect(() => {
     if (!user) return;
     loadUserConversations();
     getNotifications(user.uid).then(setNotifications).catch(() => {});
 
+    let unsubscribe = () => {};
+
+    try {
+      const chatsRef = collection(db, 'chats');
+      const q = query(chatsRef, where('participants', 'array-contains', user.uid));
+
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const liveConvs: Conversation[] = [];
+            snapshot.forEach((docSnap) => {
+              const d = docSnap.data();
+              liveConvs.push({
+                id: docSnap.id,
+                participantIds: d.participants || [],
+                participantNames: d.participantNames || {},
+                participantAvatars: d.participantAvatars || {},
+                lastMessage: d.lastMessage || '',
+                lastMessageTimestamp: d.lastMessageTimestamp || d.updatedAt || new Date().toISOString(),
+                unreadCount: d.unreadCount || {},
+              });
+            });
+
+            setConversations((prev) => {
+              const map = new Map<string, Conversation>();
+              prev.forEach((c) => map.set(c.id, c));
+              liveConvs.forEach((c) => map.set(c.id, { ...map.get(c.id), ...c }));
+              return Array.from(map.values()).sort(
+                (a, b) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime()
+              );
+            });
+          }
+        },
+        (err) => {
+          console.warn('Conversations listener notice:', err);
+        }
+      );
+    } catch {}
+
     const handleMessageSync = () => {
-      if (activeConvId) {
-        loadActiveMessages(activeConvId);
-      }
       loadUserConversations();
     };
 
@@ -253,13 +356,18 @@ function MessagesContent() {
       window.addEventListener('campuscart_message_sent', handleMessageSync);
       window.addEventListener('storage', handleMessageSync);
       return () => {
+        unsubscribe();
         window.removeEventListener('campuscart_message_sent', handleMessageSync);
         window.removeEventListener('storage', handleMessageSync);
       };
     }
-  }, [user, activeConvId, loadActiveMessages, loadUserConversations]);
 
-  // Handle URL target user param for direct messages
+    return () => {
+      unsubscribe();
+    };
+  }, [user, loadUserConversations]);
+
+  // 6. Handle URL target user param for direct messages
   useEffect(() => {
     if (!user || !targetUserParam) return;
     const sorted = [user.uid, targetUserParam].sort();
@@ -280,7 +388,7 @@ function MessagesContent() {
         [user.uid]: profile?.avatar_url || '',
         [targetUserParam]: '',
       },
-      lastMessage: 'Say hi 👋',
+      lastMessage: targetProductParam ? `Inquiring about ${targetProductParam}` : 'Say hi 👋',
       lastMessageTimestamp: new Date().toISOString(),
       unreadCount: {},
     };
@@ -289,13 +397,26 @@ function MessagesContent() {
       if (prev.some((c) => c.id === computedId)) return prev;
       return [draftConv, ...prev];
     });
-  }, [user, targetUserParam, targetNameParam, profile, joinDirectChat]);
+  }, [user, targetUserParam, targetNameParam, targetProductParam, profile, joinDirectChat]);
 
   const handleSelectConversation = (id: string, otherId?: string) => {
     setActiveConvId(id);
     setMobileView('chat');
     if (id !== GLOBAL_HUB_ID && user && otherId) {
       joinDirectChat(user.uid, otherId);
+    }
+
+    // Clear unread count for current user
+    if (user) {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === id && c.unreadCount && c.unreadCount[user.uid]) {
+            const nextUnread = { ...c.unreadCount, [user.uid]: 0 };
+            return { ...c, unreadCount: nextUnread };
+          }
+          return c;
+        })
+      );
     }
   };
 
@@ -316,7 +437,7 @@ function MessagesContent() {
     setTouchStartX(null);
   };
 
-  // Send message handler with optimistic UI and server room broadcast
+  // Send message handler
   async function handleSend(e?: React.FormEvent, customText?: string) {
     if (e) e.preventDefault();
     const textToSend = (customText || inputMsg).trim();
@@ -333,7 +454,6 @@ function MessagesContent() {
     setInputMsg('');
 
     if (activeConvId === GLOBAL_HUB_ID) {
-      // 1. Global Campus Hub Message Handling (Optimistic UI + Server Room Broadcast)
       const newGlobalMsg: ChatSocketMessage = {
         id: messageId,
         chatType: 'GLOBAL',
@@ -347,10 +467,17 @@ function MessagesContent() {
         createdAt,
       };
 
-      // Optimistically append message locally
+      // Optimistic append
       setMessages((prev) => mergeAndSortMessages(prev, [newGlobalMsg]));
 
-      // Persist to local storage & REST / Firestore queries
+      // Cross-tab broadcast
+      broadcastChannelRef.current?.postMessage({
+        type: 'NEW_MESSAGE',
+        conversationId: GLOBAL_HUB_ID,
+        message: newGlobalMsg,
+      });
+
+      // Persist to Firestore & REST
       try {
         await sendChatMessage({
           id: messageId,
@@ -363,7 +490,6 @@ function MessagesContent() {
           text: textToSend,
         });
 
-        // Also post to REST endpoint POST /api/chat/global
         fetch('/api/chat/global', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -377,7 +503,7 @@ function MessagesContent() {
         }).catch(() => {});
       } catch {}
 
-      // Broadcast to room via Socket.io (Phase 1 Fix)
+      // Socket broadcast
       sendGlobalMessage({
         senderId: user.uid,
         senderName,
@@ -386,7 +512,6 @@ function MessagesContent() {
         productContext: product || undefined,
       });
     } else {
-      // 2. Direct Message Handling
       const currentConv = conversations.find((c) => c.id === activeConvId);
       const recipientId = currentConv?.participantIds.find((id) => id !== user.uid) || targetUserParam || '';
       const recipientName = currentConv?.participantNames?.[recipientId] || targetNameParam || 'Campus Student';
@@ -407,6 +532,12 @@ function MessagesContent() {
       };
 
       setMessages((prev) => mergeAndSortMessages(prev, [newDirectMsg]));
+
+      broadcastChannelRef.current?.postMessage({
+        type: 'NEW_MESSAGE',
+        conversationId: activeConvId,
+        message: newDirectMsg,
+      });
 
       try {
         await sendChatMessage({
@@ -456,7 +587,7 @@ function MessagesContent() {
         setActiveConvId(GLOBAL_HUB_ID);
         setMobileView('list');
       }
-      toast({ title: 'Conversation deleted 🗑️', description: `Chat with ${convToDelete.name} has been removed.` });
+      toast({ title: 'Conversation removed 🗑️', description: `Chat with ${convToDelete.name} has been deleted.` });
     } catch (err: any) {
       toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -466,38 +597,49 @@ function MessagesContent() {
     }
   }
 
-  function handleCopy(text: string, id: string) {
+  // Helper to copy message text with feedback
+  const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedMessageId(id);
-    toast({ title: 'Copied to clipboard' });
+    toast({ title: 'Copied to clipboard 📋' });
     setTimeout(() => setCopiedMessageId(null), 2000);
-  }
+  };
 
-  function toggleLike(id: string) {
+  const toggleLike = (id: string) => {
     setLikedMessages((prev) => ({ ...prev, [id]: !prev[id] }));
-  }
+  };
 
-  function handleSpeak(text: string) {
+  const handleSpeak = (text: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       window.speechSynthesis.speak(utterance);
     }
-  }
+  };
 
-  const unreadNotificationsCount = useMemo(() => notifications.filter((n) => !n.isRead).length, [notifications]);
+  const unreadNotificationsCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
+  }, [notifications]);
 
   const filteredConversations = useMemo(() => {
-    if (!search.trim()) return conversations;
-    const q = search.toLowerCase().trim();
     return conversations.filter((c) => {
+      if (c.id === GLOBAL_HUB_ID) return false;
       const otherId = c.participantIds.find((id) => id !== user?.uid) || '';
-      const otherName = (c.participantNames?.[otherId] || '').toLowerCase();
-      const lastMsg = (c.lastMessage || '').toLowerCase();
-      return otherName.includes(q) || lastMsg.includes(q);
+      const otherName = c.participantNames?.[otherId] || 'Campus Student';
+      const lastMsg = c.lastMessage || '';
+
+      const matchesSearch =
+        otherName.toLowerCase().includes(search.toLowerCase()) ||
+        lastMsg.toLowerCase().includes(search.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      if (filterTab === 'direct') return true;
+      if (filterTab === 'hub') return false;
+      return true;
     });
-  }, [conversations, search, user?.uid]);
+  }, [conversations, search, user?.uid, filterTab]);
 
   const activeConv = useMemo(() => {
     if (activeConvId === GLOBAL_HUB_ID) return null;
@@ -539,7 +681,7 @@ function MessagesContent() {
       <>
         <Navbar />
         <main className="container-px mx-auto max-w-6xl py-12 min-h-screen">
-          <div className="h-96 animate-pulse rounded-3xl bg-secondary/50" />
+          <div className="h-96 animate-pulse rounded-3xl bg-secondary/50 backdrop-blur-xl border border-border/50" />
         </main>
         <Footer />
       </>
@@ -550,17 +692,20 @@ function MessagesContent() {
     return (
       <>
         <Navbar />
-        <main className="container-px mx-auto max-w-3xl py-20 text-center min-h-[70vh] flex items-center justify-center">
-          <div className="rounded-3xl border border-border p-8 sm:p-12 bg-card shadow-sm max-w-md w-full">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mx-auto mb-4">
+        <main className="container-px mx-auto max-w-3xl py-20 text-center min-h-[70vh] flex items-center justify-center relative">
+          <div className="absolute inset-0 -z-10 flex items-center justify-center">
+            <div className="h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+          </div>
+          <div className="rounded-3xl border border-border/70 p-8 sm:p-12 bg-card/80 backdrop-blur-2xl shadow-xl max-w-md w-full">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mx-auto mb-4 ring-8 ring-primary/5">
               <MessageSquare className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-bold">Sign In to View Messages</h1>
+            <h1 className="font-display text-2xl font-bold tracking-tight">Sign In to View Messages</h1>
             <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto leading-relaxed">
-              Chat directly with buyers, sellers, and student freelancers on campus.
+              Chat in real-time with buyers, sellers, and student freelancers across campus.
             </p>
-            <Button asChild className="btn-gradient-primary mt-6 rounded-xl w-full font-bold">
-              <Link href="/login">Sign In</Link>
+            <Button asChild className="btn-gradient-primary mt-6 rounded-2xl w-full font-bold shadow-md">
+              <Link href="/login">Sign In Now</Link>
             </Button>
           </div>
         </main>
@@ -575,31 +720,36 @@ function MessagesContent() {
       <main
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-[#F7F2FF] via-[#FAF7FF] to-[#FFF5ED] dark:from-[#150F22] dark:via-[#110C1B] dark:to-[#170E1B] py-2 sm:py-6 pb-24 md:pb-8"
+        className="min-h-[calc(100dvh-4rem)] bg-background relative overflow-x-hidden py-3 sm:py-6 pb-24 md:pb-8 flex flex-col justify-center"
       >
-        <div className="container-px mx-auto max-w-5xl">
-          
-          <div className="rounded-[28px] sm:rounded-[32px] border border-white/80 dark:border-border/60 bg-white/75 dark:bg-card/75 backdrop-blur-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-135px)] md:h-[calc(100dvh-150px)] min-h-[520px] max-h-[840px]">
+        {/* Soft Ambient Background Glows */}
+        <div className="absolute top-12 left-1/4 -z-10 h-72 w-72 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-16 right-1/4 -z-10 h-80 w-80 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+
+        <div className="container-px mx-auto max-w-6xl w-full">
+          {/* Main Glassmorphic Chat Shell */}
+          <div className="rounded-[28px] sm:rounded-[32px] border border-border/70 bg-card/75 dark:bg-card/65 backdrop-blur-2xl overflow-hidden shadow-2xl grid grid-cols-1 md:grid-cols-12 h-[calc(100dvh-5.5rem)] md:h-[calc(100vh-6.5rem)] min-h-[540px] max-h-[860px]">
             
-            {/* SIDEBAR NAVIGATION */}
+            {/* LEFT COLUMN: SIDEBAR (CONVERSATIONS & HUB) */}
             <div
-              className={`md:col-span-5 lg:col-span-4 border-r border-white/60 dark:border-border/60 flex flex-col h-full min-h-0 bg-transparent transition-all duration-300 ${
+              className={`md:col-span-5 lg:col-span-4 border-r border-border/60 flex flex-col h-full min-h-0 bg-background/40 dark:bg-background/20 transition-all duration-300 ${
                 mobileView === 'chat' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              <div className="p-3.5 sm:p-5 border-b border-white/60 dark:border-border/60 shrink-0 space-y-3 sm:space-y-4">
+              {/* Sidebar Header */}
+              <div className="p-4 sm:p-5 border-b border-border/60 shrink-0 space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                      Chats
+                  <div className="flex items-center gap-2.5">
+                    <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                      Messages
                     </h1>
-                    <span
-                      title={isConnected ? 'Real-time Socket Connected' : 'Connecting Socket...'}
-                      className={cn(
-                        'h-2.5 w-2.5 rounded-full animate-pulse mt-1',
-                        isConnected ? 'bg-emerald-500 ring-4 ring-emerald-500/20' : 'bg-amber-500'
-                      )}
-                    />
+                    <Badge
+                      variant="outline"
+                      className="gap-1.5 px-2 py-0.5 text-[10px] font-bold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Sync
+                    </Badge>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -608,9 +758,9 @@ function MessagesContent() {
                       onClick={() => setNotificationsModalOpen(true)}
                       title="Campus Notifications"
                       aria-label="Notifications"
-                      className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all"
+                      className="relative h-9 w-9 rounded-xl bg-card border border-border/70 shadow-xs flex items-center justify-center text-foreground hover:bg-accent hover:scale-105 active:scale-95 transition-all"
                     >
-                      <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                      <Bell className="h-4 w-4 text-muted-foreground" />
                       {unreadNotificationsCount > 0 && (
                         <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-white text-[9px] font-black flex items-center justify-center shadow-xs animate-pulse">
                           {unreadNotificationsCount}
@@ -620,217 +770,347 @@ function MessagesContent() {
                   </div>
                 </div>
 
+                {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
                     ref={searchInputRef}
-                    placeholder="Search Chats or Hub..."
+                    placeholder="Search chats or peers..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 h-10 sm:h-11 text-xs sm:text-sm rounded-2xl bg-card border border-border shadow-xs text-foreground"
+                    className="pl-10 pr-8 h-9 sm:h-10 text-xs sm:text-sm rounded-xl bg-card/80 border-border/70 shadow-2xs focus-visible:ring-primary/20"
                   />
                   {search && (
-                    <button type="button" onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1">
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                    >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
+
+                {/* Filter Pills */}
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setFilterTab('all')}
+                    className={cn(
+                      'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
+                      filterTab === 'all'
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                    )}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterTab('direct')}
+                    className={cn(
+                      'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
+                      filterTab === 'direct'
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                    )}
+                  >
+                    Direct
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterTab('hub')}
+                    className={cn(
+                      'px-3 py-1 rounded-lg text-xs font-semibold transition-all',
+                      filterTab === 'hub'
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                    )}
+                  >
+                    Campus Hub
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-2.5 scrollbar-thin">
-                
+              {/* Sidebar Conversations Scroll Area */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-2 scrollbar-thin">
                 {/* PINNED GLOBAL CAMPUS HUB */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectConversation(GLOBAL_HUB_ID)}
-                  className={cn(
-                    'w-full rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 flex items-center gap-3.5 text-left transition-all relative overflow-hidden border',
-                    activeConvId === GLOBAL_HUB_ID
-                      ? 'bg-gradient-to-r from-purple-600/15 via-indigo-600/15 to-pink-600/15 border-purple-500/50 shadow-md ring-2 ring-purple-500/20 backdrop-blur-xl scale-[1.01]'
-                      : 'bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-pink-500/10 border-purple-500/30 hover:border-purple-500/50 hover:bg-white/80 dark:hover:bg-card/80 backdrop-blur-md shadow-xs'
-                  )}
-                >
-                  <div className="h-11 w-11 sm:h-13 sm:w-13 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-2 ring-purple-400/30">
-                    <Globe className="h-5 w-5 sm:h-6 sm:w-6 animate-spin-slow" />
-                  </div>
+                {(filterTab === 'all' || filterTab === 'hub') && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectConversation(GLOBAL_HUB_ID)}
+                    className={cn(
+                      'w-full rounded-2xl p-3 sm:p-3.5 flex items-center gap-3 text-left transition-all relative overflow-hidden border',
+                      activeConvId === GLOBAL_HUB_ID
+                        ? 'bg-primary/10 border-primary/40 shadow-sm ring-1 ring-primary/20 backdrop-blur-xl'
+                        : 'bg-card/70 dark:bg-card/50 border-border/60 hover:border-border hover:bg-card/90 shadow-2xs'
+                    )}
+                  >
+                    <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Globe className="h-5 w-5" />
+                    </div>
 
-                  <div className="flex-1 min-w-0 z-10">
-                    <div className="flex items-center justify-between gap-1">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="text-xs sm:text-sm font-black text-foreground tracking-tight">Campus Hub</h4>
-                        <Badge className="bg-purple-600/90 text-white text-[9px] font-bold px-1.5 py-0 h-4 border-0">
-                          GLOBAL
-                        </Badge>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs sm:text-sm font-bold text-foreground tracking-tight">SVCET Campus Hub</h4>
+                          <Badge className="bg-primary/20 text-primary hover:bg-primary/30 text-[9px] font-black px-1.5 py-0 h-4 border-0">
+                            GLOBAL
+                          </Badge>
+                        </div>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                          <Radio className="h-2.5 w-2.5 animate-pulse text-emerald-500" />
+                          Live
+                        </span>
                       </div>
-                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-extrabold flex items-center gap-1">
-                        <Radio className="h-2.5 w-2.5 animate-pulse text-emerald-500" />
-                        Live
+                      <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
+                        Public campus feed • Instant broadcast
+                      </p>
+                    </div>
+                  </button>
+                )}
+
+                {filterTab !== 'hub' && (
+                  <>
+                    <div className="pt-2 pb-1 px-1 flex items-center justify-between text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <span>Direct Messages</span>
+                      <span className="text-[10px] font-semibold bg-secondary/80 px-2 py-0.5 rounded-full">
+                        {filteredConversations.length}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
-                      Public campus feed • Real-time broadcast
-                    </p>
-                  </div>
-                </button>
 
-                <div className="pt-1 pb-0.5 px-1 flex items-center justify-between text-[11px] font-extrabold text-muted-foreground uppercase tracking-wider">
-                  <span>Direct Messages</span>
-                  <span className="text-[10px] font-semibold">{filteredConversations.length}</span>
-                </div>
-
-                {filteredConversations.length === 0 ? (
-                  <div className="p-6 text-center text-muted-foreground">
-                    <p className="text-xs font-semibold">No direct messages yet.</p>
-                  </div>
-                ) : (
-                  filteredConversations.map((c) => {
-                    const otherId = c.participantIds.find((id) => id !== user.uid) || '';
-                    const otherName = c.participantNames?.[otherId] || 'Campus Student';
-                    const otherAvatar = c.participantAvatars?.[otherId];
-                    const isSelected = c.id === activeConvId;
-
-                    return (
-                      <div
-                        key={c.id}
-                        className={cn(
-                          'group relative w-full rounded-2xl sm:rounded-3xl flex items-center transition-all border',
-                          isSelected
-                            ? 'bg-card border-primary/40 shadow-md ring-2 ring-primary/10'
-                            : 'bg-card/75 dark:bg-card/60 border-border/80 hover:bg-card shadow-xs hover:scale-[1.01]'
-                        )}
-                      >
-                        <button
-                          onClick={() => handleSelectConversation(c.id, otherId)}
-                          className="flex-1 p-3 sm:p-4 flex items-center gap-3 sm:gap-3.5 text-left min-w-0"
-                        >
-                          <Avatar className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 ring-2 ring-purple-400/25 shadow-xs">
-                            <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
-                            <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-700 dark:text-purple-300 font-black">
-                              {otherName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1">
-                              <h4 className="text-xs sm:text-sm font-extrabold text-foreground truncate">{otherName}</h4>
-                              <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
-                                {new Date(c.lastMessageTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
-                              {c.lastMessage || 'Say hi 👋'}
-                            </p>
-                          </div>
-                        </button>
-
-                        <div className="pr-3 flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConvToDelete({ id: c.id, name: otherName });
-                              setDeleteDialogOpen(true);
-                            }}
-                            title="Delete Chat"
-                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                    {filteredConversations.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground space-y-1.5">
+                        <MessageSquare className="h-6 w-6 mx-auto opacity-30" />
+                        <p className="text-xs font-semibold">No direct conversations yet.</p>
+                        <p className="text-[11px] opacity-80">Click &apos;Chat with Seller&apos; on any product or item.</p>
                       </div>
-                    );
-                  })
+                    ) : (
+                      filteredConversations.map((c) => {
+                        const otherId = c.participantIds.find((id) => id !== user.uid) || '';
+                        const otherName = c.participantNames?.[otherId] || 'Campus Student';
+                        const otherAvatar = c.participantAvatars?.[otherId];
+                        const isSelected = c.id === activeConvId;
+                        const unread = (c.unreadCount && c.unreadCount[user.uid]) || 0;
+
+                        return (
+                          <div
+                            key={c.id}
+                            className={cn(
+                              'group relative w-full rounded-2xl flex items-center transition-all border',
+                              isSelected
+                                ? 'bg-primary/10 border-primary/40 shadow-xs ring-1 ring-primary/20'
+                                : 'bg-card/70 dark:bg-card/50 border-border/60 hover:bg-card hover:border-border shadow-2xs'
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleSelectConversation(c.id, otherId)}
+                              className="flex-1 p-3 sm:p-3.5 flex items-center gap-3 text-left min-w-0"
+                            >
+                              <div className="relative shrink-0">
+                                <Avatar className="h-10 w-10 sm:h-11 sm:w-11 ring-1 ring-border/80 shadow-2xs">
+                                  <AvatarImage src={otherAvatar} alt={otherName} className="object-cover" />
+                                  <AvatarFallback className="text-xs bg-primary/10 text-primary font-bold">
+                                    {otherName.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" />
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <h4 className="text-xs sm:text-sm font-bold text-foreground truncate">{otherName}</h4>
+                                  <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
+                                    {new Date(c.lastMessageTimestamp).toLocaleTimeString([], {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-1 mt-0.5">
+                                  <p className="text-xs text-muted-foreground truncate font-medium flex-1">
+                                    {c.lastMessage || 'Say hi 👋'}
+                                  </p>
+                                  {unread > 0 && (
+                                    <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center shadow-xs">
+                                      {unread}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+
+                            <div className="pr-2 flex items-center shrink-0">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConvToDelete({ id: c.id, name: otherName });
+                                  setDeleteDialogOpen(true);
+                                }}
+                                title="Delete Conversation"
+                                className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </>
                 )}
               </div>
             </div>
 
-            {/* RIGHT PANEL: ACTIVE CHAT THREAD */}
+            {/* RIGHT COLUMN: ACTIVE CHAT VIEWPORT */}
             <div
-              className={`md:col-span-7 lg:col-span-8 flex flex-col h-full min-h-0 bg-white/40 dark:bg-card/40 backdrop-blur-xl ${
+              className={`md:col-span-7 lg:col-span-8 flex flex-col h-full min-h-0 bg-card/40 dark:bg-card/20 backdrop-blur-xl ${
                 mobileView === 'list' ? 'hidden md:flex' : 'flex'
               }`}
             >
-              <div className="p-3 sm:p-4 border-b border-white/60 dark:border-border/60 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-md shrink-0">
-                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              {/* Active Chat Header */}
+              <div className="p-3.5 sm:p-4 border-b border-border/60 flex items-center justify-between bg-card/60 dark:bg-card/40 backdrop-blur-md shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
                   <button
                     type="button"
                     onClick={() => setMobileView('list')}
-                    aria-label="Back to conversations"
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                    aria-label="Back to conversation list"
+                    className="md:hidden h-9 w-9 rounded-xl bg-card border border-border/70 shadow-2xs flex items-center justify-center text-foreground hover:bg-accent transition-all shrink-0"
                   >
-                    <ArrowLeft className="h-4.5 w-4.5 sm:h-5 sm:w-5 stroke-[2.2]" />
+                    <ChevronLeft className="h-5 w-5" />
                   </button>
 
+                  {activeConvId === GLOBAL_HUB_ID ? (
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-primary to-accent text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Globe className="h-5 w-5" />
+                    </div>
+                  ) : (
+                    <div className="relative shrink-0">
+                      <Avatar className="h-10 w-10 ring-1 ring-border shadow-2xs">
+                        <AvatarImage src={otherParticipant?.avatar} alt={otherParticipant?.name} className="object-cover" />
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-bold">
+                          {otherParticipant?.name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
+                    </div>
+                  )}
+
                   <div className="min-w-0">
-                    <h2 className="font-display text-sm sm:text-base md:text-lg font-black text-foreground truncate flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <h2 className="font-display text-sm sm:text-base font-bold text-foreground truncate">
+                        {activeConvId === GLOBAL_HUB_ID ? 'SVCET Campus Hub' : otherParticipant?.name || 'Peer Chat'}
+                      </h2>
                       {activeConvId === GLOBAL_HUB_ID ? (
-                        <>
-                          <span>Campus Hub</span>
-                          <Badge className="bg-purple-600 text-white text-[9px] font-extrabold px-2 py-0.5">
-                            GLOBAL CHAT
-                          </Badge>
-                        </>
+                        <Badge className="bg-primary/20 text-primary hover:bg-primary/20 text-[9px] font-black px-1.5 py-0 h-4 border-0">
+                          PUBLIC
+                        </Badge>
                       ) : (
-                        otherParticipant?.name || 'Direct Message'
+                        <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 h-4 border-border text-muted-foreground gap-0.5">
+                          <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                          SVCET Verified
+                        </Badge>
                       )}
-                    </h2>
-                    <p className="text-[10px] sm:text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      <span>{activeConvId === GLOBAL_HUB_ID ? 'Public Campus Feed • Real-Time Broadcast' : 'Direct Message • Encrypted'}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>
+                        {activeConvId === GLOBAL_HUB_ID
+                          ? 'Real-Time Campus Feed • Everyone on Campus'
+                          : 'Direct Peer Conversation • Encrypted & Private'}
+                      </span>
                     </p>
                   </div>
                 </div>
 
+                {/* Actions Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      aria-label="Chat Options"
-                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                      aria-label="Conversation Options"
+                      className="h-9 w-9 rounded-xl bg-card border border-border/70 shadow-2xs flex items-center justify-center text-foreground hover:bg-accent transition-all shrink-0"
                     >
-                      <Settings className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-xl">
+                  <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5 shadow-xl bg-card/95 backdrop-blur-xl">
                     {otherParticipant && (
                       <DropdownMenuItem asChild className="rounded-xl font-medium text-xs cursor-pointer">
                         <Link href={`/seller/${encodeURIComponent(otherParticipant.name.toLowerCase().replace(/\s+/g, '-'))}`}>
                           <Store className="h-4 w-4 mr-2 text-primary" />
-                          View Storefront
+                          View Student Storefront
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={() => setMessages([])} className="rounded-xl font-medium text-xs cursor-pointer">
-                      <RotateCcw className="h-4 w-4 mr-2 text-muted-foreground" />
-                      Clear Chat History
+                    <DropdownMenuItem
+                      onClick={() => handleSend(undefined, '📍 Let\'s meet at Central Library to inspect the item.')}
+                      className="rounded-xl font-medium text-xs cursor-pointer"
+                    >
+                      <MapPin className="h-4 w-4 mr-2 text-primary" />
+                      Share Library Meetup Point
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (activeConvId && activeConvId !== GLOBAL_HUB_ID) {
+                          setConvToDelete({ id: activeConvId, name: otherParticipant?.name || 'this student' });
+                          setDeleteDialogOpen(true);
+                        } else {
+                          toast({ title: 'Campus Hub cannot be deleted' });
+                        }
+                      }}
+                      className="rounded-xl font-medium text-xs cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Conversation
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
 
+              {/* Product Context Banner (if chat was initiated from a product) */}
+              {targetProductParam && (
+                <div className="px-4 py-2 bg-primary/5 border-b border-primary/15 flex items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <ShoppingBag className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-xs font-semibold text-foreground truncate">
+                      Chatting regarding listing: <strong className="text-primary font-bold">{targetProductParam}</strong>
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] bg-card border-primary/30 text-primary shrink-0">
+                    Marketplace Inquiry
+                  </Badge>
+                </div>
+              )}
+
               {/* Messages Body */}
               <div
                 ref={chatScrollContainerRef}
-                className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 scrollbar-thin overscroll-contain"
+                className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin overscroll-contain"
               >
                 <div className="flex justify-center my-1">
-                  <div className="rounded-full px-4 py-0.5 sm:py-1 bg-card border border-border/80 text-[11px] sm:text-xs font-bold text-muted-foreground shadow-xs">
+                  <div className="rounded-full px-3.5 py-1 bg-card/80 border border-border/80 text-[10px] font-bold text-muted-foreground shadow-2xs backdrop-blur-md">
                     Today
                   </div>
                 </div>
 
                 {messages.length === 0 ? (
-                  <div className="text-center py-10 space-y-2 text-muted-foreground">
-                    <div className="h-12 w-12 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center mx-auto">
-                      <MessageCircle className="h-6 w-6" />
+                  <div className="text-center py-12 space-y-2.5 text-muted-foreground">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto ring-6 ring-primary/5">
+                      <MessageCircleQuestion className="h-6 w-6" />
                     </div>
                     <p className="text-sm font-bold text-foreground">
-                      {activeConvId === GLOBAL_HUB_ID ? 'Welcome to Global Campus Hub! 🚀' : `Say hi to ${otherParticipant?.name || 'peer'} 👋`}
+                      {activeConvId === GLOBAL_HUB_ID
+                        ? 'Welcome to SVCET Campus Hub! 🚀'
+                        : `Start a conversation with ${otherParticipant?.name || 'peer'} 👋`}
                     </p>
-                    <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
                       {activeConvId === GLOBAL_HUB_ID
                         ? 'Broadcast messages, questions, and requests to all students on campus.'
-                        : 'Agree on meetup points, negotiate prices, or ask about listings.'}
+                        : 'Agree on meetup points, negotiate prices, or ask about listings safely.'}
                     </p>
                   </div>
                 ) : (
@@ -846,23 +1126,31 @@ function MessagesContent() {
                       <div
                         key={m.id}
                         className={cn(
-                          'flex items-end gap-2 sm:gap-2.5 w-full',
+                          'flex items-end gap-2 sm:gap-2.5 w-full group/msg',
                           isMe ? 'justify-end' : 'justify-start'
                         )}
                       >
                         {!isMe && (
-                          <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
-                            <AvatarImage src={m.senderAvatar || (isGlobalRoom ? undefined : otherParticipant?.avatar)} alt={m.senderName} />
-                            <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-primary/10 text-primary">
+                          <Avatar className="h-8 w-8 ring-1 ring-border/80 shadow-2xs shrink-0 mb-1">
+                            <AvatarImage
+                              src={m.senderAvatar || (isGlobalRoom ? undefined : otherParticipant?.avatar)}
+                              alt={m.senderName}
+                              className="object-cover"
+                            />
+                            <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
                               {(m.senderName || 'C').charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         )}
 
-                        <div className={cn('flex flex-col gap-1 max-w-[85%] sm:max-w-[78%] min-w-0', isMe ? 'items-end' : 'items-start')}>
-                          
+                        <div
+                          className={cn(
+                            'flex flex-col gap-1 max-w-[85%] sm:max-w-[72%] min-w-0',
+                            isMe ? 'items-end' : 'items-start'
+                          )}
+                        >
                           {!isMe && isGlobalRoom && (
-                            <span className="text-[11px] font-extrabold text-purple-700 dark:text-purple-300 px-1">
+                            <span className="text-[11px] font-bold text-primary px-1">
                               {m.senderName || 'Campus Peer'}
                             </span>
                           )}
@@ -870,22 +1158,22 @@ function MessagesContent() {
                           {product && (
                             <div className="w-full mb-1">
                               <Link
-                                href={`/marketplace`}
-                                className="group/card block rounded-2xl border border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20 p-2.5 sm:p-3 hover:bg-purple-500/20 transition-all shadow-xs"
+                                href="/marketplace"
+                                className="group/card block rounded-xl border border-primary/25 bg-primary/5 p-2.5 hover:bg-primary/10 transition-all shadow-2xs"
                               >
-                                <div className="flex items-center gap-2.5">
-                                  <div className="h-9 w-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
-                                    <ShoppingBag className="h-4.5 w-4.5" />
+                                <div className="flex items-center gap-2">
+                                  <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+                                    <ShoppingBag className="h-4 w-4" />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-300 block">
-                                      Referenced Listing
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-primary block">
+                                      Referenced Item
                                     </span>
-                                    <h5 className="text-xs font-extrabold text-foreground truncate group-hover/card:text-purple-600 transition-colors">
+                                    <h5 className="text-xs font-bold text-foreground truncate">
                                       {product.title}
                                     </h5>
                                   </div>
-                                  <LinkIcon className="h-3.5 w-3.5 text-muted-foreground group-hover/card:translate-x-0.5 transition-transform" />
+                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover/card:text-primary transition-colors" />
                                 </div>
                               </Link>
                             </div>
@@ -893,46 +1181,78 @@ function MessagesContent() {
 
                           <div
                             className={cn(
-                              'px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-[22px] sm:rounded-[24px] shadow-xs relative inline-block font-medium',
+                              'px-4 py-2.5 sm:px-4.5 sm:py-3 text-xs sm:text-sm leading-relaxed rounded-2xl shadow-xs relative font-normal backdrop-blur-md',
                               isMe
-                                ? 'btn-gradient-primary text-white rounded-br-[4px]'
-                                : 'bg-card text-foreground border border-border rounded-bl-[4px]'
+                                ? 'bg-gradient-to-r from-primary via-primary/95 to-primary/90 text-primary-foreground rounded-br-xs'
+                                : 'bg-card/85 dark:bg-secondary/60 text-foreground border border-border/70 rounded-bl-xs'
                             )}
                             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                           >
                             <p className="whitespace-pre-wrap">{cleanText}</p>
 
-                            {isMe && (
-                              <div className="flex items-center justify-end gap-1 mt-1 text-[10px] opacity-90 font-bold text-white/90">
-                                <span>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                {m.status === 'DELIVERED' ? (
-                                  <span title="Delivered"><CheckCheck className="h-3.5 w-3.5 text-white stroke-[2.5]" /></span>
-                                ) : (
-                                  <span title="Sent"><Check className="h-3.5 w-3.5 text-white/80 stroke-[2.5]" /></span>
-                                )}
-                              </div>
-                            )}
+                            <div
+                              className={cn(
+                                'flex items-center justify-end gap-1 mt-1 text-[10px] font-medium',
+                                isMe ? 'text-primary-foreground/80' : 'text-muted-foreground'
+                              )}
+                            >
+                              <span>
+                                {new Date(m.createdAt).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                              {isMe && (
+                                <CheckCheck className="h-3.5 w-3.5 text-primary-foreground stroke-[2.5]" />
+                              )}
+                            </div>
                           </div>
 
-                          {!isMe && (
-                            <div className="flex items-center gap-1.5 px-1 text-muted-foreground">
-                              <button type="button" onClick={() => handleCopy(cleanText, m.id)} className="p-1 hover:text-foreground">
-                                {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                              </button>
-                              <button type="button" onClick={() => toggleLike(m.id)} className={cn('p-1', isLiked && 'text-purple-600')}>
-                                <ThumbsUp className="h-3.5 w-3.5" />
-                              </button>
-                              <button type="button" onClick={() => handleSpeak(cleanText)} className="p-1 hover:text-foreground">
-                                <Volume2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          )}
+                          {/* Quick Message Actions */}
+                          <div
+                            className={cn(
+                              'flex items-center gap-1 px-1 opacity-0 group-hover/msg:opacity-100 transition-opacity',
+                              isMe ? 'justify-end' : 'justify-start'
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(cleanText, m.id)}
+                              title="Copy text"
+                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                            >
+                              {isCopied ? (
+                                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => toggleLike(m.id)}
+                              title="React"
+                              className={cn(
+                                'p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors',
+                                isLiked && 'text-red-500'
+                              )}
+                            >
+                              <ThumbsUp className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSpeak(cleanText)}
+                              title="Read aloud"
+                              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                            >
+                              <Volume2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
 
                         {isMe && (
-                          <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-purple-400/20 shadow-2xs shrink-0 mb-1">
+                          <Avatar className="h-8 w-8 ring-1 ring-primary/20 shadow-2xs shrink-0 mb-1">
                             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
-                            <AvatarFallback className="text-[10px] sm:text-xs font-bold bg-[#9333ea] text-white">
+                            <AvatarFallback className="text-[10px] font-bold bg-primary text-primary-foreground">
                               {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -943,11 +1263,12 @@ function MessagesContent() {
                 )}
               </div>
 
-              {/* INPUT DOCK */}
-              <div className="p-2.5 sm:p-4 bg-transparent shrink-0 space-y-2">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none px-1">
-                  <span className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 shrink-0 flex items-center gap-1">
-                    <Zap className="h-3 w-3 fill-purple-600" />
+              {/* INPUT DOCK & QUICK CHIPS */}
+              <div className="p-3 sm:p-4 bg-background/50 dark:bg-card/30 border-t border-border/60 shrink-0 space-y-2.5 backdrop-blur-xl">
+                {/* 1-Tap Quick Reply Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none px-0.5">
+                  <span className="text-[10px] font-black uppercase text-primary shrink-0 flex items-center gap-1">
+                    <Zap className="h-3 w-3 fill-primary" />
                     Quick:
                   </span>
                   {QUICK_REPLY_CHIPS.map((chipText) => (
@@ -955,20 +1276,21 @@ function MessagesContent() {
                       key={chipText}
                       type="button"
                       onClick={() => handleSend(undefined, chipText)}
-                      className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/90 dark:bg-card/90 border border-purple-500/30 text-foreground hover:bg-purple-500/10 hover:border-purple-500/50 hover:scale-105 active:scale-95 transition-all shrink-0 shadow-2xs"
+                      className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-card/85 hover:bg-accent border border-border/70 text-foreground hover:border-primary/40 hover:scale-[1.02] active:scale-95 transition-all shrink-0 shadow-2xs"
                     >
                       {chipText}
                     </button>
                   ))}
                 </div>
 
+                {/* Form Input Bar */}
                 <form onSubmit={handleSend} className="flex items-center gap-2 max-w-4xl mx-auto w-full">
-                  <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+                  <div className="flex-1 flex items-center h-11 sm:h-12 rounded-2xl bg-card/90 dark:bg-card/75 border border-border/70 shadow-sm px-2.5 gap-2 backdrop-blur-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all">
                     <button
                       type="button"
-                      onClick={() => handleSend(undefined, '🤝 Let\'s meet at Central Library')}
-                      title="Send Central Library Location"
-                      className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 flex items-center justify-center transition-all shrink-0"
+                      onClick={() => handleSend(undefined, '📍 Let\'s meet at Central Library entrance.')}
+                      title="Send Central Library Meeting Location"
+                      className="h-8 w-8 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-all shrink-0"
                     >
                       <MapPin className="h-4 w-4" />
                     </button>
@@ -978,29 +1300,41 @@ function MessagesContent() {
                       onChange={(e) => {
                         setInputMsg(e.target.value);
                         if (activeConvId && user) {
-                          emitTyping(activeConvId, user.uid, e.target.value.length > 0);
+                          emitTyping(activeConvId, user.uid, true);
+                          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                          typingTimeoutRef.current = setTimeout(() => {
+                            emitTyping(activeConvId, user.uid, false);
+                          }, 2500);
                         }
                       }}
-                      placeholder={activeConvId === GLOBAL_HUB_ID ? 'Broadcast message to Campus Hub...' : 'Type direct message...'}
+                      placeholder={
+                        activeConvId === GLOBAL_HUB_ID
+                          ? 'Broadcast message to SVCET Campus Hub...'
+                          : `Message ${otherParticipant?.name || 'peer'}...`
+                      }
                       className="flex-1 bg-transparent border-0 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none px-1"
                     />
 
                     <button
                       type="submit"
                       disabled={!inputMsg.trim() || sending}
-                      className="h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-xl bg-foreground text-background flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+                      className="h-8.5 w-8.5 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-40"
                     >
-                      {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />}
+                      {sending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4 stroke-[2.2] -translate-y-0.5 translate-x-0.5" />
+                      )}
                     </button>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => toast({ title: 'Microphone Voice Notes ready 🎙️' })}
-                    aria-label="Voice Message"
-                    className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/95 dark:bg-card/95 border border-white/80 dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+                    onClick={() => toast({ title: 'Microphone voice notes ready 🎙️' })}
+                    aria-label="Record voice note"
+                    className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-card/90 dark:bg-card/75 border border-border/70 shadow-sm flex items-center justify-center text-foreground hover:bg-accent transition-all shrink-0"
                   >
-                    <Mic className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    <Mic className="h-4.5 w-4.5" />
                   </button>
                 </form>
               </div>
@@ -1014,14 +1348,14 @@ function MessagesContent() {
 
       {/* Notifications Modal */}
       <Dialog open={notificationsModalOpen} onOpenChange={setNotificationsModalOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-5 sm:p-6 bg-white/95 dark:bg-card/95 backdrop-blur-2xl">
+        <DialogContent className="max-w-md rounded-3xl p-5 sm:p-6 bg-card/95 backdrop-blur-2xl border border-border/80">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <BellRing className="h-4 w-4" />
                 </div>
-                <DialogTitle className="font-display font-black text-lg">Notifications</DialogTitle>
+                <DialogTitle className="font-display font-bold text-lg">Notifications</DialogTitle>
               </div>
             </div>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -1038,7 +1372,7 @@ function MessagesContent() {
             ) : (
               notifications.map((n) => (
                 <div key={n.id} className="p-3 rounded-2xl border bg-secondary/40 border-border/60 flex items-start gap-3">
-                  <div className="h-7 w-7 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="h-7 w-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                     <MessageSquare className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1052,24 +1386,33 @@ function MessagesContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Conversation Dialog */}
+      {/* Delete Conversation Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-white dark:bg-card">
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-card/95 backdrop-blur-2xl border border-border/80">
           <DialogHeader className="text-center">
             <div className="h-12 w-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-2">
               <Trash2 className="h-6 w-6" />
             </div>
-            <DialogTitle className="font-display font-black text-lg">Delete Conversation?</DialogTitle>
+            <DialogTitle className="font-display font-bold text-lg">Delete Conversation?</DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground pt-1">
-              Are you sure you want to delete your conversation with <strong className="text-foreground">{convToDelete?.name}</strong>?
+              Are you sure you want to delete your conversation with <strong className="text-foreground">{convToDelete?.name}</strong>? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="flex sm:flex-row gap-2 pt-3">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="flex-1 rounded-xl">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="flex-1 rounded-xl"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDeleteConversation} disabled={isDeleting} className="flex-1 rounded-xl font-bold">
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteConversation}
+              disabled={isDeleting}
+              className="flex-1 rounded-xl font-bold"
+            >
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
               Delete
             </Button>
