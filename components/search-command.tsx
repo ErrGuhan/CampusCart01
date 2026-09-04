@@ -58,8 +58,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Search campus products, freelance gigs, categories, or pages... (⌘K)" />
-      <CommandList className="max-h-[75vh] sm:max-h-[420px] overflow-y-auto p-2">
+      <CommandInput placeholder="Type to search campus products, gigs, notes..." />
+      <CommandList className="max-h-[75vh] sm:max-h-[440px] overflow-y-auto p-2 pb-6">
         <CommandEmpty className="py-8 text-center text-sm text-muted-foreground">
           No campus items found matching your search.
         </CommandEmpty>

@@ -119,13 +119,13 @@ export default function NotificationsPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-4xl py-8 sm:py-12 min-h-screen">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border mb-8">
+      <main className="container-px mx-auto max-w-3xl py-8 sm:py-12 min-h-screen">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border mb-6">
           <div>
-            <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+            <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Notifications
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground font-medium">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-medium">
               Stay updated in real time on your product orders, freelance proposals, and campus activities.
             </p>
           </div>
@@ -135,45 +135,56 @@ export default function NotificationsPage() {
               variant="outline"
               size="sm"
               onClick={handleMarkAllRead}
-              className="rounded-xl text-xs gap-1.5 self-start sm:self-auto font-bold"
+              className="rounded-full text-xs gap-1.5 self-start sm:self-auto font-bold border-border/80 hover:bg-secondary"
             >
-              <Check className="h-4 w-4" />
-              Mark all as read
+              <Check className="h-3.5 w-3.5" />
+              <span>Mark all as read</span>
             </Button>
           )}
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            size="sm"
+        {/* Segmented Filter Pills */}
+        <div className="inline-flex items-center p-1 rounded-2xl bg-secondary/50 border border-border/60 mb-6 shadow-2xs">
+          <button
+            type="button"
             onClick={() => setFilter('all')}
-            className="rounded-xl text-xs whitespace-nowrap font-bold"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              filter === 'all'
+                ? 'bg-background text-foreground shadow-xs border border-border/60'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
             All ({notifications.length})
-          </Button>
-          <Button
-            variant={filter === 'unread' ? 'default' : 'outline'}
-            size="sm"
+          </button>
+          <button
+            type="button"
             onClick={() => setFilter('unread')}
-            className="rounded-xl text-xs whitespace-nowrap font-bold"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              filter === 'unread'
+                ? 'bg-background text-foreground shadow-xs border border-border/60'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            Unread ({notifications.filter((n) => !n.isRead).length})
-          </Button>
+            <span>Unread</span>
+            {notifications.filter((n) => !n.isRead).length > 0 && (
+              <span className="px-1.5 py-0.25 rounded-full bg-rose-500 text-white text-[10px] font-black leading-none">
+                {notifications.filter((n) => !n.isRead).length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Notification Feed */}
         {loading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-20 animate-pulse rounded-2xl bg-secondary/50 border border-border" />
+              <div key={i} className="h-20 animate-pulse rounded-2xl bg-secondary/50 border border-border/70" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-16 text-center bg-card/40 backdrop-blur-md">
-            <Bell className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="font-display text-lg font-bold text-foreground">No notifications to show</h3>
+          <div className="rounded-3xl border border-dashed border-border p-14 text-center bg-card/40 backdrop-blur-md">
+            <Bell className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+            <h3 className="font-display text-base font-bold text-foreground">No notifications to show</h3>
             <p className="text-xs text-muted-foreground mt-1 font-medium">You are completely up to date!</p>
           </div>
         ) : (
@@ -182,14 +193,16 @@ export default function NotificationsPage() {
               <div
                 key={n.id}
                 onClick={() => handleMarkRead(n.id)}
-                className={`rounded-2xl border p-4 sm:p-5 transition-all flex items-start justify-between gap-4 backdrop-blur-md ${
+                className={`rounded-2xl border p-4 sm:p-5 transition-all flex items-start justify-between gap-4 backdrop-blur-md cursor-pointer group ${
                   !n.isRead
-                    ? 'border-primary/40 bg-primary/5 shadow-xs'
-                    : 'border-border/80 bg-card'
+                    ? 'border-primary/40 bg-primary/5 hover:bg-primary/10 shadow-xs'
+                    : 'border-border/70 bg-card/90 hover:bg-secondary/40 shadow-xs'
                 }`}
               >
-                <div className="flex items-start gap-3.5 min-w-0">
-                  <div className="h-10 w-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary mt-0.5 shadow-2xs">
+                <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                  <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center mt-0.5 shadow-2xs transition-transform group-hover:scale-105 ${
+                    !n.isRead ? 'bg-primary/15 text-primary' : 'bg-secondary text-muted-foreground'
+                  }`}>
                     {n.type === 'order' ? (
                       <ShoppingBag className="h-5 w-5" />
                     ) : n.type === 'message' ? (
@@ -201,25 +214,29 @@ export default function NotificationsPage() {
                     )}
                   </div>
 
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-sm text-foreground">{n.title}</h4>
+                      <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+                        {n.title}
+                      </h4>
                       {!n.isRead && (
-                        <span className="h-2 w-2 rounded-full bg-primary inline-block shadow-2xs" />
+                        <span className="h-2 w-2 rounded-full bg-primary inline-block shadow-2xs shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed font-medium">{n.message}</p>
-                    <span className="text-[10px] text-muted-foreground mt-2 block font-semibold">
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed font-medium line-clamp-2">
+                      {n.message}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground mt-1.5 block font-semibold">
                       {new Date(n.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 </div>
 
                 {n.link && (
-                  <Button asChild size="sm" variant="ghost" className="rounded-xl text-xs gap-1 shrink-0 self-center font-bold text-primary hover:bg-primary/10">
+                  <Button asChild size="sm" variant="ghost" className="rounded-xl text-xs gap-1.5 shrink-0 self-center font-bold text-primary hover:bg-primary/15">
                     <Link href={n.link}>
-                      View
-                      <ArrowRight className="h-3 w-3" />
+                      <span>View</span>
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                     </Link>
                   </Button>
                 )}

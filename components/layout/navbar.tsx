@@ -41,8 +41,8 @@ import { getNotifications } from '@/lib/firebase-queries';
 
 const navItems = [
   { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
-  { href: '/used', label: 'Used', icon: Recycle, badge: 'Save' },
-  { href: '/services', label: 'Freelance', icon: Sparkles, badge: 'Earn' },
+  { href: '/used', label: 'Used', icon: Recycle },
+  { href: '/services', label: 'Freelance', icon: Sparkles },
   { href: '/requests', label: 'Requests', icon: Tag, badge: 'Live' },
   { href: '/deals', label: 'Deals', icon: Zap, badge: 'Hot' },
   { href: '/community', label: 'Community', icon: MessageSquare },
@@ -140,7 +140,7 @@ export function Navbar() {
         'border-b border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-xl shadow-xs'
       )}
     >
-      <div className="px-3 sm:px-4 lg:px-6 mx-auto max-w-7xl w-full min-w-0">
+      <div className="px-3 sm:px-4 lg:px-6 mx-auto max-w-[1440px] w-full min-w-0">
         {/* Auto-Adjusting Responsive Header Bar for Every Screen */}
         <div className="flex h-16 items-center justify-between w-full gap-2 sm:gap-3 min-w-0">
           {/* Left: Mobile Menu + Blue Squircle Logo + Bold CampusCart text */}
@@ -456,7 +456,7 @@ export function Navbar() {
           </div>
 
           {/* Center: Desktop Navigation Links in a Sleek Floating Island */}
-          <nav className="hidden xl:flex items-center p-1 rounded-full bg-secondary/35 dark:bg-secondary/25 border border-border/50 backdrop-blur-md shadow-2xs shrink-0">
+          <nav className="hidden xl:flex items-center p-1 rounded-full bg-secondary/35 dark:bg-secondary/25 border border-border/50 backdrop-blur-md shadow-2xs">
             {navItems.map((item) => {
               const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
@@ -464,7 +464,7 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'relative px-3 py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 shrink-0 select-none',
+                    'relative px-2.5 py-1 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 shrink-0 select-none',
                     active
                       ? 'bg-background text-foreground font-bold shadow-xs border border-border/60 dark:border-border/40'
                       : 'text-muted-foreground hover:text-foreground hover:bg-background/40 font-medium'
@@ -477,12 +477,8 @@ export function Navbar() {
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         {item.badge}
                       </span>
-                    ) : item.badge === 'Hot' ? (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 leading-none">
-                        {item.badge}
-                      </span>
                     ) : (
-                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/10 text-primary leading-none">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 leading-none">
                         {item.badge}
                       </span>
                     )
@@ -493,7 +489,7 @@ export function Navbar() {
           </nav>
 
           {/* Desktop Instant Command Search Trigger */}
-          <div className="hidden lg:flex items-center w-36 xl:w-48 2xl:w-60 shrink-0">
+          <div className="hidden lg:flex items-center flex-1 min-w-[120px] max-w-[160px] xl:max-w-[190px] 2xl:max-w-[220px]">
             <button
               type="button"
               onClick={() => setSearchCommandOpen(true)}
@@ -556,13 +552,13 @@ export function Navbar() {
 
             {/* Utility Icons Dock */}
             <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-              {/* Desktop Messages shortcut */}
+              {/* Desktop Messages shortcut (2xl only to avoid pushing avatar on xl) */}
               {user && (
                 <Link
                   href="/messages"
                   aria-label="Campus Messages"
                   title="Campus Messages"
-                  className="hidden xl:flex relative items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all shrink-0"
+                  className="hidden 2xl:flex relative items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all shrink-0"
                 >
                   <MessageSquare className="h-4.5 w-4.5 stroke-[1.8]" />
                   {unreadCount > 0 && (
