@@ -38,11 +38,11 @@ export function ThemeToggle({
       <Button
         variant="ghost"
         size={size}
-        className={cn('relative h-10 w-10 rounded-full text-muted-foreground opacity-60', className)}
+        className={cn('relative h-9 w-9 rounded-full text-muted-foreground opacity-60', className)}
         aria-label="Toggle theme"
         disabled
       >
-        <Sun className="h-5 w-5" />
+        <Sun className="h-4.5 w-4.5" />
       </Button>
     );
   }
@@ -56,7 +56,7 @@ export function ThemeToggle({
         size={size}
         onClick={() => setTheme(isDark ? 'light' : 'dark')}
         className={cn(
-          'relative h-10 w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all overflow-hidden',
+          'relative h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all overflow-hidden',
           className
         )}
         aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
@@ -64,13 +64,13 @@ export function ThemeToggle({
       >
         <Sun
           className={cn(
-            'h-5 w-5 transition-all duration-300 absolute',
+            'h-4.5 w-4.5 transition-all duration-300 absolute',
             isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100 text-amber-500'
           )}
         />
         <Moon
           className={cn(
-            'h-5 w-5 transition-all duration-300 absolute',
+            'h-4.5 w-4.5 transition-all duration-300 absolute',
             isDark ? 'rotate-0 scale-100 opacity-100 text-sky-400' : '-rotate-90 scale-0 opacity-0'
           )}
         />

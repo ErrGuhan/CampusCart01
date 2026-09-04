@@ -142,7 +142,7 @@ export function Navbar() {
     >
       <div className="px-3 sm:px-4 lg:px-6 mx-auto max-w-7xl w-full min-w-0">
         {/* Auto-Adjusting Responsive Header Bar for Every Screen */}
-        <div className="flex h-15 xs:h-16 sm:h-18 items-center justify-between w-full gap-1.5 sm:gap-2 lg:gap-3 min-w-0">
+        <div className="flex h-16 items-center justify-between w-full gap-2 sm:gap-3 min-w-0">
           {/* Left: Mobile Menu + Blue Squircle Logo + Bold CampusCart text */}
           <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 shrink-0 min-w-0">
             {/* Mobile Sheet Trigger */}
@@ -439,12 +439,12 @@ export function Navbar() {
 
             {/* Brand Logo */}
             <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 shrink-0 group min-w-0">
-              <div className="relative flex h-8.5 w-8.5 xs:h-9 xs:w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="relative flex h-8.5 w-8.5 xs:h-9 xs:w-9 sm:h-10 sm:w-10 items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Image
                   src="/images/logo/logo-icon.png"
                   alt="CampusCart Logo"
-                  width={44}
-                  height={44}
+                  width={40}
+                  height={40}
                   priority
                   className="object-contain w-full h-full filter drop-shadow-xs"
                 />
@@ -455,43 +455,37 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation Links */}
-          <nav className="hidden xl:flex items-center gap-0.5 shrink-0">
-            {navItems.slice(0, 3).map((item) => {
+          {/* Center: Desktop Navigation Links in a Sleek Floating Island */}
+          <nav className="hidden xl:flex items-center p-1 rounded-full bg-secondary/35 dark:bg-secondary/25 border border-border/50 backdrop-blur-md shadow-2xs shrink-0">
+            {navItems.map((item) => {
               const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0',
+                    'relative px-3 py-1.5 rounded-full text-xs transition-all duration-200 flex items-center gap-1.5 shrink-0 select-none',
                     active
-                      ? 'bg-primary/10 text-primary font-bold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
-                  )}
-                >
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-            {navItems.slice(3).map((item) => {
-              const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'hidden 2xl:flex px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all items-center gap-1.5 shrink-0',
-                    active
-                      ? 'bg-primary/10 text-primary font-bold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+                      ? 'bg-background text-foreground font-bold shadow-xs border border-border/60 dark:border-border/40'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/40 font-medium'
                   )}
                 >
                   <span>{item.label}</span>
                   {item.badge && (
-                    <span className="rounded-full bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 leading-none">
-                      {item.badge}
-                    </span>
+                    item.badge === 'Live' ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 leading-none">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        {item.badge}
+                      </span>
+                    ) : item.badge === 'Hot' ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 leading-none">
+                        {item.badge}
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/10 text-primary leading-none">
+                        {item.badge}
+                      </span>
+                    )
                   )}
                 </Link>
               );
@@ -499,32 +493,33 @@ export function Navbar() {
           </nav>
 
           {/* Desktop Instant Command Search Trigger */}
-          <div className="hidden lg:flex flex-1 min-w-[120px] max-w-[180px] xl:max-w-[220px] 2xl:max-w-[260px] mx-1 sm:mx-2">
+          <div className="hidden lg:flex items-center w-36 xl:w-48 2xl:w-60 shrink-0">
             <button
               type="button"
               onClick={() => setSearchCommandOpen(true)}
-              className="relative flex h-9.5 w-full items-center justify-between rounded-xl bg-secondary/50 hover:bg-secondary/80 px-2.5 sm:px-3 text-xs text-muted-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-xs group"
+              className="relative flex h-9 w-full items-center justify-between rounded-full bg-secondary/45 hover:bg-secondary/70 px-3 text-xs text-muted-foreground border border-border/50 hover:border-border/80 transition-all cursor-pointer shadow-2xs group"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <Search className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                 <span className="truncate text-muted-foreground/80 font-medium">Search campus...</span>
               </div>
-              <kbd className="hidden xl:inline-flex items-center gap-0.5 rounded-md border border-border/80 bg-background/80 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground shadow-xs">
+              <kbd className="hidden xl:inline-flex items-center gap-0.5 rounded-md border border-border/70 bg-background/90 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-muted-foreground/80 shadow-2xs">
                 <span>⌘</span>K
               </kbd>
             </button>
           </div>
 
-          {/* Right Action Icons - Optimized responsive targets */}
-          <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0">
+          {/* Right Action Icons - Structured Modular Architecture */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Mobile Search Toggle */}
             <button
               type="button"
-              className="lg:hidden flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
+              className="lg:hidden flex items-center justify-center h-9 w-9 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
               onClick={() => setSearchCommandOpen(true)}
               aria-label="Open campus search"
+              title="Search (⌘K)"
             >
-              <Search className="h-4.5 w-4.5 xs:h-5 xs:w-5 stroke-[2.2]" />
+              <Search className="h-4.5 w-4.5 stroke-[2]" />
             </button>
 
             {/* Quick Access: Admin Approval Center (Desktop 2xl) */}
@@ -533,7 +528,7 @@ export function Navbar() {
                 variant="outline"
                 size="sm"
                 asChild
-                className="hidden 2xl:inline-flex rounded-xl text-xs font-bold border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 h-9 px-2.5 gap-1.5 shrink-0"
+                className="hidden 2xl:inline-flex rounded-full text-xs font-bold border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 h-9 px-3 gap-1.5 shrink-0 shadow-2xs"
               >
                 <Link href="/admin">
                   <ShieldCheck className="h-3.5 w-3.5" />
@@ -542,83 +537,109 @@ export function Navbar() {
               </Button>
             )}
 
-            {/* Quick Sell Button */}
+            {/* Primary Action: Sell Button */}
             {user && (
               <Button
                 size="sm"
                 asChild
-                className="hidden sm:inline-flex rounded-xl text-xs font-bold h-9 px-3 gap-1.5 shadow-xs shrink-0"
+                className="hidden sm:inline-flex rounded-full text-xs font-bold h-9 px-3.5 gap-1.5 btn-gradient-primary text-white shadow-2xs hover:shadow-md hover:brightness-105 active:scale-95 transition-all shrink-0"
               >
                 <Link href="/seller/dashboard/products">
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
                   <span>Sell</span>
                 </Link>
               </Button>
             )}
 
-            {/* Desktop Messages shortcut */}
-            <Button variant="ghost" size="icon" asChild className="hidden 2xl:flex h-9.5 w-9.5 rounded-full text-muted-foreground hover:text-foreground shrink-0">
-              <Link href="/messages" aria-label="Campus Messages">
-                <MessageSquare className="h-4.5 w-4.5" />
-              </Link>
-            </Button>
+            {/* Vertical Divider after Action CTA */}
+            {user && <div className="hidden sm:block h-4.5 w-px bg-border/70 mx-1 shrink-0" />}
 
-            {/* Desktop Notifications shortcut */}
-            {user && (
-              <Button variant="ghost" size="icon" asChild className="hidden md:flex relative h-9.5 w-9.5 rounded-full text-muted-foreground hover:text-foreground shrink-0">
-                <Link href="/notifications" aria-label="Notifications">
-                  <Bell className="h-4.5 w-4.5" />
+            {/* Utility Icons Dock */}
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              {/* Desktop Messages shortcut */}
+              {user && (
+                <Link
+                  href="/messages"
+                  aria-label="Campus Messages"
+                  title="Campus Messages"
+                  className="hidden xl:flex relative items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all shrink-0"
+                >
+                  <MessageSquare className="h-4.5 w-4.5 stroke-[1.8]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary text-[9px] font-black text-primary-foreground ring-2 ring-background shadow-xs">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              )}
+
+              {/* Desktop Notifications shortcut */}
+              {user && (
+                <Link
+                  href="/notifications"
+                  aria-label="Notifications"
+                  title="Notifications"
+                  className="hidden md:flex relative items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all shrink-0"
+                >
+                  <Bell className="h-4.5 w-4.5 stroke-[1.8]" />
                   {unreadNotifs > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-xs animate-pulse">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white ring-2 ring-background shadow-xs animate-pulse">
                       {unreadNotifs > 9 ? '9+' : unreadNotifs}
                     </span>
                   )}
                 </Link>
-              </Button>
-            )}
+              )}
 
-            {/* Wishlist */}
-            <Button variant="ghost" size="icon" asChild className="hidden 2xl:flex h-9.5 w-9.5 rounded-full text-muted-foreground hover:text-foreground shrink-0">
-              <Link href="/wishlist" aria-label="Wishlist">
-                <Heart className="h-4.5 w-4.5" />
+              {/* Wishlist */}
+              <Link
+                href="/wishlist"
+                aria-label="Wishlist"
+                title="Saved Wishlist"
+                className="hidden 2xl:flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all shrink-0"
+              >
+                <Heart className="h-4.5 w-4.5 stroke-[1.8]" />
               </Link>
-            </Button>
 
-            {/* Desktop Theme Switcher */}
-            <div className="hidden lg:flex items-center shrink-0">
-              <ThemeToggle variant="button" />
+              {/* Desktop Theme Switcher */}
+              <div className="hidden lg:flex items-center shrink-0">
+                <ThemeToggle variant="button" className="h-9 w-9" />
+              </div>
+
+              {/* Cart Button with Counter - Always Visible */}
+              <Link
+                href="/cart"
+                aria-label="Shopping Cart"
+                title="Shopping Cart"
+                className="relative flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary/70 active:scale-95 transition-all shrink-0"
+              >
+                <ShoppingCart className="h-4.5 w-4.5 stroke-[1.8]" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground ring-2 ring-background shadow-xs animate-badge-pulse">
+                    {totalItems > 99 ? '99+' : totalItems}
+                  </span>
+                )}
+              </Link>
             </div>
 
-            {/* Cart Button with Counter - Always Visible */}
-            <Link
-              href="/cart"
-              aria-label="Shopping Cart"
-              className="relative flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full text-foreground hover:bg-secondary active:scale-95 transition-all shrink-0"
-            >
-              <ShoppingCart className="h-4.5 w-4.5 xs:h-5 xs:w-5 stroke-[1.8]" />
-              {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 xs:h-4.5 xs:min-w-4.5 px-1 items-center justify-center rounded-full bg-primary text-[9px] xs:text-[10px] font-bold text-primary-foreground animate-badge-pulse shadow-xs">
-                  {totalItems > 99 ? '99+' : totalItems}
-                </span>
-              )}
-            </Link>
+            {/* Vertical Divider before Profile */}
+            <div className="h-4.5 w-px bg-border/70 mx-1 shrink-0" />
 
             {/* User Account / Profile dropdown or Login buttons - Always Visible */}
             {loading ? (
-              <div className="h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full bg-muted animate-pulse shrink-0" />
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse shrink-0" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center justify-center h-9 w-9 xs:h-9.5 xs:w-9.5 sm:h-10 sm:w-10 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/40 focus:outline-none shrink-0 overflow-hidden"
+                    className="relative flex items-center justify-center h-9 w-9 rounded-full ring-2 ring-border/80 hover:ring-primary/60 focus:ring-primary/60 transition-all duration-200 overflow-hidden shadow-2xs group shrink-0 cursor-pointer"
                     aria-label="Account menu"
                   >
-                    <Avatar className="h-8 w-8 xs:h-8.5 xs:w-8.5 sm:h-9 sm:w-9 ring-2 ring-primary/20 shrink-0 overflow-hidden">
+                    <Avatar className="h-full w-full">
                       {profile?.avatar_url && (
                         <AvatarImage src={profile.avatar_url || undefined} alt={profile.display_name} className="h-full w-full object-cover" />
                       )}
-                      <AvatarFallback className="text-xs font-bold bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                      <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -829,10 +850,10 @@ export function Navbar() {
                 </Link>
                 {/* Desktop Sign In / Join buttons */}
                 <div className="hidden sm:flex items-center gap-1.5">
-                  <Button variant="ghost" size="sm" asChild className="rounded-xl text-xs h-9 px-2.5 sm:px-3">
+                  <Button variant="ghost" size="sm" asChild className="rounded-full text-xs h-9 px-3.5 hover:bg-secondary/70">
                     <Link href="/login">Sign In</Link>
                   </Button>
-                  <Button size="sm" asChild className="btn-gradient-primary rounded-xl text-xs h-9 px-3 sm:px-3.5 shadow-xs font-bold">
+                  <Button size="sm" asChild className="btn-gradient-primary rounded-full text-xs h-9 px-4 shadow-xs font-bold text-white hover:brightness-105 active:scale-95 transition-all">
                     <Link href="/register">Join Campus</Link>
                   </Button>
                 </div>
