@@ -88,7 +88,7 @@ export function RequestsPreviewSection() {
           {requests.map((req) => (
             <div
               key={req.id}
-              className="rounded-3xl border border-border/80 bg-card p-5 sm:p-6 flex flex-col justify-between hover:border-emerald-500/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 shadow-2xs"
+              className="rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md p-5 sm:p-6 flex flex-col h-full justify-between hover:border-emerald-500/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 shadow-2xs"
             >
               <div>
                 <div className="flex items-center gap-3 mb-3.5">
@@ -118,7 +118,7 @@ export function RequestsPreviewSection() {
               <div className="mt-6 pt-3.5 border-t border-border/60 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] text-muted-foreground font-medium block leading-none">Max Budget</span>
-                  <span className="text-base sm:text-lg font-black text-emerald-600">₹{req.budget}</span>
+                  <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">₹{req.budget}</span>
                 </div>
 
                 <Button asChild size="sm" className="rounded-2xl text-xs sm:text-sm h-10 px-4 font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs">

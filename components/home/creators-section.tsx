@@ -54,7 +54,7 @@ export function CreatorsSection({ sellers }: { sellers: Seller[] }) {
             <Link
               key={seller.id}
               href={`/seller/${seller.username}`}
-              className="group flex flex-col rounded-3xl border border-border/80 bg-card p-5 sm:p-6 transition-all hover:shadow-lg hover:border-primary/40 hover:-translate-y-1 active:scale-95 shadow-2xs"
+              className="group flex flex-col h-full rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md p-5 sm:p-6 transition-all hover:shadow-lg hover:border-primary/40 hover:-translate-y-1 active:scale-95 shadow-2xs"
             >
               <div className="flex items-start gap-4">
                 <Avatar className="h-14 w-14 sm:h-16 sm:w-16 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all shrink-0">
@@ -117,7 +117,7 @@ export function CreatorsSection({ sellers }: { sellers: Seller[] }) {
           {/* Become a Creator Card */}
           <Link
             href="/register"
-            className="group flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-all hover:bg-primary/10 hover:border-primary/50 active:scale-95 shadow-2xs"
+            className="group flex flex-col h-full items-center justify-center rounded-3xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-all hover:bg-primary/10 hover:border-primary/50 active:scale-95 shadow-2xs"
           >
             <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3.5 group-hover:scale-105 transition-transform shadow-xs">
               <Store className="h-7 w-7" />

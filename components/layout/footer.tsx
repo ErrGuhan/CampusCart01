@@ -54,7 +54,7 @@ export function Footer() {
         
         {/* Top Trust Banner with Frosted Micro-Cards */}
         <div className="mb-12 pb-10 border-b border-border/60 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-left">
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-card/85 dark:bg-card/75 border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3 interactive-card">
             <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5" />
             </div>
@@ -64,7 +64,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-card/85 dark:bg-card/75 border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3 interactive-card">
             <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <MapPin className="h-5 w-5" />
             </div>
@@ -74,8 +74,8 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-card/85 dark:bg-card/75 border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3 interactive-card">
+            <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <Store className="h-5 w-5" />
             </div>
             <div>
@@ -84,8 +84,8 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-card border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-card/85 dark:bg-card/75 border border-border/80 backdrop-blur-md shadow-2xs flex items-center gap-3 interactive-card">
+            <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <Heart className="h-5 w-5" />
             </div>
             <div>

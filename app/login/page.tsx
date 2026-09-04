@@ -244,7 +244,7 @@ function LoginForm() {
       <div className="mt-5 text-center">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#0F172A] transition-colors font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Campus Marketplace</span>
@@ -253,32 +253,32 @@ function LoginForm() {
 
       {/* Interactive Forgot Password Modal */}
       <Dialog open={forgotModalOpen} onOpenChange={setForgotModalOpen}>
-        <DialogContent className="sm:max-w-[400px] rounded-3xl p-6 bg-[#F5FFFA]/95 backdrop-blur-2xl border border-white/80 dark:border-border shadow-2xl">
+        <DialogContent className="sm:max-w-[400px] rounded-3xl p-6 bg-card/95 dark:bg-card/95 backdrop-blur-2xl border border-border/80 shadow-2xl">
           <DialogHeader className="space-y-1.5 text-center sm:text-left">
-            <DialogTitle className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-              <Mail className="h-5 w-5 text-[#1D5BF1]" />
+            <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" />
               <span>Reset Password</span>
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#64748B]">
+            <DialogDescription className="text-xs text-muted-foreground">
               Enter the email address registered with your account. We will send you a secure link to reset your password.
             </DialogDescription>
           </DialogHeader>
 
           {resetSuccess ? (
             <div className="py-4 space-y-4 text-center">
-              <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+              <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-[#0F172A]">Email Sent!</h3>
-                <p className="text-xs text-[#64748B] leading-relaxed max-w-xs mx-auto">
-                  A password reset link has been sent to <span className="font-semibold text-[#0F172A]">{resetEmail}</span>. Please check your inbox and spam folders.
+                <h3 className="text-sm font-bold text-foreground">Email Sent!</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-xs mx-auto">
+                  A password reset link has been sent to <span className="font-semibold text-foreground">{resetEmail}</span>. Please check your inbox and spam folders.
                 </p>
               </div>
               <Button
                 type="button"
                 onClick={() => setForgotModalOpen(false)}
-                className="w-full h-11 rounded-xl bg-[#1D5BF1] hover:bg-[#184ECC] text-[#F5FFFA] font-semibold text-xs mt-2"
+                className="w-full h-11 rounded-xl btn-gradient-primary text-white font-semibold text-xs mt-2"
               >
                 Back to Sign In
               </Button>
@@ -288,7 +288,7 @@ function LoginForm() {
               <div className="space-y-1.5 text-left">
                 <label
                   htmlFor="resetEmail"
-                  className="block text-xs font-semibold text-[#0F172A]"
+                  className="block text-xs font-semibold text-foreground"
                 >
                   Email address
                 </label>
@@ -298,7 +298,7 @@ function LoginForm() {
                   placeholder="you@svcet.edu"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl bg-[#F5FFFA] border-[#D2D6EE] text-[#0F172A] placeholder:text-[#94A3B8] text-sm focus-visible:ring-2 focus-visible:ring-[#1D5BF1]"
+                  className="w-full h-11 px-4 rounded-xl bg-secondary/50 border-border/70 text-foreground placeholder:text-muted-foreground/60 text-sm focus-visible:ring-2 focus-visible:ring-primary"
                   required
                   autoFocus
                 />
@@ -309,18 +309,18 @@ function LoginForm() {
                   type="button"
                   variant="outline"
                   onClick={() => setForgotModalOpen(false)}
-                  className="flex-1 h-11 rounded-xl border-[#D2D6EE] text-xs font-semibold text-[#0F172A] hover:bg-[#F5FFFA]"
+                  className="flex-1 h-11 rounded-xl border-border/70 text-xs font-semibold text-foreground hover:bg-secondary/50"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={resetLoading}
-                  className="flex-1 h-11 rounded-xl bg-[#1D5BF1] hover:bg-[#184ECC] text-[#F5FFFA] font-semibold text-xs shadow-sm"
+                  className="flex-1 h-11 rounded-xl btn-gradient-primary text-white font-semibold text-xs shadow-sm"
                 >
                   {resetLoading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin text-[#F5FFFA] mr-1.5" />
+                      <Loader2 className="h-4 w-4 animate-spin text-white mr-1.5" />
                       <span>Sending...</span>
                     </>
                   ) : (
@@ -338,10 +338,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#F5FFFA] flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
+    <main className="min-h-[100dvh] w-full bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-secondary/10 dark:to-background flex items-center justify-center px-4 py-8 sm:py-12 relative overflow-hidden">
       <Suspense
         fallback={
-          <div className="h-[480px] w-full max-w-[390px] rounded-3xl animate-pulse bg-[#F5FFFA]/70 shadow-lg" />
+          <div className="h-[480px] w-full max-w-[390px] rounded-3xl animate-pulse bg-card/70 shadow-lg" />
         }
       >
         <LoginForm />

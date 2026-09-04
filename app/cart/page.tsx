@@ -34,7 +34,7 @@ export default function CartPage() {
     return (
       <>
         <Navbar />
-        <main className="container-px mx-auto max-w-7xl py-16">
+        <main className="container-px mx-auto max-w-7xl py-16 pb-28 md:pb-12">
           <div className="flex flex-col items-center justify-center text-center py-16">
             <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary text-muted-foreground mb-6">
               <ShoppingBag className="h-10 w-10" />
@@ -44,8 +44,8 @@ export default function CartPage() {
               Looks like you haven't added any products yet. Explore what your campus creates!
             </p>
             <Button className="mt-6" asChild>
-              <Link href="/products">
-                Browse Products
+              <Link href="/marketplace">
+                Explore Marketplace
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -59,7 +59,7 @@ export default function CartPage() {
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-8">
+      <main className="container-px mx-auto max-w-7xl py-8 pb-28 md:pb-12">
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
           <ChevronRight className="h-4 w-4" />

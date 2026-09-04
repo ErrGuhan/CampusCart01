@@ -164,7 +164,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
   return (
     <>
       <Navbar />
-      <main className="container-px mx-auto max-w-7xl py-5 sm:py-8 pb-28 md:pb-12">
+      <main className="container-px mx-auto max-w-7xl py-5 sm:py-8 pb-40 md:pb-12">
         
         {/* Minimal Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-6 overflow-x-auto pb-1">
@@ -763,7 +763,7 @@ export function ProductDetailClient({ product, relatedProducts, reviews = [] }: 
       </main>
 
       {/* Mobile Floating Sticky Action Bar */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 px-4 py-3 bg-[#F5FFFA]/95 dark:bg-card/95 backdrop-blur-xl border-t border-border/80 md:hidden flex items-center justify-between gap-3 shadow-lg">
+      <div className="fixed bottom-16 left-0 right-0 z-30 px-4 py-3 bg-card/95 dark:bg-card/95 backdrop-blur-xl border-t border-border/80 md:hidden flex items-center justify-between gap-3 shadow-lg">
         <div className="flex flex-col min-w-0">
           <span className="text-[10px] text-muted-foreground font-semibold">Total Price</span>
           <span className="text-base font-black text-foreground">₹{displayPrice}</span>

@@ -73,7 +73,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
       href={`/products/${product.slug}`}
       prefetch={true}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-[20px] sm:rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md shadow-xs transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 active:scale-[0.98]',
+        'group relative flex flex-col h-full overflow-hidden rounded-[20px] sm:rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md shadow-xs transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 active:scale-[0.98]',
         className
       )}
     >
@@ -101,7 +101,7 @@ export function ProductCard({ product, className, priority = false }: ProductCar
             </span>
           )}
           {product.isDigital && (
-            <span className="rounded-xl bg-[#3B42C4]/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs border border-white/20">
+            <span className="rounded-xl bg-indigo-600/90 dark:bg-indigo-500/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white shadow-2xs border border-white/20">
               Digital
             </span>
           )}

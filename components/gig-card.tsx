@@ -18,7 +18,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
     : 'CC';
 
   return (
-    <div className="group relative flex flex-col rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md shadow-xs overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-indigo-500/40 hover:-translate-y-1 active:scale-[0.98]">
+    <div className="group relative flex flex-col h-full rounded-[22px] sm:rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md shadow-xs overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-1 active:scale-[0.98]">
       {/* Optimized Cover Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden shimmer-placeholder select-none">
         <Image
@@ -96,7 +96,7 @@ export function GigCard({ gig }: { gig: ServiceGig }) {
 
           <div className="text-right">
             <span className="text-[10px] text-muted-foreground block leading-none font-medium">Starting from</span>
-            <span className="text-xs sm:text-sm font-black text-foreground group-hover:text-[#3B42C4] transition-colors">
+            <span className="text-xs sm:text-sm font-black text-foreground group-hover:text-primary transition-colors">
               ₹{gig.startingPrice}
             </span>
           </div>

@@ -83,13 +83,13 @@ export function ServicesSection() {
               <Link
                 key={skill.slug}
                 href={`/services?category=${skill.slug}`}
-                className="group relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card p-5 sm:p-6 hover:border-indigo-500/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-95 shadow-2xs"
+                className="group relative flex flex-col h-full justify-between rounded-3xl border border-border/80 bg-card/85 dark:bg-card/75 backdrop-blur-md p-5 sm:p-6 hover:border-indigo-500/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-95 shadow-2xs"
               >
                 <div>
-                  <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4 shadow-2xs">
+                  <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4 shadow-2xs">
                     <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="font-display text-base sm:text-lg font-extrabold text-foreground group-hover:text-indigo-600 transition-colors leading-snug">
+                  <h3 className="font-display text-base sm:text-lg font-extrabold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug">
                     {skill.title}
                   </h3>
                   <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
@@ -104,7 +104,7 @@ export function ServicesSection() {
                   </div>
                   <div className="text-right">
                     <span className="text-[11px] text-muted-foreground block leading-none font-medium">Starting from</span>
-                    <span className="font-extrabold text-foreground group-hover:text-indigo-600 transition-colors text-sm sm:text-base">
+                    <span className="font-extrabold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors text-sm sm:text-base">
                       {skill.price}
                     </span>
                   </div>

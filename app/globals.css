@@ -121,50 +121,56 @@
     @apply bg-gradient-to-r from-primary/15 via-indigo-500/15 to-primary/10 border border-primary/25 text-primary;
   }
   .glass-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(226, 232, 240, 0.85);
-    box-shadow: 0 8px 32px -4px rgba(37, 99, 235, 0.05);
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.05);
+    transform: translateZ(0);
   }
   .dark .glass-card {
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.45);
+    transform: translateZ(0);
+  }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.92);
+    box-shadow: 0 10px 35px -5px rgba(37, 99, 235, 0.06);
+    transform: translateZ(0);
+  }
+  .dark .glass-panel {
+    background: rgba(15, 23, 42, 0.90);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.5);
-  }
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.90);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 10px 35px -5px rgba(37, 99, 235, 0.06);
-  }
-  .dark .glass-panel {
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.55);
+    transform: translateZ(0);
   }
   .glass-dock {
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    border-top: 1px solid rgba(226, 232, 240, 0.92);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(226, 232, 240, 0.95);
     box-shadow: 0 -8px 30px -4px rgba(37, 99, 235, 0.06);
+    transform: translateZ(0);
   }
   .dark .glass-dock {
-    background: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 -8px 30px -4px rgba(0, 0, 0, 0.6);
+    transform: translateZ(0);
   }
   .glass-glow {
     box-shadow: 0 8px 32px 0 rgba(37, 99, 235, 0.08);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .glass-glow:hover {
     box-shadow: 0 14px 44px 0 rgba(37, 99, 235, 0.18);
@@ -174,7 +180,7 @@
     background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
     color: #FFFFFF;
     box-shadow: 0 4px 16px 0 rgba(37, 99, 235, 0.25);
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .btn-gradient-primary:hover {
     background: linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%);
@@ -182,6 +188,19 @@
   }
   .btn-gradient-primary:active {
     transform: scale(0.97);
+  }
+
+  /* Interactive tactile card utilities */
+  .interactive-card {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  .interactive-card:hover {
+    transform: translateY(-3px);
+  }
+  .interactive-card:active {
+    transform: scale(0.98);
   }
 
   /* Soft Background Washes */
@@ -206,12 +225,12 @@
       min-width: auto;
     }
   }
-  /* Safe area inset utilities (90px - 110px for bottom nav + FAB) */
+  /* Safe area inset utilities (calculated for bottom nav + home bar) */
   .pb-safe-nav {
-    padding-bottom: calc(env(safe-area-inset-bottom, 1rem) + 6.5rem);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 4.5rem);
   }
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
+    padding-bottom: env(safe-area-inset-bottom, 0.5rem);
   }
   .pt-safe {
     padding-top: env(safe-area-inset-top, 0rem);

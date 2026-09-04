@@ -272,23 +272,23 @@ export function ChatDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-background/70 backdrop-blur-md animate-in fade-in-50">
-      {/* Modal Card with Soft Ambient Gradient Background */}
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#E2E4F6] via-[#EEF0FA] to-[#F5FFFA] dark:from-[#171026] dark:via-[#130D20] dark:to-[#1B1120] border border-white/80 dark:border-border/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[580px] max-h-[88vh]">
+      {/* Modal Card with Brand Obsidian & Slate Styling */}
+      <div className="relative w-full max-w-lg bg-card border border-border/80 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[580px] max-h-[88vh]">
         
         {/* Modal Header */}
-        <div className="p-3.5 sm:p-4 border-b border-[#E2E4F6]/80 dark:border-border/60 flex items-center justify-between bg-[#F5FFFA]/90 dark:bg-card/70 backdrop-blur-md shrink-0">
+        <div className="p-3.5 sm:p-4 border-b border-border/80 flex items-center justify-between bg-card/90 dark:bg-card/90 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={onClose}
               aria-label="Back"
-              className="h-9 w-9 rounded-2xl bg-[#F5FFFA] dark:bg-card/90 border border-[#E2E4F6] dark:border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+              className="h-9 w-9 rounded-2xl bg-secondary border border-border shadow-2xs flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
             >
               <X className="h-4 w-4" />
             </button>
             
             <div className="min-w-0">
-              <h3 className="font-display font-black text-sm sm:text-base text-[#0F172A] truncate">{recipientName}</h3>
+              <h3 className="font-display font-black text-sm sm:text-base text-foreground truncate">{recipientName}</h3>
               <p className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Verified Student Peer
@@ -301,7 +301,7 @@ export function ChatDialog({
               asChild
               variant="ghost"
               size="sm"
-              className="text-xs text-[#1D5BF1] dark:text-purple-400 font-bold h-8 px-2.5 rounded-xl hover:bg-[#1D5BF1]/10"
+              className="text-xs text-primary font-bold h-8 px-2.5 rounded-xl hover:bg-primary/10"
             >
               <Link href={`/messages?user=${recipientId}&name=${encodeURIComponent(recipientName)}`}>
                 Full View
@@ -313,7 +313,7 @@ export function ChatDialog({
 
         {/* Product Context Banner */}
         {product && (
-          <div className="p-2.5 sm:p-3 bg-[#F5FFFA]/80 dark:bg-card/80 border-b border-[#E2E4F6]/80 dark:border-border/60 flex items-center justify-between gap-3 shrink-0 backdrop-blur-md">
+          <div className="p-2.5 sm:p-3 bg-secondary/40 border-b border-border/60 flex items-center justify-between gap-3 shrink-0 backdrop-blur-md">
             <div className="flex items-center gap-2.5 min-w-0">
               {product.image && (
                 <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-secondary shrink-0 border border-border/60">
@@ -322,7 +322,7 @@ export function ChatDialog({
               )}
               <div className="min-w-0">
                 <p className="text-xs font-bold text-foreground truncate">{product.name}</p>
-                <p className="text-xs font-black text-[#1D5BF1] dark:text-purple-400">₹{product.price}</p>
+                <p className="text-xs font-black text-primary">₹{product.price}</p>
               </div>
             </div>
 
@@ -330,7 +330,7 @@ export function ChatDialog({
               size="sm"
               variant="outline"
               onClick={() => setOfferMode(!offerMode)}
-              className="h-8 text-xs font-bold rounded-xl border-[#1D5BF1]/40 text-[#1D5BF1] dark:text-purple-400 hover:bg-[#1D5BF1]/10 shrink-0"
+              className="h-8 text-xs font-bold rounded-xl border-primary/40 text-primary hover:bg-primary/10 shrink-0"
             >
               <Handshake className="h-3.5 w-3.5 mr-1" />
               Make Offer
@@ -340,7 +340,7 @@ export function ChatDialog({
 
         {/* Make Offer Collapsible Drawer */}
         {offerMode && product && (
-          <div className="p-3 bg-[#1D5BF1]/10 border-b border-[#1D5BF1]/20 space-y-2 animate-in slide-in-from-top-2 shrink-0">
+          <div className="p-3 bg-primary/10 border-b border-primary/20 space-y-2 animate-in slide-in-from-top-2 shrink-0">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-foreground">Propose Price to {recipientName}:</span>
               <span className="text-muted-foreground line-through">Listed: ₹{product.price}</span>
@@ -353,14 +353,14 @@ export function ChatDialog({
                   value={offerPrice}
                   onChange={(e) => setOfferPrice(e.target.value)}
                   placeholder="Offer amount"
-                  className="pl-8 h-9 text-xs rounded-xl bg-[#F5FFFA] dark:bg-card"
+                  className="pl-8 h-9 text-xs rounded-xl bg-card border-border"
                 />
               </div>
               <Button
                 size="sm"
                 onClick={handleSendOffer}
                 disabled={sending}
-                className="btn-gradient-primary rounded-xl text-xs font-bold h-9 px-3 text-[#F5FFFA]"
+                className="btn-gradient-primary rounded-xl text-xs font-bold h-9 px-3 text-white"
               >
                 Send Offer
               </Button>
@@ -373,7 +373,7 @@ export function ChatDialog({
           
           {/* Centered Date Separator */}
           <div className="flex justify-center my-1">
-            <div className="rounded-full px-3.5 py-0.5 bg-[#F5FFFA]/90 dark:bg-card/80 border border-[#E2E4F6] dark:border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
+            <div className="rounded-full px-3.5 py-0.5 bg-card/90 dark:bg-card/80 border border-border/60 text-[11px] font-bold text-muted-foreground shadow-2xs">
               Today
             </div>
           </div>
@@ -388,9 +388,9 @@ export function ChatDialog({
                 
                 {/* Peer avatar on left */}
                 {!isMe && (
-                  <Avatar className="h-7 w-7 ring-2 ring-[#1D5BF1]/20 shadow-2xs shrink-0 mb-1">
+                  <Avatar className="h-7 w-7 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
                     <AvatarImage src={recipientAvatar} alt={recipientName} />
-                    <AvatarFallback className="text-[10px] font-black bg-gradient-to-br from-[#1D5BF1] to-[#3B42C4] text-white">
+                    <AvatarFallback className="text-[10px] font-black bg-gradient-to-br from-primary to-indigo-600 text-white">
                       {recipientName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -401,8 +401,8 @@ export function ChatDialog({
                     className={cn(
                       'px-4 py-2.5 text-xs sm:text-sm leading-relaxed rounded-[22px] shadow-sm w-fit inline-block font-medium',
                       isMe
-                        ? 'bg-[#1D5BF1] dark:bg-purple-600 text-[#F5FFFA] rounded-br-[4px]'
-                        : 'bg-[#F5FFFA] dark:bg-card text-[#0F172A] border border-[#E2E4F6] dark:border-border/80 rounded-bl-[4px] shadow-2xs'
+                        ? 'btn-gradient-primary text-white rounded-br-[4px]'
+                        : 'bg-card text-foreground border border-border/80 rounded-bl-[4px] shadow-2xs'
                     )}
                     style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                   >
@@ -416,13 +416,15 @@ export function ChatDialog({
                         type="button"
                         onClick={() => handleCopy(m.text, m.id)}
                         className="p-0.5 rounded hover:text-foreground"
+                        title="Copy text"
                       >
                         {isCopied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleLike(m.id)}
-                        className={cn('p-0.5 rounded', isLiked ? 'text-[#1D5BF1]' : 'hover:text-foreground')}
+                        className={cn('p-0.5 rounded', isLiked ? 'text-primary' : 'hover:text-foreground')}
+                        title="Like message"
                       >
                         <ThumbsUp className="h-3 w-3" />
                       </button>
@@ -430,6 +432,7 @@ export function ChatDialog({
                         type="button"
                         onClick={() => handleSpeak(m.text)}
                         className="p-0.5 rounded hover:text-foreground"
+                        title="Speak aloud"
                       >
                         <Volume2 className="h-3 w-3" />
                       </button>
@@ -439,9 +442,9 @@ export function ChatDialog({
 
                 {/* User avatar on right */}
                 {isMe && (
-                  <Avatar className="h-7 w-7 ring-2 ring-[#1D5BF1]/20 shadow-2xs shrink-0 mb-1">
+                  <Avatar className="h-7 w-7 ring-2 ring-primary/20 shadow-2xs shrink-0 mb-1">
                     <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || 'You'} />
-                    <AvatarFallback className="text-[10px] font-bold bg-[#1D5BF1] text-white">
+                    <AvatarFallback className="text-[10px] font-bold bg-primary text-white">
                       {(profile?.display_name || user.email || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -453,7 +456,7 @@ export function ChatDialog({
 
         {/* Message Input Footer (Floating Pill Dock) */}
         <form onSubmit={handleSendMessage} className="p-2.5 sm:p-3 bg-transparent flex items-center gap-2 shrink-0">
-          <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-[#F5FFFA] dark:bg-card/95 border border-[#E2E4F6] dark:border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
+          <div className="flex-1 flex items-center h-11 sm:h-12 rounded-full bg-card/95 dark:bg-card/95 border border-border/80 shadow-md px-3 gap-2 backdrop-blur-md">
             <button
               type="button"
               onClick={() => setInputText((prev) => prev ? prev + ' 🤝 Let\'s meet at Central Library' : '🤝 Let\'s meet at Central Library')}
@@ -472,7 +475,7 @@ export function ChatDialog({
             <button
               type="submit"
               disabled={!inputText.trim() || sending}
-              className="h-8 w-8 rounded-xl bg-[#1D5BF1] text-[#F5FFFA] flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
+              className="h-8 w-8 rounded-xl btn-gradient-primary text-white flex items-center justify-center shadow-xs hover:scale-105 active:scale-90 transition-transform shrink-0 disabled:opacity-30"
             >
               {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 -translate-y-0.5 translate-x-0.5" />}
             </button>
@@ -482,7 +485,7 @@ export function ChatDialog({
             type="button"
             onClick={() => toast({ title: 'Microphone Voice Notes enabled! 🎙️' })}
             aria-label="Voice note"
-            className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-[#F5FFFA] dark:bg-card/95 border border-[#E2E4F6] dark:border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
+            className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-card/95 dark:bg-card/95 border border-border/80 shadow-md flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all shrink-0"
           >
             <Mic className="h-4.5 w-4.5" />
           </button>

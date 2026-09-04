@@ -39,8 +39,8 @@ export function ScrollToTop() {
       aria-label="Scroll back to top"
       className={cn(
         'fixed z-40 flex h-11 w-11 items-center justify-center rounded-full',
-        'bottom-22 md:bottom-6 right-4 sm:right-6',
-        'bg-[#F5FFFA]/90 dark:bg-card/90 text-foreground border border-[#E2E4F6]/80 dark:border-border/80',
+        'bottom-20 md:bottom-6 left-4 sm:left-6',
+        'bg-card/90 dark:bg-card/90 text-foreground border border-border/80',
         'backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300',
         'hover:scale-110 active:scale-95 hover:border-primary/40 hover:text-primary',
         'animate-in fade-in zoom-in-75 duration-200'

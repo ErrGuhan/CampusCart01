@@ -127,7 +127,7 @@ export function CampusCartAIAssistant() {
         },
       ]);
       setLoading(false);
-    }, 450);
+    }, 120);
   }
 
   function handleCopy(text: string, id: string) {
@@ -159,14 +159,14 @@ export function CampusCartAIAssistant() {
       <button
         onClick={() => setOpen(!open)}
         aria-label="Open AI shopping assistant"
-        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#1D5BF1] to-[#3B42C4] text-[#F5FFFA] shadow-[0_4px_25px_rgba(29,91,241,0.4)] hover:shadow-[0_6px_35px_rgba(29,91,241,0.55)] hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-[#1D5BF1]/25 border border-white/30"
+        className="fixed bottom-20 md:bottom-6 right-3.5 sm:right-6 z-50 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white shadow-[0_4px_25px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_35px_rgba(37,99,235,0.5)] hover:scale-105 active:scale-90 transition-all duration-200 ring-4 ring-primary/20 border border-white/25"
       >
         {open ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 animate-pulse" />}
       </button>
 
-      {/* Chat Window with Soft Ambient Gradient Background */}
+      {/* Chat Window with Soft Frosted Backdrop */}
       {open && (
-        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-white/80 dark:border-white/15 bg-[#F5FFFA]/95 dark:bg-slate-900/80 backdrop-blur-2xl shadow-[0_16px_50px_rgba(29,91,241,0.14)] flex flex-col overflow-hidden animate-fade-in-up">
+        <div className="fixed bottom-20 sm:bottom-24 left-2.5 right-2.5 sm:left-auto sm:right-6 z-50 sm:w-[390px] h-[74vh] max-h-[560px] rounded-[32px] border border-border/80 bg-card/95 dark:bg-card/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-50 zoom-in-95 duration-200">
           
           {/* Header */}
           <div className="p-3.5 sm:p-4 border-b border-border/80 bg-card/90 dark:bg-card/75 backdrop-blur-md flex items-center justify-between">
